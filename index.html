@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotifKain - Katalog Desain 2024</title>
+    <meta name="description" content="Koleksi desain motif kain eksklusif dari MotifKain">
+    <meta property="og:title" content="MotifKain - Katalog Desain 2024">
+    <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" href="assets/logo/logo-motifkain.png" type="image/png">
+    <style>
+        :root {
+            --brown-dark: #5D4037;
+            --brown-medium: #8D6E63;
+            --brown-light: #A1887F;
+            --teal: #008B8B;
+            --teal-light: #20B2AA;
+            --beige: #F5F0E8;
+            --cream: #FFF8F0;
+            --gold: #C9A66B;
+            --white: #FFFFFF;
+            --text: #3E2723;
+            --text-light: #6D4C41;
+            --green: #25D366;
+        }
+
+        /* ===== KATALOG UTAMA - INSTAGRAM 4:5 ===== */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #E8E0D5 0%, #D4C8B8 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 2rem 1rem;
+            overflow-x: hidden;
+            padding-bottom: 120px;
+        }
+
+        /* Container */
+        .catalog-container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        /* Header */
+        .catalog-header {
+            text-align: center;
+            width: 100%;
+        }
+
+        .website-badge {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            background: var(--white);
+            border-radius: 25px;
+            font-size: 0.75rem;
+            color: var(--teal);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            font-weight: 500;
+        }
+
+        /* Flipbook - Instagram 4:5 Portrait */
+        .flipbook {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 4 / 5;
+            position: relative;
+        }
+
+        .flipbook-pages {
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow:
+                0 0 0 1px rgba(0,0,0,0.05),
+                0 4px 20px rgba(0,0,0,0.1),
+                0 8px 40px rgba(0,0,0,0.15),
+                0 16px 60px rgba(0,0,0,0.1);
+        }
+
+        .flipbook-page {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: var(--white);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .flipbook-page.flipped {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        .flipbook-page.flipping-left {
+            animation: flipLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .flipbook-page.sliding-in-right {
+            animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .flipbook-page.sliding-out-right {
+            animation: slideOutRight 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .flipbook-page.flipping-right {
+            animation: flipRight 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes flipLeft {
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(-100%); opacity: 0; }
+        }
+
+        @keyframes slideInRight {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOutRight {
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+
+        @keyframes flipRight {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Image clickable in catalog */
+        .catalog-image {
+            cursor: zoom-in;
+            transition: opacity 0.2s;
+        }
+        .catalog-image:active {
+            opacity: 0.8;
+        }
+
+        /* Navigation */
+        .flipbook-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .nav-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid rgba(93,64,55,0.2);
+            background: var(--white);
+            color: var(--brown-dark);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--teal);
+            border-color: var(--teal);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-indicator {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            background: var(--white);
+            padding: 0.5rem 1.25rem;
+            border-radius: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .page-indicator strong {
+            color: var(--brown-dark);
+            font-size: 1rem;
+        }
+
+        /* Page Dots */
+        .page-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            max-width: 400px;
+            padding: 0 1rem;
+        }
+
+        .page-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(93,64,55,0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .page-dot:hover {
+            background: var(--brown-light);
+            transform: scale(1.2);
+        }
+
+        .page-dot.active {
+            background: var(--teal);
+            transform: scale(1.3);
+        }
+
+        /* Footer */
+        .catalog-footer {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .catalog-footer p {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            opacity: 0.7;
+            margin-bottom: 0.75rem;
+        }
+
+        .share-section { margin-top: 0.5rem; }
+
+        .share-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1.25rem;
+            background: var(--teal);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .share-btn:hover {
+            background: var(--teal-light);
+            transform: translateY(-2px);
+        }
+
+        /* Admin Button */
+        .admin-access {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 100;
+        }
+
+        .admin-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid rgba(93,64,55,0.2);
+            background: var(--white);
+            color: var(--text-light);
+            font-size: 1rem;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+
+        .admin-btn:hover {
+            opacity: 1;
+            background: var(--brown-dark);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--beige);
+            border-top-color: var(--teal);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== IMAGE ZOOM / LIGHTBOX ===== */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .lightbox-overlay.active {
+            display: flex;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .lightbox-image-container {
+            max-width: 90vw;
+            max-height: 70vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lightbox-image {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .lightbox-pilih-btn {
+            margin-top: 1.5rem;
+            padding: 1rem 2.5rem;
+            background: var(--green);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .lightbox-pilih-btn:hover {
+            background: #20BA5C;
+            transform: scale(1.05);
+        }
+
+        /* ===== PILIH BUTTON (Fixed Bottom) ===== */
+        .pilih-float-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            padding: 1.5rem 1rem;
+            display: none;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .pilih-float-container.active {
+            display: flex;
+        }
+
+        .pilih-float-btn {
+            padding: 1rem 2.5rem;
+            background: var(--green);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 20px rgba(37,211,102,0.4);
+            transition: all 0.3s;
+        }
+
+        .pilih-float-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(37,211,102,0.5);
+        }
+
+        .pilih-count {
+            background: white;
+            color: var(--green);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        /* ===== SETTINGS BUTTON ===== */
+        .settings-btn {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 5rem;
+            z-index: 100;
+        }
+
+        .settings-btn button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid rgba(93,64,55,0.2);
+            background: var(--white);
+            color: var(--brown-dark);
+            font-size: 1rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+
+        .settings-btn button:hover {
+            opacity: 1;
+            background: var(--teal);
+            color: white;
+        }
+
+        /* ===== WA NUMBER SETTINGS MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .modal-content h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--brown-dark);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #E0D5C9;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: var(--teal);
+        }
+
+        .modal-content button {
+            width: 100%;
+            padding: 0.875rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .modal-content .btn-save {
+            background: var(--teal);
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-content .btn-cancel {
+            background: #f0f0f0;
+            color: var(--text-light);
+        }
+
+        /* ===== SELECTED ITEM BADGE ===== */
+        .selected-badge {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 28px;
+            height: 28px;
+            background: var(--green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(37,211,102,0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            body {
+                padding: 1rem 0.5rem;
+            }
+
+            .flipbook {
+                max-width: 100%;
+                border-radius: 12px;
+            }
+
+            .flipbook-nav {
+                max-width: 100%;
+            }
+
+            .catalog-footer {
+                max-width: 100%;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .flipbook {
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .flipbook-nav,
+            .share-section,
+            .admin-access,
+            .pilih-float-container,
+            .settings-btn {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="catalog-container">
+        <header class="catalog-header">
+            <span class="website-badge">🌐 website.motifkain.com</span>
+        </header>
+
+        <div class="flipbook">
+            <div id="flipbookContainer">
+                <div class="loading-spinner"><div class="spinner"></div></div>
+            </div>
+        </div>
+
+        <nav class="flipbook-nav">
+            <button id="prevBtn" class="nav-btn" disabled>‹</button>
+            <div class="page-indicator">Halaman <strong id="pageIndicator">1</strong> / <span id="totalPages">?</span></div>
+            <button id="nextBtn" class="nav-btn">›</button>
+        </nav>
+
+        <footer class="catalog-footer">
+            <p>© 2024 MotifKain. All rights reserved.</p>
+            <div class="share-section">
+                <button class="share-btn" onclick="shareCatalog()">📤 Bagikan</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Floating Pilih Button -->
+    <div class="pilih-float-container" id="pilihFloatContainer">
+        <button class="pilih-float-btn" onclick="sendToWhatsApp()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            Kirim ke WhatsApp
+            <span class="pilih-count" id="pilihCount">0</span>
+        </button>
+    </div>
+
+    <!-- Settings Button -->
+    <div class="settings-btn">
+        <button onclick="openSettings()" title="Pengaturan">⚙️</button>
+    </div>
+
+    <!-- Admin Button -->
+    <div class="admin-access">
+        <a href="admin.html" class="admin-btn" title="Admin">🔧</a>
+    </div>
+
+    <!-- Lightbox for Image Zoom -->
+    <div class="lightbox-overlay" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+        <div class="lightbox-image-container">
+            <img src="" alt="" class="lightbox-image" id="lightboxImage">
+        </div>
+        <button class="lightbox-pilih-btn" id="lightboxPilihBtn" onclick="pilihFromLightbox()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+            </svg>
+            Pilih Item Ini
+        </button>
+    </div>
+
+    <!-- WA Number Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <h3>⚙️ Pengaturan WhatsApp</h3>
+            <input type="text" id="waNumberInput" placeholder="Contoh: 6281234567890">
+            <p style="font-size: 0.75rem; color: #999; margin-bottom: 1rem;">
+                Masukkan nomor WhatsApp tanpa + (contoh: 6281234567890)
+            </p>
+            <button class="btn-save" onclick="saveWASettings()">Simpan</button>
+            <button class="btn-cancel" onclick="closeSettings()">Batal</button>
+        </div>
+    </div>
+
+    <script src="assets/js/templates.js"></script>
+    <script src="assets/js/flipbook.js"></script>
+    <script>
+        // ===== SELECTION STATE =====
+        let selectedItems = [];
+        let currentLightboxItem = null;
+        let waNumber = localStorage.getItem('motifkain_wa') || '';
+
+        // ===== SHARE FUNCTION =====
+        function shareCatalog() {
+            const url = window.location.href.split('?')[0];
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Katalog MotifKain 2024',
+                    text: 'Lihat koleksi motif kain eksklusif',
+                    url: url
+                });
+            } else {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Link disalin!\n\n' + url);
+                });
+            }
+        }
+
+        // ===== NAVIGATION =====
+        document.getElementById('prevBtn').onclick = () => window.flipbook?.prevPage();
+        document.getElementById('nextBtn').onclick = () => window.flipbook?.nextPage();
+
+        // ===== LIGHTBOX / ZOOM =====
+        function openLightbox(imageSrc, itemInfo, pageIndex) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightboxImage');
+            const btn = document.getElementById('lightboxPilihBtn');
+
+            img.src = imageSrc;
+            currentLightboxItem = { src: imageSrc, info: itemInfo, pageIndex: pageIndex };
+
+            // Check if already selected
+            const isSelected = selectedItems.some(item => item.src === imageSrc);
+            if (isSelected) {
+                btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg> Sudah Dipilih`;
+                btn.style.background = '#888';
+            } else {
+                btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg> Pilih Item Ini`;
+                btn.style.background = '#25D366';
+            }
+
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+            currentLightboxItem = null;
+        }
+
+        function pilihFromLightbox() {
+            if (!currentLightboxItem) return;
+
+            const { src, info, pageIndex } = currentLightboxItem;
+            const existingIndex = selectedItems.findIndex(item => item.src === src);
+
+            if (existingIndex >= 0) {
+                selectedItems.splice(existingIndex, 1);
+            } else {
+                selectedItems.push({ src, info, pageIndex });
+            }
+
+            updateSelectedUI();
+            closeLightbox();
+        }
+
+        // ===== SELECTION UI =====
+        function updateSelectedUI() {
+            const container = document.getElementById('pilihFloatContainer');
+            const countEl = document.getElementById('pilihCount');
+
+            if (selectedItems.length > 0) {
+                container.classList.add('active');
+                countEl.textContent = selectedItems.length;
+            } else {
+                container.classList.remove('active');
+            }
+
+            // Update badges on flipbook images
+            document.querySelectorAll('.selected-badge').forEach(el => el.remove());
+
+            selectedItems.forEach((item, index) => {
+                const img = document.querySelector(`.catalog-image[src="${item.src}"]`);
+                if (img) {
+                    const badge = document.createElement('div');
+                    badge.className = 'selected-badge';
+                    badge.textContent = index + 1;
+                    badge.onclick = (e) => {
+                        e.stopPropagation();
+                        selectedItems.splice(index, 1);
+                        updateSelectedUI();
+                    };
+                    img.parentElement.style.position = 'relative';
+                    img.parentElement.appendChild(badge);
+                }
+            });
+        }
+
+        // ===== SEND TO WHATSAPP =====
+        function sendToWhatsApp() {
+            if (selectedItems.length === 0) {
+                alert('Pilih至少 satu item terlebih dahulu!');
+                return;
+            }
+
+            if (!waNumber) {
+                openSettings();
+                return;
+            }
+
+            let message = `Halo, saya tertarik dengan item berikut dari Katalog MotifKain:\n\n`;
+
+            selectedItems.forEach((item, index) => {
+                const pageNum = item.pageIndex + 1;
+                message += `${index + 1}. Halaman ${pageNum}`;
+                if (item.info) {
+                    message += ` - ${item.info}`;
+                }
+                message += `\n`;
+            });
+
+            message += `\nMohon info lebih lanjut. Terima kasih!`;
+
+            const encodedMsg = encodeURIComponent(message);
+            const waUrl = `https://wa.me/${waNumber}?text=${encodedMsg}`;
+
+            window.open(waUrl, '_blank');
+        }
+
+        // ===== SETTINGS =====
+        function openSettings() {
+            document.getElementById('waNumberInput').value = waNumber;
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function saveWASettings() {
+            let num = document.getElementById('waNumberInput').value.trim();
+            // Remove + if present
+            num = num.replace(/^\+/, '');
+            // Remove spaces and dashes
+            num = num.replace(/[\s-]/g, '');
+
+            if (!num) {
+                alert('Masukkan nomor WhatsApp yang valid!');
+                return;
+            }
+
+            waNumber = num;
+            localStorage.setItem('motifkain_wa', waNumber);
+            closeSettings();
+            alert('Nomor WhatsApp berhasil disimpan!');
+        }
+
+        // ===== OVERRIDE FLIPBOOK IMAGE CLICK =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handler for images in flipbook after it's rendered
+            setTimeout(() => {
+                setupImageClickHandlers();
+            }, 1000);
+        });
+
+        function setupImageClickHandlers() {
+            const container = document.getElementById('flipbookContainer');
+            if (!container) return;
+
+            container.addEventListener('click', function(e) {
+                const img = e.target.closest('.catalog-image');
+                if (img) {
+                    e.stopPropagation();
+                    const src = img.src;
+                    const pageEl = img.closest('.flipbook-page');
+                    const pageIndex = pageEl ? parseInt(pageEl.dataset.page || '0') : 0;
+
+                    // Get title from page
+                    const titleEl = pageEl.querySelector('h1, h2');
+                    const info = titleEl ? titleEl.textContent.trim() : `Halaman ${pageIndex + 1}`;
+
+                    openLightbox(src, info, pageIndex);
+                }
+            });
+        }
+
+        // Close lightbox on escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLightbox();
+                closeSettings();
+            }
+        });
+
+        // Close lightbox on overlay click
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLightbox();
+            }
+        });
+
+        document.getElementById('settingsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSettings();
+            }
+        });
+    </script>
+</body>
+</html>

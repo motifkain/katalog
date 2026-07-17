@@ -1,0 +1,18 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Kemeja Batik Modern",
+      "description": "Desain motif batik kontemporer dengan sentuhan warna coklat dan gold",
+      "image": "assets/images/sample-1.jpg",
+      "addedAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Blouse Motif Bunga",
+      "description": "Motif bunga klasik dengan warna teal yang elegan",
+      "image": "assets/images/sample-2.jpg",
+      "addedAt": "2024-01-16T11:00:00Z"
+    }
+  ]
+}

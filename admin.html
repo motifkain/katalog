@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - MotifKain</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        :root {
+            --brown-dark: #5D4037;
+            --brown-medium: #8D6E63;
+            --brown-light: #A1887F;
+            --teal: #008B8B;
+            --teal-light: #20B2AA;
+            --beige: #F5F0E8;
+            --cream: #FFF8F0;
+            --gold: #C9A66B;
+            --white: #FFFFFF;
+            --text: #3E2723;
+            --text-light: #6D4C41;
+            --error: #D32F2F;
+            --success: #388E3C;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--beige); min-height: 100vh; overflow-x: hidden; }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--brown-light); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--brown-dark); }
+
+        /* ===== LOGIN ===== */
+        .login-section {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background: radial-gradient(ellipse at top, rgba(201,166,107,.15) 0%, transparent 50%), var(--beige);
+        }
+
+        .login-card {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(93,64,55,.15);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .login-card h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--brown-dark);
+            margin-bottom: .5rem;
+        }
+
+        .login-card p {
+            color: var(--text-light);
+            font-size: .875rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: .875rem 1rem;
+            border: 2px solid rgba(93,64,55,.2);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--cream);
+            transition: all .3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--teal);
+            background: var(--white);
+        }
+
+        .btn {
+            padding: .875rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary { background: var(--teal); color: var(--white); }
+        .btn-primary:hover { background: var(--teal-light); transform: translateY(-2px); }
+
+        .btn-secondary { background: rgba(255,255,255,.1); color: var(--white); border: 1px solid rgba(255,255,255,.2); }
+        .btn-secondary:hover { background: rgba(255,255,255,.2); }
+
+        .btn-outline { background: transparent; color: var(--brown-dark); border: 2px solid var(--brown-dark); }
+        .btn-outline:hover { background: var(--brown-dark); color: var(--white); }
+
+        .btn-sm { padding: .5rem 1rem; font-size: .875rem; }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-danger:hover { background: #B71C1C; }
+
+        .login-error { color: var(--error); font-size: .875rem; margin-top: 1rem; display: none; }
+
+        /* ===== DASHBOARD ===== */
+        .dashboard-section { display: none; }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--brown-dark) 0%, var(--brown-medium) 100%);
+            color: var(--white);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .dashboard-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: var(--white);
+        }
+
+        .header-actions { display: flex; gap: .75rem; }
+
+        /* ===== SETTINGS BAR ===== */
+        .settings-bar {
+            background: var(--cream);
+            padding: .75rem 2rem;
+            display: flex;
+            gap: 1.5rem;
+            font-size: .8rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .settings-bar label { display: flex; align-items: center; gap: .5rem; color: var(--text-light); }
+        .settings-bar input[type="text"] {
+            padding: .4rem .75rem;
+            border: 1px solid rgba(93,64,55,.2);
+            border-radius: 6px;
+            font-size: .8rem;
+            background: var(--white);
+            width: 250px;
+        }
+
+        .sync-status {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .sync-dot.connected { background: var(--success); }
+        .sync-dot.local { background: var(--gold); }
+
+        /* ===== MAIN LAYOUT ===== */
+        .editor-layout {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* ===== PAGES PANEL (LEFT) ===== */
+        .pages-panel {
+            background: var(--white);
+            border-right: 1px solid rgba(93,64,55,.1);
+            width: 300px;
+            height: calc(100vh - 120px);
+            position: sticky;
+            top: 120px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(93,64,55,.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .panel-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            color: var(--brown-dark);
+        }
+
+        .pages-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: .5rem;
+        }
+
+        /* Drag & Drop Items */
+        .page-item {
+            padding: .75rem;
+            margin-bottom: .5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            background: var(--cream);
+            position: relative;
+        }
+
+        .page-item:hover { border-color: var(--brown-light); background: rgba(93,64,55,.05); }
+        .page-item.active { border-color: var(--teal); background: rgba(0,139,139,.08); }
+        .page-item.dragging { opacity: 0.5; cursor: grabbing; }
+        .page-item.drag-over { border-color: var(--teal); border-style: dashed; }
+
+        .drag-handle {
+            color: var(--brown-light);
+            font-size: 1rem;
+            cursor: grab;
+            padding: .25rem;
+            flex-shrink: 0;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .page-thumb {
+            width: 45px;
+            height: 56px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: var(--beige);
+        }
+
+        .page-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+        .page-info { flex: 1; min-width: 0; }
+        .page-info h4 { font-size: .8rem; color: var(--brown-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .page-info span { font-size: .65rem; color: var(--text-light); }
+
+        .page-badge {
+            position: absolute;
+            top: -.25rem;
+            right: -.25rem;
+            background: var(--teal);
+            color: white;
+            font-size: .5rem;
+            padding: .15rem .4rem;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: .25rem;
+            opacity: 0;
+            transition: opacity .2s;
+        }
+
+        .page-item:hover .page-actions { opacity: 1; }
+        .page-actions button {
+            width: 24px;
+            height: 24px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            cursor: pointer;
+            font-size: .75rem;
+            transition: all .2s;
+        }
+        .page-actions button:hover { background: rgba(0,0,0,.1); }
+        .page-actions .delete-btn:hover { background: rgba(211,47,47,.1); color: var(--error); }
+
+        /* ===== PREVIEW PANEL (CENTER) ===== */
+        .preview-panel {
+            background: var(--beige);
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow-y: auto;
+            min-width: 0;
+        }
+
+        .preview-book {
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 4 / 5;
+            display: flex;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 12px 50px rgba(0,0,0,.2);
+            flex-shrink: 0;
+        }
+
+        .preview-page { flex: 1; overflow: hidden; font-size: 7px; }
+
+        .preview-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        .preview-placeholder span { font-size: 3rem; opacity: .2; margin-bottom: 1rem; }
+
+        /* ===== EDITOR PANEL (RIGHT) ===== */
+        .editor-panel {
+            background: var(--white);
+            border-left: 1px solid rgba(93,64,55,.1);
+            width: 380px;
+            min-width: 320px;
+            height: calc(100vh - 120px);
+            position: sticky;
+            top: 120px;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .editor-section { padding: 1rem; border-bottom: 1px solid rgba(93,64,55,.1); }
+        .editor-section h3 { font-size: .875rem; color: var(--brown-dark); margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem; }
+
+        /* Template Grid */
+        .template-grid { display: flex; flex-direction: column; gap: .5rem; }
+
+        .template-category { margin-bottom: .75rem; }
+        .template-category-label {
+            font-size: .6rem;
+            color: #999;
+            letter-spacing: 0.1em;
+            margin-bottom: .4rem;
+            text-transform: uppercase;
+        }
+
+        .template-options-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; }
+
+        .template-option {
+            padding: .5rem .25rem;
+            border: 2px solid #E0D5C9;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .2s;
+            text-align: center;
+            background: var(--white);
+            font-size: .65rem;
+        }
+
+        .template-option:hover { border-color: var(--teal); }
+        .template-option.selected { border-color: var(--teal); background: rgba(0,139,139,.08); }
+
+        .template-preview {
+            height: 35px;
+            border-radius: 4px;
+            margin-bottom: .3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .7rem;
+            font-weight: 600;
+        }
+
+        .template-option > span { font-size: .55rem; color: var(--text); display: block; }
+
+        /* Form Fields */
+        .field-group { margin-bottom: 1rem; }
+        .field-group label { display: block; font-size: .75rem; color: var(--text-light); margin-bottom: .4rem; font-weight: 500; }
+        .field-group input,
+        .field-group textarea {
+            width: 100%;
+            padding: .75rem;
+            border: 1px solid #E0D5C9;
+            border-radius: 6px;
+            font-size: .875rem;
+            background: var(--cream);
+            font-family: 'Inter', sans-serif;
+            transition: all .2s;
+        }
+        .field-group input:focus,
+        .field-group textarea:focus { outline: none; border-color: var(--teal); background: var(--white); }
+        .field-group textarea { resize: vertical; min-height: 70px; }
+
+        /* Image Upload */
+        .image-upload {
+            border: 2px dashed var(--brown-light);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            background: var(--cream);
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-upload:hover { border-color: var(--teal); background: rgba(0,139,139,.05); }
+        .image-upload.has-image { padding: .75rem; min-height: auto; }
+        .image-upload img { max-width: 100%; max-height: 200px; border-radius: 4px; }
+        .image-upload > span { display: block; font-size: .8rem; color: var(--text-light); margin-top: .5rem; }
+        .image-upload input { display: none; }
+
+        /* Grid Images - LEBIH BESAR */
+        .grid-images { display: grid; grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+        .grid-image-item {
+            aspect-ratio: 1;
+            border: 2px dashed #D4C4B0;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--cream);
+            transition: all .2s;
+            min-height: 100px;
+        }
+        .grid-image-item:hover { border-color: var(--teal); }
+        .grid-image-item img { width: 100%; height: 100%; object-fit: cover; }
+        .grid-image-item > span { font-size: 1.5rem; opacity: .3; }
+
+        /* Delete Button */
+        .delete-section { padding: 1rem; }
+        .delete-page-btn {
+            width: 100%;
+            padding: .75rem;
+            background: var(--white);
+            border: 1px solid var(--error);
+            color: var(--error);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: .875rem;
+            transition: all .2s;
+        }
+        .delete-page-btn:hover { background: var(--error); color: white; }
+
+        /* ===== NOTIFICATION ===== */
+        .notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--brown-dark);
+            color: white;
+            border-radius: 8px;
+            font-size: .875rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all .3s;
+            z-index: 1000;
+        }
+        .notification.show { transform: translateY(0); opacity: 1; }
+        .notification.success { background: var(--success); }
+        .notification.error { background: var(--error); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1100px) {
+            .editor-layout { flex-direction: column; }
+            .pages-panel, .editor-panel {
+                width: 100% !important;
+                height: auto !important;
+                position: static !important;
+                max-height: 50vh;
+            }
+            .preview-panel { min-height: 60vh; }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header { flex-direction: column; text-align: center; }
+            .settings-bar { flex-direction: column; align-items: stretch; }
+            .settings-bar input[type="text"] { width: 100%; }
+            .sync-status { margin-left: 0; margin-top: .5rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN -->
+    <section id="loginSection" class="login-section">
+        <div class="login-card">
+            <img src="assets/logo/logo-motifkain.png" alt="MotifKain" style="max-width: 90px; margin-bottom: 2rem;">
+            <h1>Dashboard Admin</h1>
+            <p>Masukkan password</p>
+            <form id="loginForm">
+                <input type="password" id="passwordInput" class="form-input" placeholder="Password..." required style="margin-bottom: 1rem;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Masuk</button>
+            </form>
+            <p id="loginError" class="login-error">Password salah!</p>
+            <p style="margin-top: 2rem; font-size: .75rem; color: var(--text-light);">Default: motifkain2024</p>
+        </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboardSection" class="dashboard-section">
+        <header class="dashboard-header">
+            <h1>Dashboard MotifKain</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary btn-sm" onclick="admin.openCatalog()">Lihat Katalog</button>
+                <button class="btn btn-outline btn-sm" onclick="admin.logout()">Logout</button>
+            </div>
+        </header>
+
+        <div class="settings-bar">
+            <label>
+                PocketBase URL:
+                <input type="text" id="pocketbaseUrl" placeholder="http://localhost:8090" value="">
+            </label>
+            <label>
+                <input type="password" id="pocketbasePassword" placeholder="Admin password" style="width:150px;">
+            </label>
+            <button class="btn btn-primary btn-sm" onclick="admin.connectPocketBase()">Sync</button>
+            <div class="sync-status">
+                <div class="sync-dot" id="syncDot"></div>
+                <span id="syncText">Local Only</span>
+            </div>
+        </div>
+
+        <div class="editor-layout">
+            <!-- PAGES LIST -->
+            <div class="pages-panel">
+                <div class="panel-header">
+                    <h2>Halaman Katalog</h2>
+                    <button class="btn btn-primary btn-sm" onclick="admin.addPage()">+ Tambah</button>
+                </div>
+                <div class="pages-list" id="pagesList"></div>
+            </div>
+
+            <!-- PREVIEW -->
+            <div class="preview-panel">
+                <div class="preview-book" id="previewBook">
+                    <div class="preview-page" id="previewPage"></div>
+                </div>
+            </div>
+
+            <!-- EDITOR -->
+            <div class="editor-panel">
+                <div class="editor-section">
+                    <h3>Template <span id="currentTemplate"></span></h3>
+                    <div class="template-grid" id="templateGrid"></div>
+                </div>
+
+                <div class="editor-section">
+                    <h3>Isi Halaman</h3>
+                    <div id="fieldsContainer"></div>
+                </div>
+
+                <div class="editor-section">
+                    <h3>Gambar</h3>
+                    <div id="imageFields"></div>
+                </div>
+
+                <div class="editor-section">
+                    <h3>Logo</h3>
+                    <div id="logoField"></div>
+                </div>
+
+                <div class="delete-section">
+                    <button class="delete-page-btn" onclick="admin.deleteCurrentPage()">Hapus Halaman</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NOTIFICATION -->
+    <div class="notification" id="notification"></div>
+
+    <script src="assets/js/templates.js"></script>
+    <script>
+        class AdminDashboard {
+            constructor() {
+                this.pages = [];
+                this.currentPageIndex = -1;
+                this.adminPassword = 'motifkain2024';
+                this.pocketbaseUrl = '';
+                this.pocketbaseToken = '';
+                this.isConnected = false;
+
+                this.draggedItem = null;
+                this.init();
+            }
+
+            init() {
+                if (sessionStorage.getItem('motifkain_auth') === 'authenticated') {
+                    this.showDashboard();
+                } else {
+                    this.showLogin();
+                }
+                this.loadPages();
+                this.renderTemplateSelector();
+                this.setupDragAndDrop();
+            }
+
+            showLogin() {
+                document.getElementById('loginSection').style.display = 'flex';
+                document.getElementById('dashboardSection').style.display = 'none';
+            }
+
+            showDashboard() {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'block';
+            }
+
+            login(password) {
+                if (password === this.adminPassword) {
+                    sessionStorage.setItem('motifkain_auth', 'authenticated');
+                    this.showDashboard();
+                } else {
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            }
+
+            logout() {
+                sessionStorage.removeItem('motifkain_auth');
+                this.showLogin();
+            }
+
+            // ===== POCKETBASE =====
+            async connectPocketBase() {
+                const url = document.getElementById('pocketbaseUrl').value.trim();
+                const password = document.getElementById('pocketbasePassword').value.trim();
+
+                if (!url) {
+                    this.showNotification('Masukkan URL PocketBase', 'error');
+                    return;
+                }
+
+                this.pocketbaseUrl = url;
+
+                try {
+                    // Test connection with auth
+                    const response = await fetch(`${url}/api/collections/users/auth-with-password`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            identity: 'admin@motifkain.com',
+                            password: password || 'motifkain2024'
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.pocketbaseToken = data.token;
+                        this.isConnected = true;
+                        document.getElementById('syncDot').className = 'sync-dot connected';
+                        document.getElementById('syncText').textContent = 'Connected';
+                        this.showNotification('Berhasil terhubung ke PocketBase!', 'success');
+
+                        // Save to localStorage
+                        localStorage.setItem('motifkain_pb_url', url);
+
+                        // Load from PocketBase
+                        await this.loadFromPocketBase();
+                    } else {
+                        // Try without specific user
+                        const response2 = await fetch(`${url}/api/collections/_pb_users_auth_/auth-with-password`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                identity: 'admin',
+                                password: password || 'motifkain2024'
+                            })
+                        });
+
+                        if (response2.ok) {
+                            const data = await response2.json();
+                            this.pocketbaseToken = data.token;
+                            this.isConnected = true;
+                            document.getElementById('syncDot').className = 'sync-dot connected';
+                            document.getElementById('syncText').textContent = 'Connected';
+                            this.showNotification('Berhasil terhubung ke PocketBase!', 'success');
+                            localStorage.setItem('motifkain_pb_url', url);
+                            await this.loadFromPocketBase();
+                        } else {
+                            throw new Error('Auth failed');
+                        }
+                    }
+                } catch (e) {
+                    this.isConnected = false;
+                    document.getElementById('syncDot').className = 'sync-dot';
+                    document.getElementById('syncText').textContent = 'Connection failed';
+                    this.showNotification('Gagal terhubung. Pastikan PocketBase berjalan.', 'error');
+                }
+            }
+
+            async loadFromPocketBase() {
+                if (!this.isConnected) return;
+
+                try {
+                    const response = await fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records?sort=order`, {
+                        headers: { 'Authorization': this.pocketbaseToken }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.pages = data.items.map(item => ({
+                            id: item.id,
+                            template: item.template,
+                            order: item.order,
+                            mainTitle: item.mainTitle,
+                            subtitle: item.subtitle,
+                            description: item.description,
+                            title: item.title,
+                            body: item.body,
+                            overlayText: item.overlayText,
+                            overlayPosition: item.overlayPosition,
+                            header: item.header,
+                            footerText: item.footerText,
+                            image: item.image ? `${this.pocketbaseUrl}/api/files/catalog_pages/${item.id}/${item.image}` : '',
+                            images: item.images || [],
+                            logo: item.logo ? `${this.pocketbaseUrl}/api/files/catalog_pages/${item.id}/${item.logo}` : '',
+                            createdAt: item.created
+                        }));
+
+                        // Sync images
+                        for (let i = 0; i < this.pages.length; i++) {
+                            if (this.pages[i].images && this.pages[i].images.length > 0) {
+                                this.pages[i].images = this.pages[i].images.map((img, idx) =>
+                                    `${this.pocketbaseUrl}/api/files/catalog_pages/${this.pages[i].id}/${img}`
+                                );
+                            }
+                        }
+
+                        this.saveToLocalStorage();
+                        this.renderPagesList();
+                        this.selectPage(0);
+                        this.showNotification('Data dimuat dari PocketBase', 'success');
+                    }
+                } catch (e) {
+                    console.error('Failed to load from PocketBase:', e);
+                }
+            }
+
+            async saveToPocketBase(page) {
+                if (!this.isConnected) return;
+
+                const formData = new FormData();
+                formData.append('id', page.id);
+                formData.append('template', page.template);
+                formData.append('order', page.order);
+                formData.append('mainTitle', page.mainTitle || '');
+                formData.append('subtitle', page.subtitle || '');
+                formData.append('description', page.description || '');
+                formData.append('title', page.title || '');
+                formData.append('body', page.body || '');
+                formData.append('overlayText', page.overlayText || '');
+                formData.append('overlayPosition', page.overlayPosition || 'bottom');
+                formData.append('header', page.header || '');
+                formData.append('footerText', page.footerText || '');
+
+                // Handle image upload
+                if (page.image && page.image.startsWith('data:')) {
+                    const blob = this.dataURLtoBlob(page.image);
+                    formData.append('image', blob, 'image.jpg');
+                }
+
+                if (page.logo && page.logo.startsWith('data:')) {
+                    const blob = this.dataURLtoBlob(page.logo);
+                    formData.append('logo', blob, 'logo.png');
+                }
+
+                try {
+                    const response = await fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records`, {
+                        method: 'POST',
+                        headers: { 'Authorization': this.pocketbaseToken },
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        // Update local page with new ID
+                        const index = this.pages.findIndex(p => p.id === page.id);
+                        if (index >= 0) {
+                            this.pages[index].id = data.id;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to save to PocketBase:', e);
+                }
+            }
+
+            async updatePocketBase(page) {
+                if (!this.isConnected) return;
+
+                const formData = new FormData();
+                formData.append('template', page.template);
+                formData.append('order', page.order);
+                formData.append('mainTitle', page.mainTitle || '');
+                formData.append('subtitle', page.subtitle || '');
+                formData.append('description', page.description || '');
+                formData.append('title', page.title || '');
+                formData.append('body', page.body || '');
+                formData.append('overlayText', page.overlayText || '');
+                formData.append('overlayPosition', page.overlayPosition || 'bottom');
+                formData.append('header', page.header || '');
+                formData.append('footerText', page.footerText || '');
+
+                try {
+                    await fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records/${page.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Authorization': this.pocketbaseToken },
+                        body: formData
+                    });
+                } catch (e) {
+                    console.error('Failed to update PocketBase:', e);
+                }
+            }
+
+            dataURLtoBlob(dataurl) {
+                const arr = dataurl.split(',');
+                const mime = arr[0].match(/:(.*?);/)[1];
+                const bstr = atob(arr[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+                return new Blob([u8arr], { type: mime });
+            }
+
+            // ===== PAGES MANAGEMENT =====
+            loadPages() {
+                const stored = localStorage.getItem('motifkain_catalog');
+                if (stored) {
+                    this.pages = JSON.parse(stored);
+                } else {
+                    // Default pages
+                    this.pages = [
+                        Object.assign(PageTemplates.createEmptyPage('cover-dark'), {
+                            mainTitle: 'MOTIFKAIN',
+                            subtitle: 'Koleksi Desain 2024',
+                            description: 'Selamat datang di koleksi motif kain eksklusif'
+                        })
+                    ];
+                    this.savePages();
+                }
+                this.renderPagesList();
+            }
+
+            savePages() {
+                localStorage.setItem('motifkain_catalog', JSON.stringify(this.pages));
+                localStorage.setItem('motifkain_refresh', Date.now());
+            }
+
+            saveToLocalStorage() {
+                localStorage.setItem('motifkain_catalog', JSON.stringify(this.pages));
+                localStorage.setItem('motifkain_refresh', Date.now());
+                document.getElementById('syncDot').className = 'sync-dot local';
+                document.getElementById('syncText').textContent = 'Saved locally';
+            }
+
+            // ===== DRAG & DROP =====
+            setupDragAndDrop() {
+                const list = document.getElementById('pagesList');
+
+                list.addEventListener('dragstart', (e) => {
+                    const item = e.target.closest('.page-item');
+                    if (!item) return;
+
+                    this.draggedItem = item;
+                    item.classList.add('dragging');
+
+                    // Set order data
+                    e.dataTransfer.setData('text/plain', item.dataset.index);
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                list.addEventListener('dragend', (e) => {
+                    const item = e.target.closest('.page-item');
+                    if (item) item.classList.remove('dragging');
+
+                    // Remove all drag-over states
+                    list.querySelectorAll('.page-item').forEach(el => {
+                        el.classList.remove('drag-over');
+                    });
+
+                    this.draggedItem = null;
+                });
+
+                list.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+
+                    const item = e.target.closest('.page-item');
+                    if (!item || item === this.draggedItem) return;
+
+                    // Remove existing drag-over
+                    list.querySelectorAll('.page-item').forEach(el => el.classList.remove('drag-over'));
+
+                    // Add to current
+                    item.classList.add('drag-over');
+                });
+
+                list.addEventListener('drop', (e) => {
+                    e.preventDefault();
+
+                    const targetItem = e.target.closest('.page-item');
+                    if (!targetItem || !this.draggedItem) return;
+
+                    const fromIndex = parseInt(this.draggedItem.dataset.index);
+                    const toIndex = parseInt(targetItem.dataset.index);
+
+                    if (fromIndex !== toIndex) {
+                        // Reorder pages
+                        const [movedPage] = this.pages.splice(fromIndex, 1);
+                        this.pages.splice(toIndex, 0, movedPage);
+
+                        // Update order numbers
+                        this.pages.forEach((p, i) => p.order = i);
+
+                        this.savePages();
+                        this.renderPagesList();
+
+                        // Select the moved page
+                        this.selectPage(toIndex);
+
+                        // Sync to PocketBase
+                        if (this.isConnected) {
+                            this.syncAllToPocketBase();
+                        }
+
+                        this.showNotification(`Halaman dipindahkan ke posisi ${toIndex + 1}`, 'success');
+                    }
+
+                    targetItem.classList.remove('drag-over');
+                });
+            }
+
+            async syncAllToPocketBase() {
+                if (!this.isConnected) return;
+
+                for (const page of this.pages) {
+                    await this.updatePocketBase(page);
+                }
+            }
+
+            // ===== RENDER =====
+            renderPagesList() {
+                const container = document.getElementById('pagesList');
+                let html = '';
+
+                this.pages.forEach((page, i) => {
+                    const isActive = i === this.currentPageIndex;
+
+                    // Get thumbnail color/icon
+                    const template = PageTemplates.getTemplate(page.template);
+                    const thumbColor = this.getThumbColor(page.template);
+
+                    html += `
+                    <div class="page-item ${isActive ? 'active' : ''}"
+                         data-index="${i}"
+                         draggable="true">
+                        <div class="drag-handle">⋮⋮</div>
+                        <div class="page-thumb" style="background:${thumbColor};">
+                            ${page.image ? `<img src="${page.image}" alt="">` : ''}
+                        </div>
+                        <div class="page-info">
+                            <h4>${this.getPageTitle(page) || `Halaman ${i + 1}`}</h4>
+                            <span>${template.name}</span>
+                        </div>
+                        <span class="page-badge">${i + 1}</span>
+                        <div class="page-actions">
+                            <button onclick="event.stopPropagation(); admin.duplicatePage(${i})" title="Duplikat">D</button>
+                            <button class="delete-btn" onclick="event.stopPropagation(); admin.deletePage(${i})" title="Hapus">X</button>
+                        </div>
+                    </div>`;
+                });
+
+                container.innerHTML = html;
+            }
+
+            getThumbColor(template) {
+                const colors = {
+                    'cover-dark': 'linear-gradient(180deg,#1a2a3a,#0d1520)',
+                    'cover-light': '#FFF8F0',
+                    'cover-split': 'linear-gradient(90deg,#1a1a1a 40%,#fff 60%)',
+                    'cover-numbered': '#1a1a1a',
+                    'cover-minimal': '#fafafa',
+                    'cover-logo-left': 'linear-gradient(90deg,#1a1a1a 35%,#fff 65%)',
+                    'image-full': '#1a1a1a',
+                    'image-text': '#1a1a1a',
+                    'text-image': '#FFF8F0',
+                    'text-only': '#FFF8F0',
+                    'image-split': 'linear-gradient(90deg,#1a1a1a 50%,#fff 50%)',
+                    'text-grid': '#fff',
+                    'text-left-image': '#fafafa',
+                    'numbered-list': '#1a1a1a',
+                    'image-dual': '#fff',
+                    'gallery-2x2': '#fff',
+                    'gallery-3x3': '#fff',
+                    'gallery-masonry': '#fafafa'
+                };
+                return colors[template] || '#1a1a1a';
+            }
+
+            getPageTitle(page) {
+                return page.mainTitle || page.title || page.header || page.overlayTitle || '';
+            }
+
+            selectPage(index) {
+                this.currentPageIndex = index;
+                this.renderPagesList();
+                this.renderPreview();
+                this.renderTemplateSelector();
+                this.renderEditor();
+            }
+
+            renderPreview() {
+                const preview = document.getElementById('previewPage');
+
+                if (this.currentPageIndex < 0) {
+                    preview.innerHTML = '<div class="preview-placeholder"><span>📄</span><p>Pilih halaman</p></div>';
+                    return;
+                }
+
+                const page = this.pages[this.currentPageIndex];
+                preview.innerHTML = PageTemplates.renderPage(page, this.currentPageIndex + 1);
+            }
+
+            renderTemplateSelector() {
+                const container = document.getElementById('templateGrid');
+                const templates = PageTemplates.getAllTemplates();
+                const currentTemplate = this.currentPageIndex >= 0 ? this.pages[this.currentPageIndex].template : '';
+
+                document.getElementById('currentTemplate').textContent = currentTemplate ?
+                    '- ' + PageTemplates.getTemplate(currentTemplate).name : '';
+
+                // Group templates by category
+                const coverTemplates = templates.filter(t => t.id.startsWith('cover-'));
+                const contentTemplates = templates.filter(t => t.id.startsWith('image-') || t.id.startsWith('text-'));
+                const galleryTemplates = templates.filter(t => t.id.startsWith('gallery-') || t.id.includes('grid'));
+
+                let html = '';
+
+                // Cover Templates
+                html += '<div class="template-category">';
+                html += '<div class="template-category-label">COVER</div>';
+                html += '<div class="template-options-row">';
+                coverTemplates.forEach(t => {
+                    const isSelected = t.id === currentTemplate;
+                    const isDark = ['cover-dark', 'cover-numbered', 'cover-split'].includes(t.id);
+                    html += `
+                    <div class="template-option ${isSelected ? 'selected' : ''}" data-template="${t.id}">
+                        <div class="template-preview" style="background:${this.getThumbColor(t.id)};color:${isDark ? '#C9A66B' : '#5D4037'};">
+                            ${t.icon}
+                        </div>
+                        <span>${t.name.replace('Cover ', '')}</span>
+                    </div>`;
+                });
+                html += '</div></div>';
+
+                // Content Templates
+                html += '<div class="template-category">';
+                html += '<div class="template-category-label">KONTEN</div>';
+                html += '<div class="template-options-row">';
+                contentTemplates.forEach(t => {
+                    const isSelected = t.id === currentTemplate;
+                    const isDark = t.id.includes('image-');
+                    html += `
+                    <div class="template-option ${isSelected ? 'selected' : ''}" data-template="${t.id}">
+                        <div class="template-preview" style="background:${this.getThumbColor(t.id)};color:${isDark ? '#C9A66B' : '#5D4037'};">
+                            ${t.icon}
+                        </div>
+                        <span>${t.name}</span>
+                    </div>`;
+                });
+                html += '</div></div>';
+
+                // Gallery Templates
+                html += '<div class="template-category">';
+                html += '<div class="template-category-label">GALLERY</div>';
+                html += '<div class="template-options-row">';
+                galleryTemplates.forEach(t => {
+                    const isSelected = t.id === currentTemplate;
+                    html += `
+                    <div class="template-option ${isSelected ? 'selected' : ''}" data-template="${t.id}">
+                        <div class="template-preview" style="background:${this.getThumbColor(t.id)};color:#5D4037;">
+                            ${t.icon}
+                        </div>
+                        <span>${t.name}</span>
+                    </div>`;
+                });
+                html += '</div></div>';
+
+                container.innerHTML = html;
+            }
+
+            changeTemplate(templateId) {
+                if (this.currentPageIndex < 0) return;
+
+                const newPage = PageTemplates.createEmptyPage(templateId);
+                // Preserve essential data
+                newPage.id = this.pages[this.currentPageIndex].id;
+                newPage.createdAt = this.pages[this.currentPageIndex].createdAt;
+                newPage.order = this.currentPageIndex;
+                newPage.logo = this.pages[this.currentPageIndex].logo;
+                newPage.image = this.pages[this.currentPageIndex].image;
+                newPage.images = this.pages[this.currentPageIndex].images;
+
+                this.pages[this.currentPageIndex] = newPage;
+                this.savePages();
+                this.saveToLocalStorage();
+
+                this.renderTemplateSelector();
+                this.renderPreview();
+                this.renderEditor();
+                this.renderPagesList();
+
+                // Sync
+                if (this.isConnected) {
+                    this.updatePocketBase(newPage);
+                }
+            }
+
+            renderEditor() {
+                if (this.currentPageIndex < 0) return;
+
+                const page = this.pages[this.currentPageIndex];
+                this.renderTextFields(page.template, page);
+                this.renderImageFields(page.template, page);
+                this.renderLogoField(page);
+            }
+
+            renderTextFields(template, page) {
+                const container = document.getElementById('fieldsContainer');
+                let html = '';
+
+                // Style settings for all templates
+                html += '<div style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px dashed #ddd;">';
+                html += '<div style="font-size:.7rem;color:#999;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.05em;">🎨 Gaya Teks</div>';
+                html += `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;">
+                    <div class="field-group" style="grid-column: span 2;">
+                        <label>Tema Warna</label>
+                        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-top:.4rem;">
+                            ${Object.entries({
+                                'elegant-gold': ['#5D4037', '#C9A66B', '#FFF8F0'],
+                                'ocean-blue': ['#1E3A5F', '#4A90A4', '#F0F8FF'],
+                                'forest-green': ['#2D4739', '#4CAF50', '#F1F8E9'],
+                                'sunset-orange': ['#D84315', '#FF7043', '#FBE9E7'],
+                                'royal-purple': ['#4A148C', '#9C27B0', '#F3E5F5'],
+                                'monochrome': ['#212121', '#616161', '#FAFAFA'],
+                                'rose-gold': ['#8B5A5A', '#D4A5A5', '#FFF5F5'],
+                                'earth-brown': ['#5D4037', '#A1887F', '#EFEBE9']
+                            }).map(([id, colors]) => `
+                                <div onclick="admin.updateField('colorTheme', '${id}')"
+                                     style="cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid ${page.colorTheme === id ? 'var(--teal)' : '#E0D5C9'};transition:all .2s;"
+                                     title="${id.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}">
+                                    <div style="display:flex;height:28px;">
+                                        <div style="flex:1;background:${colors[0]};"></div>
+                                        <div style="flex:1;background:${colors[1]};"></div>
+                                        <div style="flex:1;background:${colors[2]};"></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>Font Family</label>
+                        <select onchange="admin.updateField('fontFamily', this.value)" style="width:100%;padding:.6rem;border:1px solid #E0D5C9;border-radius:6px;font-size:.8rem;background:var(--cream);">
+                            <option value="Playfair Display" ${page.fontFamily === 'Playfair Display' ? 'selected' : ''}>Playfair (Elegant)</option>
+                            <option value="Inter" ${page.fontFamily === 'Inter' ? 'selected' : ''}>Inter (Modern)</option>
+                            <option value="serif" ${page.fontFamily === 'serif' ? 'selected' : ''}>Serif</option>
+                            <option value="sans-serif" ${page.fontFamily === 'sans-serif' ? 'selected' : ''}>Sans Serif</option>
+                            <option value="Georgia" ${page.fontFamily === 'Georgia' ? 'selected' : ''}>Georgia</option>
+                            <option value="Times New Roman" ${page.fontFamily === 'Times New Roman' ? 'selected' : ''}>Times</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>Ukuran Huruf Utama (px)</label>
+                        <input type="number" value="${page.fontSizePx || 24}" min="8" max="120" step="1"
+                               onchange="admin.updateField('fontSizePx', this.value)"
+                               style="width:100%;padding:.6rem;border:1px solid #E0D5C9;border-radius:6px;font-size:.8rem;background:var(--cream);">
+                    </div>
+                    <div class="field-group">
+                        <label>Ukuran Judul (px)</label>
+                        <input type="number" value="${page.titleSizePx || 36}" min="10" max="150" step="1"
+                               onchange="admin.updateField('titleSizePx', this.value)"
+                               style="width:100%;padding:.6rem;border:1px solid #E0D5C9;border-radius:6px;font-size:.8rem;background:var(--cream);">
+                    </div>
+                    <div class="field-group">
+                        <label>Ukuran Deskripsi (px)</label>
+                        <input type="number" value="${page.bodySizePx || 14}" min="8" max="80" step="1"
+                               onchange="admin.updateField('bodySizePx', this.value)"
+                               style="width:100%;padding:.6rem;border:1px solid #E0D5C9;border-radius:6px;font-size:.8rem;background:var(--cream);">
+                    </div>
+                    <div class="field-group" id="customColorsSection" style="${page.colorTheme ? 'display:none;' : ''}">
+                        <label>Warna Teks Custom</label>
+                        <input type="color" value="${page.textColor || '#1a1a1a'}" onchange="admin.updateField('textColor', this.value)"
+                               style="width:100%;height:35px;border:1px solid #E0D5C9;border-radius:6px;cursor:pointer;">
+                    </div>
+                    <div class="field-group" id="customBgSection" style="${page.colorTheme ? 'display:none;' : ''}">
+                        <label>Warna Background Custom</label>
+                        <input type="color" value="${page.bgColor || '#ffffff'}" onchange="admin.updateField('bgColor', this.value)"
+                               style="width:100%;height:35px;border:1px solid #E0D5C9;border-radius:6px;cursor:pointer;">
+                    </div>
+                </div>`;
+                html += '</div>';
+
+                switch(template) {
+                    // Cover Templates
+                    case 'cover-dark':
+                    case 'cover-light':
+                        html += this.createInput('mainTitle', 'Judul Utama', page.mainTitle);
+                        html += this.createInput('subtitle', 'Subtitle', page.subtitle);
+                        html += this.createTextarea('description', 'Deskripsi', page.description);
+                        break;
+                    case 'cover-split':
+                        html += this.createInput('mainTitle', 'Judul Utama', page.mainTitle);
+                        html += this.createInput('subtitle', 'Subtitle', page.subtitle);
+                        html += this.createInput('header', 'Header Kiri', page.header);
+                        html += this.createTextarea('body', 'Deskripsi Kiri', page.body);
+                        html += this.createTextarea('description', 'Deskripsi Kanan', page.description);
+                        break;
+                    case 'cover-numbered':
+                        html += this.createInput('mainTitle', 'Judul Utama', page.mainTitle);
+                        html += this.createInput('subtitle', 'Subtitle', page.subtitle);
+                        html += this.createInput('header', 'Nomor (01, 02...)', page.header);
+                        html += this.createTextarea('body', 'Deskripsi', page.body);
+                        html += this.createInput('footerText', 'Footer URL', page.footerText);
+                        break;
+                    case 'cover-minimal':
+                        html += this.createInput('mainTitle', 'Judul Utama', page.mainTitle);
+                        html += this.createInput('subtitle', 'Subtitle', page.subtitle);
+                        html += this.createTextarea('body', 'Tagline / Slogan', page.body);
+                        break;
+                    case 'cover-logo-left':
+                        html += this.createInput('mainTitle', 'Judul Utama', page.mainTitle);
+                        html += this.createInput('subtitle', 'Subtitle', page.subtitle);
+                        html += this.createInput('header', 'Header Kiri', page.header);
+                        html += this.createTextarea('body', 'Deskripsi Kiri', page.body);
+                        html += this.createTextarea('description', 'Deskripsi Kanan', page.description);
+                        break;
+                    // Content Templates
+                    case 'image-full':
+                        html += this.createInput('overlayText', 'Teks Overlay', page.overlayText);
+                        html += this.createSelect('overlayPosition', 'Posisi Teks', page.overlayPosition, ['bottom', 'top']);
+                        break;
+                    case 'image-text':
+                    case 'text-image':
+                    case 'text-left-image':
+                        html += this.createInput('title', 'Judul', page.title);
+                        html += this.createTextarea('body', 'Deskripsi', page.body);
+                        html += this.createInput('footerText', 'Footer URL', page.footerText);
+                        break;
+                    case 'text-only':
+                        html += this.createInput('subtitle', 'Subtitle', page.subtitle);
+                        html += this.createInput('title', 'Judul', page.title);
+                        html += this.createTextarea('body', 'Isi Teks', page.body);
+                        break;
+                    case 'image-split':
+                        html += this.createInput('title', 'Judul Produk', page.title);
+                        html += this.createTextarea('description', 'Deskripsi', page.description);
+                        html += this.createInput('overlayText', 'Teks Overlay di Gambar', page.overlayText);
+                        break;
+                    case 'text-grid':
+                        html += this.createInput('subtitle', 'Label Section', page.subtitle);
+                        html += this.createInput('title', 'Judul', page.title);
+                        html += this.createTextarea('body', 'Deskripsi', page.body);
+                        html += this.createInput('footerText', 'Footer Info', page.footerText);
+                        break;
+                    case 'numbered-list':
+                        html += this.createInput('mainTitle', 'Label Utama', page.mainTitle);
+                        html += this.createInput('subtitle', 'Subtitle', page.subtitle);
+                        html += this.createTextarea('body', 'Deskripsi Item 01', page.body);
+                        html += this.createTextarea('overlayText', 'Deskripsi Item 02', page.overlayText);
+                        html += this.createInput('overlayPosition', 'Deskripsi Item 03', page.overlayPosition);
+                        html += this.createInput('footerText', 'Footer URL', page.footerText);
+                        break;
+                    case 'image-dual':
+                        html += this.createInput('title', 'Judul', page.title);
+                        html += this.createTextarea('description', 'Deskripsi', page.description);
+                        html += this.createInput('footerText', 'Footer Info', page.footerText);
+                        break;
+                    // Gallery Templates
+                    case 'gallery-2x2':
+                    case 'gallery-3x3':
+                    case 'gallery-masonry':
+                        html += this.createInput('header', 'Header Gallery', page.header);
+                        html += this.createInput('footerText', 'Footer Text', page.footerText);
+                        break;
+                }
+
+                container.innerHTML = html;
+            }
+
+            createInput(field, label, value) {
+                value = value || '';
+                return `<div class="field-group">
+                    <label>${label}</label>
+                    <input type="text" value="${this.escapeHtml(value)}"
+                           onchange="admin.updateField('${field}', this.value)">
+                </div>`;
+            }
+
+            createTextarea(field, label, value) {
+                value = value || '';
+                return `<div class="field-group">
+                    <label>${label}</label>
+                    <textarea onchange="admin.updateField('${field}', this.value)">${this.escapeHtml(value)}</textarea>
+                </div>`;
+            }
+
+            createSelect(field, label, value, options) {
+                let opts = options.map(opt => `<option value="${opt}" ${opt === value ? 'selected' : ''}>${opt}</option>`).join('');
+                return `<div class="field-group">
+                    <label>${label}</label>
+                    <select onchange="admin.updateField('${field}', this.value)" style="width:100%;padding:.75rem;border:1px solid #E0D5C9;border-radius:6px;font-size:.875rem;background:var(--cream);">
+                        ${opts}
+                    </select>
+                </div>`;
+            }
+
+            escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            renderImageFields(template, page) {
+                const container = document.getElementById('imageFields');
+                let html = '';
+
+                // Single image templates
+                if (['cover-dark', 'cover-light', 'cover-split', 'cover-logo-left', 'cover-minimal', 'cover-numbered', 'image-full', 'image-text', 'text-image', 'text-only', 'image-split', 'text-left-image', 'numbered-list'].includes(template)) {
+                    const hasImage = page.image ? 'has-image' : '';
+                    const imageHtml = page.image ? `<img src="${page.image}" alt="">` :
+                        `<span style="font-size:2rem;opacity:0.3;">📷</span><span>Klik upload</span>`;
+
+                    html += `<div class="image-upload ${hasImage}" onclick="document.getElementById('imgInput').click()">
+                        ${imageHtml}
+                        <input type="file" id="imgInput" accept="image/*" onchange="admin.handleImageUpload(this.files[0], 'image')">
+                    </div>`;
+
+                    if (page.image) {
+                        html += `<button class="btn btn-outline btn-sm" style="margin-top:0.5rem;width:100%;"
+                                     onclick="admin.updateField('image', '')">Hapus Gambar</button>`;
+                    }
+                } else if (template === 'gallery-2x2') {
+                    const images = page.images || ['','','',''];
+                    html += '<div class="grid-images" style="gap:0.75rem;">';
+                    images.forEach((img, i) => {
+                        const imgHtml = img ? `<img src="${img}" alt="">` : `<span style="font-size:2rem;">+</span>`;
+                        html += `<div class="grid-image-item" style="min-height:120px;" onclick="document.getElementById('g${i}').click()">
+                            ${imgHtml}
+                            <input type="file" id="g${i}" accept="image/*" style="display:none"
+                                   onchange="admin.handleGridImageUpload(this.files[0], ${i})">
+                        </div>`;
+                    });
+                    html += '</div>';
+                } else if (template === 'gallery-3x3') {
+                    const images = page.images || ['','','','','','','','',''];
+                    html += '<div class="grid-images" style="grid-template-columns:repeat(3,1fr);">';
+                    images.forEach((img, i) => {
+                        const imgHtml = img ? `<img src="${img}" alt="">` : `<span>+</span>`;
+                        html += `<div class="grid-image-item" style="min-height:120px;" onclick="document.getElementById('g${i}').click()">
+                            ${imgHtml}
+                            <input type="file" id="g${i}" accept="image/*" style="display:none"
+                                   onchange="admin.handleGridImageUpload(this.files[0], ${i})">
+                        </div>`;
+                    });
+                    html += '</div>';
+                } else if (template === 'gallery-masonry') {
+                    const images = page.images || ['','','','',''];
+                    html += '<div class="grid-images" style="grid-template-columns:repeat(3,1fr);">';
+                    images.forEach((img, i) => {
+                        const imgHtml = img ? `<img src="${img}" alt="">` : `<span>+</span>`;
+                        html += `<div class="grid-image-item" style="min-height:120px;" onclick="document.getElementById('g${i}').click()">
+                            ${imgHtml}
+                            <input type="file" id="g${i}" accept="image/*" style="display:none"
+                                   onchange="admin.handleGridImageUpload(this.files[0], ${i})">
+                        </div>`;
+                    });
+                    html += '</div>';
+                } else if (template === 'text-grid') {
+                    const images = page.images || ['','','',''];
+                    html += '<div class="grid-images" style="grid-template-columns:repeat(2,1fr);gap:0.75rem;">';
+                    images.forEach((img, i) => {
+                        const imgHtml = img ? `<img src="${img}" alt="">` : `<span style="font-size:2rem;">+</span>`;
+                        html += `<div class="grid-image-item" style="min-height:130px;" onclick="document.getElementById('g${i}').click()">
+                            ${imgHtml}
+                            <input type="file" id="g${i}" accept="image/*" style="display:none"
+                                   onchange="admin.handleGridImageUpload(this.files[0], ${i})">
+                        </div>`;
+                    });
+                    html += '</div>';
+                } else if (template === 'image-dual') {
+                    // First image
+                    const hasImage1 = page.image ? 'has-image' : '';
+                    const imageHtml1 = page.image ? `<img src="${page.image}" alt="">` :
+                        `<span style="font-size:1.5rem;opacity:0.3;">📷</span><span>Gambar 1</span>`;
+                    html += `<div style="margin-bottom:0.5rem;"><div class="image-upload ${hasImage1}" onclick="document.getElementById('imgInput').click()" style="min-height:80px;">
+                        ${imageHtml1}
+                        <input type="file" id="imgInput" accept="image/*" onchange="admin.handleImageUpload(this.files[0], 'image')">
+                    </div></div>`;
+                    // Second image
+                    const images = page.images || ['',''];
+                    const hasImage2 = images[0] ? 'has-image' : '';
+                    const imageHtml2 = images[0] ? `<img src="${images[0]}" alt="">` :
+                        `<span style="font-size:1.5rem;opacity:0.3;">📷</span><span>Gambar 2</span>`;
+                    html += `<div class="image-upload ${hasImage2}" onclick="document.getElementById('imgDual').click()" style="min-height:80px;">
+                        ${imageHtml2}
+                        <input type="file" id="imgDual" accept="image/*" onchange="admin.handleGridImageUpload(this.files[0], 0)">
+                    </div>`;
+                }
+
+                container.innerHTML = html;
+            }
+
+            renderLogoField(page) {
+                const container = document.getElementById('logoField');
+                const hasLogo = page.logo ? 'has-image' : '';
+                const logoHtml = page.logo ? `<img src="${page.logo}" alt="Logo">` :
+                    `<span style="font-size:1.5rem;opacity:0.3;">LOGO</span><span>Upload Logo</span>`;
+
+                let html = `<div class="image-upload ${hasLogo}" onclick="document.getElementById('logoInput').click()">
+                    ${logoHtml}
+                    <input type="file" id="logoInput" accept="image/*" onchange="admin.handleImageUpload(this.files[0], 'logo')">
+                </div>`;
+
+                if (page.logo) {
+                    html += `<button class="btn btn-outline btn-sm" style="margin-top:0.5rem;width:100%;"
+                                 onclick="admin.updateField('logo', '')">Hapus Logo</button>`;
+                }
+
+                container.innerHTML = html;
+            }
+
+            updateField(field, value) {
+                if (this.currentPageIndex < 0) return;
+
+                this.pages[this.currentPageIndex][field] = value;
+                this.savePages();
+                this.saveToLocalStorage();
+                this.renderPreview();
+                this.renderPagesList();
+
+                // Sync to PocketBase
+                if (this.isConnected) {
+                    this.updatePocketBase(this.pages[this.currentPageIndex]);
+                }
+            }
+
+            handleImageUpload(file, field) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.updateField(field, e.target.result);
+                    // Sync image to PocketBase
+                    if (this.isConnected) {
+                        this.updatePocketBase(this.pages[this.currentPageIndex]);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+
+            handleGridImageUpload(file, index) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (this.currentPageIndex < 0) return;
+
+                    const page = this.pages[this.currentPageIndex];
+                    let images = page.images || [];
+
+                    // Ensure array is large enough
+                    const maxIndex = Math.max(
+                        page.template === 'gallery-2x2' ? 4 : 0,
+                        page.template === 'gallery-3x3' ? 9 : 0,
+                        page.template === 'gallery-masonry' ? 5 : 0,
+                        page.template === 'text-grid' ? 4 : 0
+                    );
+
+                    while (images.length <= maxIndex) {
+                        images.push('');
+                    }
+
+                    images[index] = e.target.result;
+                    this.updateField('images', images);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            addPage() {
+                const newPage = PageTemplates.createEmptyPage('image-text');
+                newPage.order = this.pages.length;
+                this.pages.push(newPage);
+                this.savePages();
+                this.saveToLocalStorage();
+                this.renderPagesList();
+                this.selectPage(this.pages.length - 1);
+
+                // Sync to PocketBase
+                if (this.isConnected) {
+                    this.saveToPocketBase(newPage);
+                }
+
+                this.showNotification('Halaman baru ditambahkan!', 'success');
+            }
+
+            duplicatePage(index) {
+                const duplicated = {...this.pages[index], id: Date.now()};
+                this.pages.splice(index + 1, 0, duplicated);
+
+                // Update orders
+                this.pages.forEach((p, i) => p.order = i);
+
+                this.savePages();
+                this.saveToLocalStorage();
+                this.renderPagesList();
+                this.selectPage(index + 1);
+
+                if (this.isConnected) {
+                    this.saveToPocketBase(duplicated);
+                }
+
+                this.showNotification('Halaman diduplikasi!', 'success');
+            }
+
+            deletePage(index) {
+                if (this.pages.length <= 1) {
+                    this.showNotification('Minimal harus ada 1 halaman!', 'error');
+                    return;
+                }
+
+                const deletedId = this.pages[index].id;
+                this.pages.splice(index, 1);
+
+                // Update orders
+                this.pages.forEach((p, i) => p.order = i);
+
+                this.savePages();
+                this.saveToLocalStorage();
+
+                if (this.currentPageIndex >= this.pages.length) {
+                    this.currentPageIndex = this.pages.length - 1;
+                }
+
+                this.renderPagesList();
+                this.selectPage(this.currentPageIndex);
+
+                // Delete from PocketBase
+                if (this.isConnected && deletedId) {
+                    fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records/${deletedId}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': this.pocketbaseToken }
+                    }).catch(e => console.error('Failed to delete from PocketBase:', e));
+                }
+
+                this.showNotification('Halaman dihapus!', 'success');
+            }
+
+            deleteCurrentPage() {
+                if (this.currentPageIndex >= 0) {
+                    this.deletePage(this.currentPageIndex);
+                }
+            }
+
+            openCatalog() {
+                window.open('index.html', '_blank');
+            }
+
+            showNotification(message, type = '') {
+                const notif = document.getElementById('notification');
+                notif.textContent = message;
+                notif.className = 'notification show' + (type ? ' ' + type : '');
+
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        let admin;
+        document.addEventListener('DOMContentLoaded', function() {
+            admin = new AdminDashboard();
+
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                admin.login(document.getElementById('passwordInput').value);
+            });
+
+            // Template click delegation
+            document.getElementById('templateGrid').addEventListener('click', function(e) {
+                const option = e.target.closest('.template-option');
+                if (option && admin) {
+                    const templateId = option.dataset.template;
+                    if (templateId) {
+                        admin.changeTemplate(templateId);
+                    }
+                }
+            });
+
+            // Pages list click delegation
+            document.getElementById('pagesList').addEventListener('click', function(e) {
+                const item = e.target.closest('.page-item');
+                if (item && admin) {
+                    const index = parseInt(item.dataset.index);
+                    if (!isNaN(index)) {
+                        admin.selectPage(index);
+                    }
+                }
+            });
+
+            // Load saved PocketBase URL
+            const savedUrl = localStorage.getItem('motifkain_pb_url');
+            if (savedUrl) {
+                document.getElementById('pocketbaseUrl').value = savedUrl;
+            }
+        });
+    </script>
+</body>
+</html>

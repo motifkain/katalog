@@ -1,0 +1,37 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Kemeja Batik Modern",
+      "description": "Desain motif batik kontemporer dengan sentuhan warna coklat dan gold. Cocok untuk acara formal maupun casual.",
+      "image": "",
+      "addedAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Blouse Motif Bunga",
+      "description": "Motif bunga klasik dengan warna teal yang elegan. Perfect untuk gaya modern feminine.",
+      "image": "",
+      "addedAt": "2024-01-16T11:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Dress Kotak-kotak",
+      "description": "Pola kotak-kotak klasik yang timeless. Nyaman dipakai seharian.",
+      "image": "",
+      "addedAt": "2024-01-17T12:00:00Z"
+    },
+    {
+      "id": 4,
+      "name": "Atasan Casual Premium",
+      "description": "Desain simpel tapi premium. Cocok untuk daily wear.",
+      "image": "",
+      "addedAt": "2024-01-18T13:00:00Z"
+    }
+  ],
+  "settings": {
+    "template": "split",
+    "catalogTitle": "MotifKain 2024",
+    "lastUpdated": "2024-01-20"
+  }
+}
