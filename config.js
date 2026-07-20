@@ -10,7 +10,7 @@ window.MOTIFKAIN_CONFIG = {
     // URL PocketBase API - PRODUCTION
     // LOCAL: http://127.0.0.1:8090
     // PRODUCTION: https://api.motifkain.com
-    pocketbaseUrl: 'https://api.motifkain.com',
+    pocketbaseUrl: 'https://93aqmqko.up.railway.app',
 
     // Nama collection (default: catalog_pages)
     pocketbaseCollection: 'catalog_pages',
