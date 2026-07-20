@@ -1,0 +1,30 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build output
+dist/
+build/
+
+# PocketBase data (local development)
+pb_data/
+
+# SSL certificates (sensitive)
+*.pem
+*.key
+ssl/
+
+# Temporary files
+*.tmp
+*.bak
+.cache/

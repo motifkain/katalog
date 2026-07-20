@@ -506,13 +506,14 @@
         <div class="login-card">
             <img src="assets/logo/logo-motifkain.png" alt="MotifKain" style="max-width: 90px; margin-bottom: 2rem;">
             <h1>Dashboard Admin</h1>
-            <p>Masukkan password</p>
+            <p>Masukkan email & password PocketBase</p>
             <form id="loginForm">
+                <input type="email" id="emailInput" class="form-input" placeholder="Email..." required style="margin-bottom: 0.75rem;">
                 <input type="password" id="passwordInput" class="form-input" placeholder="Password..." required style="margin-bottom: 1rem;">
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Masuk</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginBtn">Masuk</button>
             </form>
-            <p id="loginError" class="login-error">Password salah!</p>
-            <p style="margin-top: 2rem; font-size: .75rem; color: var(--text-light);">Default: motifkain2024</p>
+            <p id="loginError" class="login-error">Email atau password salah!</p>
+            <p id="loginLoading" style="margin-top: 1rem; font-size: .75rem; color: var(--text-light); display: none;">Menghubungkan...</p>
         </div>
     </section>
 
@@ -521,25 +522,11 @@
         <header class="dashboard-header">
             <h1>Dashboard MotifKain</h1>
             <div class="header-actions">
+                <span id="userEmail" style="font-size: .8rem; opacity: 0.8;"></span>
                 <button class="btn btn-secondary btn-sm" onclick="admin.openCatalog()">Lihat Katalog</button>
                 <button class="btn btn-outline btn-sm" onclick="admin.logout()">Logout</button>
             </div>
         </header>
-
-        <div class="settings-bar">
-            <label>
-                PocketBase URL:
-                <input type="text" id="pocketbaseUrl" placeholder="http://localhost:8090" value="">
-            </label>
-            <label>
-                <input type="password" id="pocketbasePassword" placeholder="Admin password" style="width:150px;">
-            </label>
-            <button class="btn btn-primary btn-sm" onclick="admin.connectPocketBase()">Sync</button>
-            <div class="sync-status">
-                <div class="sync-dot" id="syncDot"></div>
-                <span id="syncText">Local Only</span>
-            </div>
-        </div>
 
         <div class="editor-layout">
             <!-- PAGES LIST -->
@@ -590,28 +577,41 @@
     <!-- NOTIFICATION -->
     <div class="notification" id="notification"></div>
 
+    <script src="config.js"></script>
     <script src="assets/js/templates.js"></script>
     <script>
         class AdminDashboard {
             constructor() {
                 this.pages = [];
                 this.currentPageIndex = -1;
-                this.adminPassword = 'motifkain2024';
                 this.pocketbaseUrl = '';
                 this.pocketbaseToken = '';
+                this.pocketbaseModel = null;
                 this.isConnected = false;
-
                 this.draggedItem = null;
                 this.init();
             }
 
             init() {
-                if (sessionStorage.getItem('motifkain_auth') === 'authenticated') {
+                // Check if already logged in with valid session
+                const savedToken = sessionStorage.getItem('motifkain_pb_token');
+                const savedUrl = sessionStorage.getItem('motifkain_pb_url');
+                const savedEmail = sessionStorage.getItem('motifkain_user_email');
+
+                if (savedToken && savedUrl) {
+                    this.pocketbaseUrl = savedUrl;
+                    this.pocketbaseToken = savedToken;
+                    this.isConnected = true;
                     this.showDashboard();
+                    if (savedEmail) {
+                        document.getElementById('userEmail').textContent = savedEmail;
+                    }
+                    this.loadFromPocketBase();
                 } else {
                     this.showLogin();
                 }
-                this.loadPages();
+
+                this.loadLocalPages();
                 this.renderTemplateSelector();
                 this.setupDragAndDrop();
             }
@@ -626,141 +626,210 @@
                 document.getElementById('dashboardSection').style.display = 'block';
             }
 
-            login(password) {
-                if (password === this.adminPassword) {
-                    sessionStorage.setItem('motifkain_auth', 'authenticated');
-                    this.showDashboard();
-                } else {
-                    document.getElementById('loginError').style.display = 'block';
-                }
-            }
+            async login(email, password) {
+                const btn = document.getElementById('loginBtn');
+                const loading = document.getElementById('loginLoading');
+                const error = document.getElementById('loginError');
 
-            logout() {
-                sessionStorage.removeItem('motifkain_auth');
-                this.showLogin();
-            }
+                btn.disabled = true;
+                btn.textContent = 'Loading...';
+                loading.style.display = 'block';
+                error.style.display = 'none';
 
-            // ===== POCKETBASE =====
-            async connectPocketBase() {
-                const url = document.getElementById('pocketbaseUrl').value.trim();
-                const password = document.getElementById('pocketbasePassword').value.trim();
-
+                // Get URL from config
+                const url = window.MOTIFKAIN_CONFIG?.pocketbaseUrl;
                 if (!url) {
-                    this.showNotification('Masukkan URL PocketBase', 'error');
+                    error.textContent = 'PocketBase URL belum diset di config.js';
+                    error.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = 'Masuk';
+                    loading.style.display = 'none';
                     return;
                 }
 
-                this.pocketbaseUrl = url;
+                this.pocketbaseUrl = url.replace(/\/$/, '');
 
                 try {
-                    // Test connection with auth
-                    const response = await fetch(`${url}/api/collections/users/auth-with-password`, {
+                    // Authenticate with PocketBase admins API
+                    const response = await fetch(`${this.pocketbaseUrl}/api/admins/auth-with-password`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            identity: 'admin@motifkain.com',
-                            password: password || 'motifkain2024'
+                            identity: email,
+                            password: password
                         })
                     });
 
                     if (response.ok) {
                         const data = await response.json();
+
+                        // Save session
                         this.pocketbaseToken = data.token;
+                        this.pocketbaseModel = data.admin || data.user;
                         this.isConnected = true;
-                        document.getElementById('syncDot').className = 'sync-dot connected';
-                        document.getElementById('syncText').textContent = 'Connected';
-                        this.showNotification('Berhasil terhubung ke PocketBase!', 'success');
 
-                        // Save to localStorage
-                        localStorage.setItem('motifkain_pb_url', url);
+                        sessionStorage.setItem('motifkain_pb_token', data.token);
+                        sessionStorage.setItem('motifkain_pb_url', this.pocketbaseUrl);
+                        sessionStorage.setItem('motifkain_auth', 'authenticated');
+                        sessionStorage.setItem('motifkain_user_email', email);
 
-                        // Load from PocketBase
+                        document.getElementById('userEmail').textContent = email;
+                        this.showDashboard();
+
+                        // Load pages from PocketBase
                         await this.loadFromPocketBase();
                     } else {
-                        // Try without specific user
-                        const response2 = await fetch(`${url}/api/collections/_pb_users_auth_/auth-with-password`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                identity: 'admin',
-                                password: password || 'motifkain2024'
-                            })
-                        });
-
-                        if (response2.ok) {
-                            const data = await response2.json();
-                            this.pocketbaseToken = data.token;
-                            this.isConnected = true;
-                            document.getElementById('syncDot').className = 'sync-dot connected';
-                            document.getElementById('syncText').textContent = 'Connected';
-                            this.showNotification('Berhasil terhubung ke PocketBase!', 'success');
-                            localStorage.setItem('motifkain_pb_url', url);
-                            await this.loadFromPocketBase();
-                        } else {
-                            throw new Error('Auth failed');
-                        }
+                        error.textContent = 'Email atau password salah!';
+                        error.style.display = 'block';
                     }
                 } catch (e) {
-                    this.isConnected = false;
-                    document.getElementById('syncDot').className = 'sync-dot';
-                    document.getElementById('syncText').textContent = 'Connection failed';
-                    this.showNotification('Gagal terhubung. Pastikan PocketBase berjalan.', 'error');
+                    console.error('Login error:', e);
+                    error.textContent = 'Tidak dapat terhubung ke server. Pastikan PocketBase aktif.';
+                    error.style.display = 'block';
                 }
+
+                btn.disabled = false;
+                btn.textContent = 'Masuk';
+                loading.style.display = 'none';
             }
 
+            logout() {
+                sessionStorage.removeItem('motifkain_auth');
+                sessionStorage.removeItem('motifkain_pb_token');
+                sessionStorage.removeItem('motifkain_user_email');
+                this.pocketbaseToken = '';
+                this.pocketbaseModel = null;
+                this.isConnected = false;
+                this.showLogin();
+            }
+
+            // ===== LOCAL PAGES (fallback) =====
+            loadLocalPages() {
+                const stored = localStorage.getItem('motifkain_catalog');
+                if (stored) {
+                    try {
+                        this.pages = JSON.parse(stored);
+                    } catch (e) {
+                        this.pages = [];
+                    }
+                }
+                this.renderPagesList();
+            }
+
+            // ===== POCKETBASE SYNC =====
             async loadFromPocketBase() {
                 if (!this.isConnected) return;
 
                 try {
-                    const response = await fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records?sort=order`, {
+                    const response = await fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records?sort=order&perPage=500`, {
                         headers: { 'Authorization': this.pocketbaseToken }
                     });
 
                     if (response.ok) {
                         const data = await response.json();
-                        this.pages = data.items.map(item => ({
-                            id: item.id,
-                            template: item.template,
-                            order: item.order,
-                            mainTitle: item.mainTitle,
-                            subtitle: item.subtitle,
-                            description: item.description,
-                            title: item.title,
-                            body: item.body,
-                            overlayText: item.overlayText,
-                            overlayPosition: item.overlayPosition,
-                            header: item.header,
-                            footerText: item.footerText,
-                            image: item.image ? `${this.pocketbaseUrl}/api/files/catalog_pages/${item.id}/${item.image}` : '',
-                            images: item.images || [],
-                            logo: item.logo ? `${this.pocketbaseUrl}/api/files/catalog_pages/${item.id}/${item.logo}` : '',
-                            createdAt: item.created
-                        }));
-
-                        // Sync images
-                        for (let i = 0; i < this.pages.length; i++) {
-                            if (this.pages[i].images && this.pages[i].images.length > 0) {
-                                this.pages[i].images = this.pages[i].images.map((img, idx) =>
-                                    `${this.pocketbaseUrl}/api/files/catalog_pages/${this.pages[i].id}/${img}`
-                                );
-                            }
+                        if (data.items && data.items.length > 0) {
+                            this.pages = data.items.map(item => this.mapPocketBaseToPage(item));
+                            this.renderPagesList();
+                            this.selectPage(0);
+                            this.showNotification(`Loaded ${this.pages.length} pages dari cloud`, 'success');
+                        } else {
+                            // No cloud data, try local
+                            this.loadLocalPages();
                         }
-
-                        this.saveToLocalStorage();
-                        this.renderPagesList();
-                        this.selectPage(0);
-                        this.showNotification('Data dimuat dari PocketBase', 'success');
                     }
                 } catch (e) {
-                    console.error('Failed to load from PocketBase:', e);
+                    console.error('Load from PocketBase error:', e);
+                    this.loadLocalPages();
                 }
             }
 
-            async saveToPocketBase(page) {
-                if (!this.isConnected) return;
+            mapPocketBaseToPage(item) {
+                return {
+                    id: item.id,
+                    template: item.template || 'cover-dark',
+                    order: item.order || 0,
+                    mainTitle: item.mainTitle || '',
+                    subtitle: item.subtitle || '',
+                    description: item.description || '',
+                    title: item.title || '',
+                    body: item.body || '',
+                    overlayText: item.overlayText || '',
+                    overlayPosition: item.overlayPosition || 'bottom',
+                    header: item.header || '',
+                    footerText: item.footerText || '',
+                    image: item.image ? `${this.pocketbaseUrl}/api/files/catalog_pages/${item.id}/${item.image}` : '',
+                    images: (item.images || []).map((img, idx) =>
+                        `${this.pocketbaseUrl}/api/files/catalog_pages/${item.id}/${img}`),
+                    logo: item.logo ? `${this.pocketbaseUrl}/api/files/catalog_pages/${item.id}/${item.logo}` : '',
+                    colorTheme: item.colorTheme || '',
+                    fontFamily: item.fontFamily || '',
+                    fontSizePx: item.fontSizePx || 24,
+                    titleSizePx: item.titleSizePx || 36,
+                    bodySizePx: item.bodySizePx || 14,
+                    logoSizePx: item.logoSizePx || 40,
+                    textColor: item.textColor || '',
+                    bgColor: item.bgColor || ''
+                };
+            }
 
+            saveToLocalStorage() {
+                localStorage.setItem('motifkain_catalog', JSON.stringify(this.pages));
+            }
+
+            // ===== AUTO SYNC =====
+            async addPage() {
+                const newPage = {
+                    ...PageTemplates.createEmptyPage('image-text'),
+                    order: this.pages.length
+                };
+
+                if (this.isConnected) {
+                    try {
+                        const created = await this.createPageInPocketBase(newPage);
+                        newPage.id = created.id;
+                    } catch (e) {
+                        console.error('Failed to create in PocketBase:', e);
+                    }
+                } else {
+                    newPage.id = 'local_' + Date.now();
+                }
+
+                this.pages.push(newPage);
+                this.saveToLocalStorage();
+                this.renderPagesList();
+                this.selectPage(this.pages.length - 1);
+                this.showNotification('Halaman baru ditambahkan!', 'success');
+            }
+
+            async createPageInPocketBase(page) {
                 const formData = new FormData();
-                formData.append('id', page.id);
+                formData.append('template', page.template);
+                formData.append('order', page.order);
+
+                const response = await fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records`, {
+                    method: 'POST',
+                    headers: { 'Authorization': this.pocketbaseToken },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Create failed');
+                return await response.json();
+            }
+
+            async updatePage(page) {
+                this.saveToLocalStorage();
+
+                if (this.isConnected && page.id && !String(page.id).startsWith('local_')) {
+                    try {
+                        await this.updatePageInPocketBase(page);
+                    } catch (e) {
+                        console.error('Failed to update in PocketBase:', e);
+                    }
+                }
+            }
+
+            async updatePageInPocketBase(page) {
+                const formData = new FormData();
                 formData.append('template', page.template);
                 formData.append('order', page.order);
                 formData.append('mainTitle', page.mainTitle || '');
@@ -772,8 +841,16 @@
                 formData.append('overlayPosition', page.overlayPosition || 'bottom');
                 formData.append('header', page.header || '');
                 formData.append('footerText', page.footerText || '');
+                formData.append('colorTheme', page.colorTheme || '');
+                formData.append('fontFamily', page.fontFamily || '');
+                formData.append('fontSizePx', page.fontSizePx || 24);
+                formData.append('titleSizePx', page.titleSizePx || 36);
+                formData.append('bodySizePx', page.bodySizePx || 14);
+                formData.append('logoSizePx', page.logoSizePx || 40);
+                formData.append('textColor', page.textColor || '');
+                formData.append('bgColor', page.bgColor || '');
 
-                // Handle image upload
+                // Handle image uploads
                 if (page.image && page.image.startsWith('data:')) {
                     const blob = this.dataURLtoBlob(page.image);
                     formData.append('image', blob, 'image.jpg');
@@ -784,50 +861,105 @@
                     formData.append('logo', blob, 'logo.png');
                 }
 
-                try {
-                    const response = await fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records`, {
-                        method: 'POST',
-                        headers: { 'Authorization': this.pocketbaseToken },
-                        body: formData
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        // Update local page with new ID
-                        const index = this.pages.findIndex(p => p.id === page.id);
-                        if (index >= 0) {
-                            this.pages[index].id = data.id;
+                if (page.images && page.images.length > 0) {
+                    page.images.forEach((img, idx) => {
+                        if (img && img.startsWith('data:')) {
+                            const blob = this.dataURLtoBlob(img);
+                            formData.append('images', blob, `image_${idx}.jpg`);
                         }
-                    }
-                } catch (e) {
-                    console.error('Failed to save to PocketBase:', e);
+                    });
                 }
+
+                await fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records/${page.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': this.pocketbaseToken },
+                    body: formData
+                });
             }
 
-            async updatePocketBase(page) {
-                if (!this.isConnected) return;
+            async deletePage(index) {
+                const page = this.pages[index];
+                if (!page) return;
 
-                const formData = new FormData();
-                formData.append('template', page.template);
-                formData.append('order', page.order);
-                formData.append('mainTitle', page.mainTitle || '');
-                formData.append('subtitle', page.subtitle || '');
-                formData.append('description', page.description || '');
-                formData.append('title', page.title || '');
-                formData.append('body', page.body || '');
-                formData.append('overlayText', page.overlayText || '');
-                formData.append('overlayPosition', page.overlayPosition || 'bottom');
-                formData.append('header', page.header || '');
-                formData.append('footerText', page.footerText || '');
+                // Delete from PocketBase if connected
+                if (this.isConnected && page.id && !String(page.id).startsWith('local_')) {
+                    try {
+                        await fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records/${page.id}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': this.pocketbaseToken }
+                        });
+                    } catch (e) {
+                        console.error('Failed to delete from PocketBase:', e);
+                    }
+                }
 
-                try {
-                    await fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records/${page.id}`, {
-                        method: 'PATCH',
-                        headers: { 'Authorization': this.pocketbaseToken },
-                        body: formData
-                    });
-                } catch (e) {
-                    console.error('Failed to update PocketBase:', e);
+                this.pages.splice(index, 1);
+
+                // Update order
+                this.pages.forEach((p, i) => p.order = i);
+
+                this.saveToLocalStorage();
+
+                if (this.currentPageIndex >= this.pages.length) {
+                    this.currentPageIndex = Math.max(0, this.pages.length - 1);
+                }
+
+                this.renderPagesList();
+                this.selectPage(this.currentPageIndex);
+                this.showNotification('Halaman dihapus!', 'success');
+            }
+
+            async duplicatePage(index) {
+                const original = this.pages[index];
+                const duplicated = {
+                    ...JSON.parse(JSON.stringify(original)),
+                    id: 'local_' + Date.now(),
+                    order: index + 1
+                };
+
+                // Insert after original
+                this.pages.splice(index + 1, 0, duplicated);
+
+                // Update orders
+                this.pages.forEach((p, i) => p.order = i);
+
+                // Create in PocketBase if connected
+                if (this.isConnected) {
+                    try {
+                        const created = await this.createPageInPocketBase(duplicated);
+                        duplicated.id = created.id;
+                    } catch (e) {
+                        console.error('Failed to create duplicate in PocketBase:', e);
+                    }
+                }
+
+                this.saveToLocalStorage();
+                this.renderPagesList();
+                this.selectPage(index + 1);
+                this.showNotification('Halaman diduplikasi!', 'success');
+            }
+
+            async reorderPages(fromIndex, toIndex) {
+                const [movedPage] = this.pages.splice(fromIndex, 1);
+                this.pages.splice(toIndex, 0, movedPage);
+
+                // Update orders
+                this.pages.forEach((p, i) => p.order = i);
+
+                this.saveToLocalStorage();
+                this.renderPagesList();
+
+                // Update all pages in PocketBase
+                if (this.isConnected) {
+                    for (const page of this.pages) {
+                        if (page.id && !String(page.id).startsWith('local_')) {
+                            try {
+                                await this.updatePageInPocketBase(page);
+                            } catch (e) {
+                                console.error('Failed to reorder:', e);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -842,34 +974,9 @@
             }
 
             // ===== PAGES MANAGEMENT =====
-            loadPages() {
-                const stored = localStorage.getItem('motifkain_catalog');
-                if (stored) {
-                    this.pages = JSON.parse(stored);
-                } else {
-                    // Default pages
-                    this.pages = [
-                        Object.assign(PageTemplates.createEmptyPage('cover-dark'), {
-                            mainTitle: 'MOTIFKAIN',
-                            subtitle: 'Koleksi Desain 2024',
-                            description: 'Selamat datang di koleksi motif kain eksklusif'
-                        })
-                    ];
-                    this.savePages();
-                }
-                this.renderPagesList();
-            }
-
             savePages() {
                 localStorage.setItem('motifkain_catalog', JSON.stringify(this.pages));
                 localStorage.setItem('motifkain_refresh', Date.now());
-            }
-
-            saveToLocalStorage() {
-                localStorage.setItem('motifkain_catalog', JSON.stringify(this.pages));
-                localStorage.setItem('motifkain_refresh', Date.now());
-                document.getElementById('syncDot').className = 'sync-dot local';
-                document.getElementById('syncText').textContent = 'Saved locally';
             }
 
             // ===== DRAG & DROP =====
@@ -924,38 +1031,12 @@
                     const toIndex = parseInt(targetItem.dataset.index);
 
                     if (fromIndex !== toIndex) {
-                        // Reorder pages
-                        const [movedPage] = this.pages.splice(fromIndex, 1);
-                        this.pages.splice(toIndex, 0, movedPage);
-
-                        // Update order numbers
-                        this.pages.forEach((p, i) => p.order = i);
-
-                        this.savePages();
-                        this.renderPagesList();
-
-                        // Select the moved page
-                        this.selectPage(toIndex);
-
-                        // Sync to PocketBase
-                        if (this.isConnected) {
-                            this.syncAllToPocketBase();
-                        }
-
+                        this.reorderPages(fromIndex, toIndex);
                         this.showNotification(`Halaman dipindahkan ke posisi ${toIndex + 1}`, 'success');
                     }
 
                     targetItem.classList.remove('drag-over');
                 });
-            }
-
-            async syncAllToPocketBase() {
-                if (!this.isConnected) return;
-
-                for (const page of this.pages) {
-                    await this.updatePocketBase(page);
-                }
-            }
 
             // ===== RENDER =====
             renderPagesList() {
@@ -1206,6 +1287,12 @@
                                onchange="admin.updateField('bodySizePx', this.value)"
                                style="width:100%;padding:.6rem;border:1px solid #E0D5C9;border-radius:6px;font-size:.8rem;background:var(--cream);">
                     </div>
+                    <div class="field-group">
+                        <label>Ukuran Logo (px)</label>
+                        <input type="number" value="${page.logoSizePx || 40}" min="10" max="200" step="1"
+                               onchange="admin.updateField('logoSizePx', this.value)"
+                               style="width:100%;padding:.6rem;border:1px solid #E0D5C9;border-radius:6px;font-size:.8rem;background:var(--cream);">
+                    </div>
                     <div class="field-group" id="customColorsSection" style="${page.colorTheme ? 'display:none;' : ''}">
                         <label>Warna Teks Custom</label>
                         <input type="color" value="${page.textColor || '#1a1a1a'}" onchange="admin.updateField('textColor', this.value)"
@@ -1448,19 +1535,16 @@
                 container.innerHTML = html;
             }
 
-            updateField(field, value) {
+            async updateField(field, value) {
                 if (this.currentPageIndex < 0) return;
 
                 this.pages[this.currentPageIndex][field] = value;
                 this.savePages();
-                this.saveToLocalStorage();
                 this.renderPreview();
                 this.renderPagesList();
 
-                // Sync to PocketBase
-                if (this.isConnected) {
-                    this.updatePocketBase(this.pages[this.currentPageIndex]);
-                }
+                // Auto-sync to PocketBase
+                await this.updatePage(this.pages[this.currentPageIndex]);
             }
 
             handleImageUpload(file, field) {
@@ -1468,10 +1552,6 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     this.updateField(field, e.target.result);
-                    // Sync image to PocketBase
-                    if (this.isConnected) {
-                        this.updatePocketBase(this.pages[this.currentPageIndex]);
-                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -1503,72 +1583,86 @@
                 reader.readAsDataURL(file);
             }
 
-            addPage() {
-                const newPage = PageTemplates.createEmptyPage('image-text');
-                newPage.order = this.pages.length;
-                this.pages.push(newPage);
-                this.savePages();
-                this.saveToLocalStorage();
-                this.renderPagesList();
-                this.selectPage(this.pages.length - 1);
+            async addPage() {
+                const newPage = {
+                    ...PageTemplates.createEmptyPage('image-text'),
+                    id: this.isConnected ? '' : 'local_' + Date.now(),
+                    order: this.pages.length
+                };
 
-                // Sync to PocketBase
                 if (this.isConnected) {
-                    this.saveToPocketBase(newPage);
+                    try {
+                        const created = await this.createPageInPocketBase(newPage);
+                        newPage.id = created.id;
+                    } catch (e) {
+                        console.error('Failed to create in PocketBase:', e);
+                        newPage.id = 'local_' + Date.now();
+                    }
                 }
 
+                this.pages.push(newPage);
+                this.savePages();
+                this.renderPagesList();
+                this.selectPage(this.pages.length - 1);
                 this.showNotification('Halaman baru ditambahkan!', 'success');
             }
 
-            duplicatePage(index) {
-                const duplicated = {...this.pages[index], id: Date.now()};
-                this.pages.splice(index + 1, 0, duplicated);
+            async duplicatePage(index) {
+                const original = this.pages[index];
+                const duplicated = {
+                    ...JSON.parse(JSON.stringify(original)),
+                    id: this.isConnected ? '' : 'local_' + Date.now()
+                };
 
-                // Update orders
+                this.pages.splice(index + 1, 0, duplicated);
                 this.pages.forEach((p, i) => p.order = i);
 
-                this.savePages();
-                this.saveToLocalStorage();
-                this.renderPagesList();
-                this.selectPage(index + 1);
-
                 if (this.isConnected) {
-                    this.saveToPocketBase(duplicated);
+                    try {
+                        const created = await this.createPageInPocketBase(duplicated);
+                        duplicated.id = created.id;
+                    } catch (e) {
+                        console.error('Failed to create in PocketBase:', e);
+                        duplicated.id = 'local_' + Date.now();
+                    }
                 }
 
+                this.savePages();
+                this.renderPagesList();
+                this.selectPage(index + 1);
                 this.showNotification('Halaman diduplikasi!', 'success');
             }
 
-            deletePage(index) {
+            async deletePage(index) {
                 if (this.pages.length <= 1) {
                     this.showNotification('Minimal harus ada 1 halaman!', 'error');
                     return;
                 }
 
-                const deletedId = this.pages[index].id;
+                const page = this.pages[index];
+
+                // Delete from PocketBase if connected
+                if (this.isConnected && page.id && !String(page.id).startsWith('local_')) {
+                    try {
+                        await fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records/${page.id}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': this.pocketbaseToken }
+                        });
+                    } catch (e) {
+                        console.error('Failed to delete from PocketBase:', e);
+                    }
+                }
+
                 this.pages.splice(index, 1);
-
-                // Update orders
                 this.pages.forEach((p, i) => p.order = i);
-
                 this.savePages();
-                this.saveToLocalStorage();
 
                 if (this.currentPageIndex >= this.pages.length) {
-                    this.currentPageIndex = this.pages.length - 1;
+                    this.currentPageIndex = Math.max(0, this.pages.length - 1);
                 }
 
                 this.renderPagesList();
                 this.selectPage(this.currentPageIndex);
-
-                // Delete from PocketBase
-                if (this.isConnected && deletedId) {
-                    fetch(`${this.pocketbaseUrl}/api/collections/catalog_pages/records/${deletedId}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': this.pocketbaseToken }
-                    }).catch(e => console.error('Failed to delete from PocketBase:', e));
-                }
-
                 this.showNotification('Halaman dihapus!', 'success');
             }
 
@@ -1599,7 +1693,9 @@
 
             document.getElementById('loginForm').addEventListener('submit', function(e) {
                 e.preventDefault();
-                admin.login(document.getElementById('passwordInput').value);
+                const email = document.getElementById('emailInput').value.trim();
+                const password = document.getElementById('passwordInput').value;
+                admin.login(email, password);
             });
 
             // Template click delegation
@@ -1623,12 +1719,6 @@
                     }
                 }
             });
-
-            // Load saved PocketBase URL
-            const savedUrl = localStorage.getItem('motifkain_pb_url');
-            if (savedUrl) {
-                document.getElementById('pocketbaseUrl').value = savedUrl;
-            }
         });
     </script>
 </body>

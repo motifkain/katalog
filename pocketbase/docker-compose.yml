@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    container_name: motifkain-pocketbase
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./pb_data:/pb
+    environment:
+      - TZ=Asia/Jakarta
+
+  # Nginx sebagai reverse proxy dengan SSL
+  nginx:
+    image: nginx:alpine
+    container_name: motifkain-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - pocketbase
+
+volumes:
+  pb_data:

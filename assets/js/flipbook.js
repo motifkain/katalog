@@ -31,22 +31,63 @@ class Flipbook {
 
     async loadPages() {
         // Coba load dari PocketBase first, fallback ke localStorage
-        if (this.options.pocketbaseUrl && window.PocketBaseService) {
+        const pbUrl = window.MOTIFKAIN_CONFIG?.pocketbaseUrl || this.options.pocketbaseUrl;
+
+        if (pbUrl) {
             try {
-                this.pages = await window.PocketBaseService.getCatalogPages();
+                const response = await fetch(`${pbUrl}/api/collections/catalog_pages/records?sort=order`);
+                if (response.ok) {
+                    const data = await response.json();
+                    this.pages = data.items.map(item => ({
+                        id: item.id,
+                        template: item.template,
+                        order: item.order,
+                        mainTitle: item.mainTitle,
+                        subtitle: item.subtitle,
+                        description: item.description,
+                        title: item.title,
+                        body: item.body,
+                        overlayText: item.overlayText,
+                        overlayPosition: item.overlayPosition,
+                        header: item.header,
+                        footerText: item.footerText,
+                        image: item.image ? `${pbUrl}/api/files/catalog_pages/${item.id}/${item.image}` : '',
+                        images: item.images || [],
+                        logo: item.logo ? `${pbUrl}/api/files/catalog_pages/${item.id}/${item.logo}` : '',
+                        colorTheme: item.colorTheme,
+                        fontFamily: item.fontFamily,
+                        fontSizePx: item.fontSizePx,
+                        titleSizePx: item.titleSizePx,
+                        bodySizePx: item.bodySizePx,
+                        logoSizePx: item.logoSizePx,
+                        textColor: item.textColor,
+                        bgColor: item.bgColor
+                    }));
+
+                    // Process multiple images
+                    for (let i = 0; i < this.pages.length; i++) {
+                        if (this.pages[i].images && this.pages[i].images.length > 0) {
+                            this.pages[i].images = this.pages[i].images.map((img, idx) =>
+                                `${pbUrl}/api/files/catalog_pages/${this.pages[i].id}/${img}`
+                            );
+                        }
+                    }
+
+                    if (window.MOTIFKAIN_CONFIG?.debug) {
+                        console.log('Loaded', this.pages.length, 'pages from PocketBase');
+                    }
+                    this.totalPages = this.pages.length;
+                    return;
+                }
             } catch (e) {
-                console.log('PocketBase unavailable, using localStorage');
-                this.pages = this.loadFromLocalStorage();
+                if (window.MOTIFKAIN_CONFIG?.debug) {
+                    console.log('PocketBase unavailable, using localStorage:', e);
+                }
             }
-        } else {
-            this.pages = this.loadFromLocalStorage();
         }
 
-        // Assign order berdasarkan index
-        this.pages.forEach((page, i) => {
-            page.order = i;
-        });
-
+        // Fallback ke localStorage
+        this.pages = this.loadFromLocalStorage();
         this.totalPages = this.pages.length;
     }
 

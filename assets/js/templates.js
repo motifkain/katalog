@@ -162,7 +162,14 @@ const PageTemplates = {
             id: Date.now(),
             template: templateId,
             createdAt: new Date().toISOString(),
-            order: 0
+            order: 0,
+            // Default styling
+            colorTheme: 'elegant-gold',
+            fontFamily: 'Playfair Display',
+            fontSizePx: 24,
+            titleSizePx: 36,
+            bodySizePx: 14,
+            logoSizePx: 40
         };
         switch(templateId) {
             case 'cover-dark':
@@ -290,6 +297,16 @@ const PageTemplates = {
         }
     },
 
+    // Helper to get logo style based on size setting
+    getLogoStyle(data, invert = false) {
+        const size = data.logoSizePx ? data.logoSizePx + 'px' : '40px';
+        let style = `height:${size};`;
+        if (invert) {
+            style += 'filter:brightness(0)invert(1);';
+        }
+        return style;
+    },
+
     // Helper to get style properties (PIXEL BASED + THEMED)
     getStyleProps(data) {
         // Get theme colors if theme is selected
@@ -301,6 +318,8 @@ const PageTemplates = {
             subtitleSize: data.fontSizePx ? (Math.round(data.fontSizePx * 0.7)) + 'px' : '16px',
             bodySize: data.bodySizePx ? data.bodySizePx + 'px' : '14px',
             fontSize: data.fontSizePx ? data.fontSizePx + 'px' : '24px',
+            // Logo size
+            logoSize: data.logoSizePx ? data.logoSizePx + 'px' : '40px',
             // Colors - use theme if available, else use custom
             textColor: theme ? theme.textDark : (data.textColor || '#1a1a1a'),
             bgColor: theme ? theme.bgLight : (data.bgColor || '#ffffff'),
@@ -328,7 +347,7 @@ const PageTemplates = {
 
             <!-- Logo area -->
             <div style="text-align:center;margin-bottom:auto;">
-                ${data.logo ? `<img src="${data.logo}" style="height:8%;max-height:60px;filter:brightness(0)invert(1);margin-bottom:3%;">` : ''}
+                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data, true)}margin-bottom:3%;">` : ''}
             </div>
 
             <!-- Main content -->
@@ -356,7 +375,7 @@ const PageTemplates = {
 
             <!-- Logo area -->
             <div style="text-align:center;margin-bottom:auto;">
-                ${data.logo ? `<img src="${data.logo}" style="height:8%;max-height:60px;margin-bottom:3%;">` : ''}
+                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:3%;">` : ''}
             </div>
 
             <!-- Main content -->
@@ -380,7 +399,7 @@ const PageTemplates = {
         const textPosition = data.overlayPosition === 'top' ? 'top:5%;transform:none;' : 'bottom:8%;';
         return `
         <div style="width:100%;height:100%;background:${style.bgColor};position:relative;display:flex;flex-direction:column;">
-            ${data.logo ? `<div style="position:absolute;top:5%;left:5%;z-index:10;"><img src="${data.logo}" style="height:30px;filter:brightness(0)invert(1);"></div>` : ''}
+            ${data.logo ? `<div style="position:absolute;top:5%;left:5%;z-index:10;"><img src="${data.logo}" style="${this.getLogoStyle(data, true)}"></div>` : ''}
 
             <div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;">
                 ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:cover;">` : `
@@ -413,7 +432,7 @@ const PageTemplates = {
                 <div style="width:100%;height:100%;background:${style.bgDark || '#2a2a2a'};display:flex;align-items:center;justify-content:center;">
                     <span style="font-size:3rem;opacity:0.2;">📷</span>
                 </div>`}
-                ${data.logo ? `<div style="position:absolute;top:5%;right:5%;"><img src="${data.logo}" style="height:25px;filter:brightness(0)invert(1);opacity:0.8;"></div>` : ''}
+                ${data.logo ? `<div style="position:absolute;top:5%;right:5%;"><img src="${data.logo}" style="${this.getLogoStyle(data, true)}opacity:0.8;"></div>` : ''}
             </div>
 
             <!-- Text section (40%) -->
@@ -436,7 +455,7 @@ const PageTemplates = {
         <div style="width:100%;height:100%;background:${style.bgColor};display:flex;flex-direction:column;">
             <!-- Text section (40%) -->
             <div style="flex:0 0 40%;padding:8%;display:flex;flex-direction:column;justify-content:center;background:${style.bgCard};">
-                ${data.logo ? `<div style="margin-bottom:5%;"><img src="${data.logo}" style="height:20px;"></div>` : `<div style="width:30px;height:2px;background:${style.accentAlt};margin-bottom:5%;"></div>`}
+                ${data.logo ? `<div style="margin-bottom:5%;"><img src="${data.logo}" style="${this.getLogoStyle(data)}"></div>` : `<div style="width:30px;height:2px;background:${style.accentAlt};margin-bottom:5%;"></div>`}
                 <h2 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:4%;line-height:1.2;">${data.title || 'Nama Produk'}</h2>
                 <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.6;flex:1;">${data.description || ''}</p>
                 <div style="margin-top:auto;padding-top:5%;border-top:1px solid ${style.bgMuted};">
@@ -459,7 +478,7 @@ const PageTemplates = {
         const style = this.getStyleProps(data);
         return `
         <div style="width:100%;height:100%;background:${style.bgColor};padding:10%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-            ${data.logo ? `<div style="margin-bottom:auto;"><img src="${data.logo}" style="height:25px;"></div>` : ''}
+            ${data.logo ? `<div style="margin-bottom:auto;"><img src="${data.logo}" style="${this.getLogoStyle(data)}"></div>` : ''}
 
             <div style="flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;">
                 ${data.subtitle ? `<p style="color:${style.accentAlt};font-size:${style.subtitleSize};letter-spacing:0.2em;margin-bottom:3%;">${data.subtitle}</p>` : ''}
@@ -482,7 +501,7 @@ const PageTemplates = {
         <div style="width:100%;height:100%;background:${style.bgColor};display:flex;flex-direction:column;padding:5%;">
             <!-- Header -->
             <div style="margin-bottom:4%;">
-                ${data.logo ? `<div style="margin-bottom:3%;"><img src="${data.logo}" style="height:20px;"></div>` : ''}
+                ${data.logo ? `<div style="margin-bottom:3%;"><img src="${data.logo}" style="${this.getLogoStyle(data)}"></div>` : ''}
                 <h2 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};">${data.header || 'Gallery'}</h2>
                 <div style="width:30px;height:2px;background:${style.accentAlt};margin-top:3%;"></div>
             </div>
@@ -511,7 +530,7 @@ const PageTemplates = {
         return `
         <div style="width:100%;height:100%;background:${style.bgColor};display:flex;flex-direction:column;padding:4%;">
             <div style="margin-bottom:3%;">
-                ${data.logo ? `<div style="margin-bottom:2%;"><img src="${data.logo}" style="height:18px;"></div>` : ''}
+                ${data.logo ? `<div style="margin-bottom:2%;"><img src="${data.logo}" style="${this.getLogoStyle(data)}"></div>` : ''}
                 <h2 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};">${data.header || 'Gallery'}</h2>
                 <div style="width:25px;height:2px;background:${style.accentAlt};margin-top:2%;"></div>
             </div>
@@ -539,7 +558,7 @@ const PageTemplates = {
             <!-- Kiri - Gelap -->
             <div style="width:40%;height:100%;background:${style.bgDark};padding:6%;display:flex;flex-direction:column;position:relative;">
                 <div style="position:absolute;top:5%;left:5%;width:25px;height:25px;border-top:1px solid rgba(255,255,255,0.3);border-left:1px solid rgba(255,255,255,0.3);"></div>
-                ${data.logo ? `<img src="${data.logo}" style="height:35px;filter:brightness(0)invert(1);margin-bottom:15%;margin-top:auto;">` : `<span style="color:rgba(255,255,255,0.5);font-size:${style.bodySize};margin-bottom:15%;margin-top:auto;">LOGO</span>`}
+                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data, true)}margin-bottom:15%;margin-top:auto;">` : `<span style="color:rgba(255,255,255,0.5);font-size:${style.bodySize};margin-bottom:15%;margin-top:auto;">LOGO</span>`}
                 <div style="width:25px;height:1px;background:${style.accent};margin-bottom:10%;"></div>
                 <p style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};line-height:1.8;">${data.header || 'LOREM IPSUM'}</p>
                 <p style="color:rgba(255,255,255,0.6);font-size:${style.bodySize};margin-top:5%;line-height:1.6;">${data.body || 'Deskripsi singkat tentang koleksi Anda.'}</p>
@@ -569,7 +588,7 @@ const PageTemplates = {
         <div style="width:100%;height:100%;background:${style.bgDark};padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
             <!-- Garis diagonal dekoratif -->
             <div style="position:absolute;top:0;right:0;width:40%;height:100%;background:linear-gradient(135deg,transparent 49%,rgba(255,255,255,0.03) 50%,transparent 51%);"></div>
-            ${data.logo ? `<div style="margin-bottom:auto;"><img src="${data.logo}" style="height:30px;filter:brightness(0)invert(1);opacity:0.7;"></div>` : ''}
+            ${data.logo ? `<div style="margin-bottom:auto;"><img src="${data.logo}" style="${this.getLogoStyle(data, true)}opacity:0.7;"></div>` : ''}
             <div style="display:flex;align-items:flex-start;gap:5%;flex:1;">
                 <div style="width:30%;display:flex;flex-direction:column;justify-content:center;">
                     <h2 style="font-family:'${style.fontFamily}',serif;font-size:${largeNum};color:#fff;font-weight:700;line-height:1;margin-bottom:5%;">${data.header || '01'}</h2>
@@ -597,7 +616,7 @@ const PageTemplates = {
             <div style="position:absolute;top:8%;right:8%;width:40px;height:40px;border-top:1px solid ${style.textMuted};border-right:1px solid ${style.textMuted};"></div>
             <div style="position:absolute;bottom:8%;left:8%;width:40px;height:40px;border-bottom:1px solid ${style.textMuted};border-left:1px solid ${style.textMuted};"></div>
             <div style="position:absolute;top:5%;left:5%;opacity:0.03;font-size:${bigQuote};color:${style.textColor};">"</div>
-            ${data.logo ? `<div style="margin-bottom:15%;"><img src="${data.logo}" style="height:30px;"></div>` : ''}
+            ${data.logo ? `<div style="margin-bottom:15%;"><img src="${data.logo}" style="${this.getLogoStyle(data)}"></div>` : ''}
             <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
                 <p style="color:${style.textMuted};font-size:${style.subtitleSize};letter-spacing:0.3em;margin-bottom:5%;text-transform:uppercase;">${data.subtitle || 'Company Name'}</p>
                 <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:8%;font-weight:300;">${data.mainTitle || 'CATALOGUE'}</h1>
@@ -619,7 +638,7 @@ const PageTemplates = {
                 <div style="width:100%;height:100%;background:${style.bgMuted};display:flex;align-items:center;justify-content:center;">
                     <span style="font-size:${style.titleSize};opacity:0.1;">📷</span>
                 </div>`}
-                ${data.logo ? `<div style="position:absolute;top:5%;left:5%;"><img src="${data.logo}" style="height:25px;opacity:0.8;"></div>` : ''}
+                ${data.logo ? `<div style="position:absolute;top:5%;left:5%;"><img src="${data.logo}" style="${this.getLogoStyle(data, true)}opacity:0.8;"></div>` : ''}
                 ${data.overlayText ? `<div style="position:absolute;bottom:5%;left:5%;right:5%;">
                     <p style="color:#fff;font-size:${style.bodySize};text-shadow:0 2px 8px rgba(0,0,0,0.5);line-height:1.4;">${data.overlayText}</p>
                 </div>` : ''}
@@ -640,7 +659,7 @@ const PageTemplates = {
         const style = this.getStyleProps(data);
         return `
         <div style="width:100%;height:100%;background:${style.bgColor};padding:6%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-            ${data.logo ? `<div style="margin-bottom:4%;"><img src="${data.logo}" style="height:25px;"></div>` : ''}
+            ${data.logo ? `<div style="margin-bottom:4%;"><img src="${data.logo}" style="${this.getLogoStyle(data)}"></div>` : ''}
             <div style="flex:1;display:flex;gap:5%;">
                 <!-- Teks Kiri -->
                 <div style="flex:0.8;display:flex;flex-direction:column;justify-content:center;">
@@ -674,7 +693,7 @@ const PageTemplates = {
         return `
         <div style="width:100%;height:100%;background:${style.bgColor};padding:4%;display:flex;flex-direction:column;">
             <div style="margin-bottom:3%;">
-                ${data.logo ? `<div style="margin-bottom:2%;"><img src="${data.logo}" style="height:18px;"></div>` : ''}
+                ${data.logo ? `<div style="margin-bottom:2%;"><img src="${data.logo}" style="${this.getLogoStyle(data)}"></div>` : ''}
                 <h2 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:2%;">${data.header || 'Gallery'}</h2>
                 <div style="width:30px;height:2px;background:${style.accentAlt};"></div>
             </div>
@@ -706,7 +725,7 @@ const PageTemplates = {
             <!-- Kiri - Area Logo -->
             <div style="width:35%;height:100%;background:${style.bgDark};padding:8%;display:flex;flex-direction:column;justify-content:space-between;">
                 <div>
-                    ${data.logo ? `<img src="${data.logo}" style="height:40px;filter:brightness(0)invert(1);margin-bottom:15%;">` : `<div style="padding:15% 20%;background:rgba(255,255,255,0.1);border-radius:8px;margin-bottom:15%;"><span style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};">LOGO</span></div>`}
+                    ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data, true)}margin-bottom:15%;">` : `<div style="padding:15% 20%;background:rgba(255,255,255,0.1);border-radius:8px;margin-bottom:15%;"><span style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};">LOGO</span></div>`}
                     <div style="width:30px;height:1px;background:${style.accent};margin-bottom:10%;"></div>
                 </div>
                 <div>
@@ -736,7 +755,7 @@ const PageTemplates = {
         <div style="width:100%;height:100%;display:flex;background:${style.bgCard};">
             <!-- Kiri - Teks -->
             <div style="width:40%;height:100%;padding:8%;display:flex;flex-direction:column;justify-content:center;background:${style.bgColor};">
-                ${data.logo ? `<img src="${data.logo}" style="height:25px;margin-bottom:10%;">` : ''}
+                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:10%;">` : ''}
                 <h2 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:5%;line-height:1.2;">${data.title || 'LOREM IPSUM'}</h2>
                 <div style="width:30px;height:2px;background:${style.accent};margin-bottom:8%;"></div>
                 <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;flex:1;">${data.body || 'Deskripsi produk atau layanan Anda.'}</p>
@@ -762,7 +781,7 @@ const PageTemplates = {
             <div style="position:absolute;top:5%;right:5%;width:30px;height:30px;border-top:1px solid rgba(255,255,255,0.1);border-right:1px solid rgba(255,255,255,0.1);"></div>
             <div style="position:absolute;bottom:5%;left:5%;width:30px;height:30px;border-bottom:1px solid rgba(255,255,255,0.1);border-left:1px solid rgba(255,255,255,0.1);"></div>
 
-            ${data.logo ? `<img src="${data.logo}" style="height:30px;filter:brightness(0)invert(1);opacity:0.5;margin-bottom:5%;">` : ''}
+            ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data, true)}opacity:0.5;margin-bottom:5%;">` : ''}
 
             <p style="color:${style.accent};font-size:${style.subtitleSize};letter-spacing:0.3em;margin-bottom:3%;">${data.mainTitle || 'CATALOGUE'}</p>
             <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:#fff;margin-bottom:8%;">${data.subtitle || 'Exhibition'}</h1>
@@ -796,7 +815,7 @@ const PageTemplates = {
         <div style="width:100%;height:100%;background:${style.bgColor};display:flex;flex-direction:column;padding:5%;">
             <!-- Header -->
             <div style="margin-bottom:3%;">
-                ${data.logo ? `<img src="${data.logo}" style="height:20px;margin-bottom:3%;">` : ''}
+                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:3%;">` : ''}
                 <h2 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:2%;">${data.title || 'Judul'}</h2>
                 <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.6;">${data.description || 'Deskripsi singkat'}</p>
                 <div style="width:25px;height:2px;background:${style.accentAlt};margin-top:3%;"></div>
