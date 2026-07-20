@@ -1,9 +1,17 @@
 {
   "buildCommand": "",
-  "outputDirectory": "/",
+  "outputDirectory": ".",
   "installCommand": "",
   "framework": null,
   "rewrites": [
     { "source": "/(.*)", "destination": "/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache" }
+      ]
+    }
   ]
 }
