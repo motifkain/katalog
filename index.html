@@ -172,30 +172,6 @@
             aspect-ratio: 2 / 3;
         }
 
-        .welcome-btn {
-            margin-top: 60px;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.875rem 2rem;
-            background: transparent;
-            color: var(--teal);
-            border: none;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .welcome-btn:hover {
-            color: var(--teal-light);
-        }
-        .welcome-btn::after {
-            content: "→";
-            transition: transform 0.3s;
-        }
-        .welcome-btn:hover::after {
-            transform: translateX(4px);
-        }
 
         /* ===== MAIN APP (Hidden initially) ===== */
         .app-screen {
@@ -913,12 +889,6 @@
                 </div>
             </div>
             <div class="page-indicator" id="pageIndicator"></div>
-            <button class="welcome-btn" onclick="openKatalog()">
-                Lihat Katalog
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-                </svg>
-            </button>
         </div>
     </div>
 
