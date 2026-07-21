@@ -1285,7 +1285,11 @@
                 const res = await fetch(CONFIG.pocketbaseUrl + "/api/collections/" + CONFIG.pocketbaseCollection + "/records?per-page=200&sort=-created");
                 if (res.ok) {
                     const data = await res.json();
-                    allProducts = data.items || [];
+                    allProducts = (data.items || []).map(item => ({
+                        ...item,
+                        image: item.image ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${item.id}/${item.image}` : '',
+                        images: (item.images || []).map(img => `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${item.id}/${img}`)
+                    }));
                 }
             } catch (e) {
                 console.error("Error loading products:", e);
