@@ -799,6 +799,7 @@
                     titleSizePx: item.titleSizePx || 36,
                     bodySizePx: item.bodySizePx || 14,
                     logoSizePx: item.logoSizePx || 40,
+                    logoPosition: item.logoPosition || 'top',
                     textColor: item.textColor || '',
                     bgColor: item.bgColor || '',
                     // Classification fields
@@ -883,6 +884,7 @@
                 formData.append('titleSizePx', page.titleSizePx || 36);
                 formData.append('bodySizePx', page.bodySizePx || 14);
                 formData.append('logoSizePx', page.logoSizePx || 40);
+                formData.append('logoPosition', page.logoPosition || 'top');
                 formData.append('textColor', page.textColor || '');
                 formData.append('bgColor', page.bgColor || '');
 
