@@ -1247,21 +1247,21 @@
                 nextPageContent.innerHTML = `<div class="catalog-page">${PageTemplates.renderPage(pageContentData, targetIndex + 1)}</div>`;
             }
 
-            // Set initial transform states for BOTH pages
+            // Animation settings
             const animDuration = 600;
+            const revealDelay = animDuration * 0.3; // Start revealing page 2 at 30% of animation
 
             if (direction > 0) {
-                // FORWARD FLIP: Both pages rotate together
-                // Current page: 0° → -90° (flips away to the left)
-                // Next page: 90° → 0° (revealed from underneath)
+                // FORWARD FLIP: Current page flips away, next page revealed
 
                 // Set initial states
                 currentPage.style.transition = 'none';
                 currentPage.style.transform = 'rotateY(0deg)';
 
+                // Next page starts completely hidden (edge-on at 90deg)
                 nextPageEl.style.transition = 'none';
                 nextPageEl.style.transform = 'rotateY(90deg)';
-                nextPageEl.style.opacity = '1';
+                nextPageEl.style.opacity = '0';
 
                 // Force reflow
                 currentPage.offsetHeight;
@@ -1269,49 +1269,63 @@
 
                 // Start animation
                 requestAnimationFrame(() => {
+                    // Current page flips away
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transform = 'rotateY(-90deg)';
 
-                    nextPageEl.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    nextPageEl.style.transform = 'rotateY(0deg)';
+                    // Next page stays hidden for first 30%, then snaps to visible
+                    setTimeout(() => {
+                        nextPageEl.style.transition = 'opacity 0.01s'; // Instant opacity change
+                        nextPageEl.style.opacity = '1';
+                        nextPageEl.style.transform = 'rotateY(90deg)';
+
+                        // Then rotate to reveal
+                        requestAnimationFrame(() => {
+                            nextPageEl.style.transition = `transform ${animDuration * 0.7}ms ease-out`;
+                            nextPageEl.style.transform = 'rotateY(0deg)';
+                        });
+                    }, revealDelay);
                 });
 
             } else {
-                // BACKWARD FLIP: For backward, we swap the roles
-                // The "next page" element will show the PREVIOUS content
-                // We animate it to reveal from underneath
+                // BACKWARD FLIP: Same logic, reverse direction
 
-                // For backward, we put the previous page content directly in nextPageContent
-                // and swap the z-index roles
-                const currentContent = currentPage.querySelector('.page-content');
+                // For backward, put the previous page content in nextPageEl
+                nextPageEl.querySelector('.page-content').innerHTML = nextPageContent.innerHTML;
+                nextPageContent.innerHTML = '';
 
-                // Set initial states - current page is on top, ready to flip away
+                // Set initial states
                 currentPage.style.transition = 'none';
                 currentPage.style.transform = 'rotateY(0deg)';
                 currentPage.style.zIndex = '2';
 
-                // Next page element shows previous content, starts from -90deg
+                // Next page starts hidden (edge-on at -90deg)
                 nextPageEl.style.transition = 'none';
                 nextPageEl.style.transform = 'rotateY(-90deg)';
-                nextPageEl.style.opacity = '1';
+                nextPageEl.style.opacity = '0';
                 nextPageEl.style.zIndex = '1';
-
-                // Put the previous page content in nextPageEl
-                nextPageEl.querySelector('.page-content').innerHTML = nextPageContent.innerHTML;
-                nextPageContent.innerHTML = '';
 
                 // Force reflow
                 currentPage.offsetHeight;
                 nextPageEl.offsetHeight;
 
-                // Start animation - currentPage flips right (0°→90°), nextPageEl flips right too (-90°→0°)
-                // This creates the illusion of the previous page being revealed
+                // Start animation
                 requestAnimationFrame(() => {
+                    // Current page flips away to the right
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transform = 'rotateY(90deg)';
 
-                    nextPageEl.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    nextPageEl.style.transform = 'rotateY(0deg)';
+                    // Next page stays hidden for first 30%, then reveals
+                    setTimeout(() => {
+                        nextPageEl.style.transition = 'opacity 0.01s';
+                        nextPageEl.style.opacity = '1';
+                        nextPageEl.style.transform = 'rotateY(-90deg)';
+
+                        requestAnimationFrame(() => {
+                            nextPageEl.style.transition = `transform ${animDuration * 0.7}ms ease-out`;
+                            nextPageEl.style.transform = 'rotateY(0deg)';
+                        });
+                    }, revealDelay);
                 });
             }
 
@@ -1322,12 +1336,10 @@
 
                 // Swap the pages content
                 if (direction > 0) {
-                    // Forward: move nextPageContent to currentPage
                     const contentDiv = currentPage.querySelector('.page-content');
                     contentDiv.innerHTML = nextPageContent.innerHTML;
                     nextPageContent.innerHTML = '';
                 } else {
-                    // Backward: move nextPageEl content to currentPage
                     const contentDiv = currentPage.querySelector('.page-content');
                     contentDiv.innerHTML = nextPageEl.querySelector('.page-content').innerHTML;
                     nextPageEl.querySelector('.page-content').innerHTML = '';
@@ -1343,7 +1355,7 @@
                 nextPageEl.style.opacity = '0';
                 nextPageEl.style.zIndex = '1';
 
-                // Force reflow to apply reset
+                // Force reflow
                 currentPage.offsetHeight;
                 nextPageEl.offsetHeight;
 
@@ -1351,7 +1363,7 @@
                 updatePageCounter();
                 updateNavButtons();
                 isFlipping = false;
-            }, animDuration);
+            }, animDuration + 50); // Small buffer
         }
 
         function updatePageCounter() {
