@@ -139,20 +139,60 @@
 
         /* Navigation Hint */
         .page-hint {
-            position: absolute;
-            bottom: -40px;
-            left: 50%;
-            transform: translateX(-50%);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
             color: #999;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
         }
 
         .page-hint svg {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Page counter */
+        .page-counter {
+            font-size: 0.7rem;
+            color: #999;
+        }
+
+        /* Arrow navigation buttons */
+        .book-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .book-nav-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .book-nav-btn:hover {
+            background: var(--teal);
+            border-color: var(--teal);
+            color: #fff;
+        }
+
+        .book-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .book-nav-btn:disabled:hover {
+            background: #fff;
+            border-color: #ddd;
+            color: #666;
         }
 
         /* Swipe area indicators */
@@ -853,8 +893,21 @@
                 <div class="swipe-left-area" id="swipeLeft"></div>
                 <div class="swipe-right-area" id="swipeRight"></div>
                 <div class="page-hint">
-                    <span>Geser untuk membalik halaman</span>
+                    <span>Geser atau klik untuk membalik</span>
                 </div>
+            </div>
+            <div class="page-counter" id="pageCounter">1 / 1</div>
+            <div class="book-nav">
+                <button class="book-nav-btn" id="prevBtn" onclick="flipPage(-1)" title="Halaman sebelumnya">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                    </svg>
+                </button>
+                <button class="book-nav-btn" id="nextBtn" onclick="flipPage(1)" title="Halaman berikutnya">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                    </svg>
+                </button>
             </div>
             <div class="page-indicator" id="pageIndicator"></div>
         </div>
@@ -1016,7 +1069,7 @@
 
             // Render first page
             renderBookPage(0);
-            renderPageIndicator();
+            initBookViewer();
         }
 
         function renderBookPage(index) {
@@ -1118,6 +1171,17 @@
                 if (e.key === 'ArrowRight') flipPage(1);
                 if (e.key === 'ArrowLeft') flipPage(-1);
             });
+
+            // Click on image to zoom (coming soon)
+            const bookPage = document.getElementById('bookPage');
+            if (bookPage) {
+                bookPage.addEventListener('click', (e) => {
+                    // Check if clicked on an image
+                    if (e.target.tagName === 'IMG') {
+                        alert('Fitur zoom gambar akan segera hadir! 📸');
+                    }
+                });
+            }
         }
 
         function flipPage(direction) {
@@ -1136,11 +1200,9 @@
 
             isFlipping = true;
 
-            // Prepare next page content BEFORE animation
-            let targetIndex = currentPageIndex + 1;
-            if (direction < 0) targetIndex = currentPageIndex - 1;
+            // Prepare next/prev page content BEFORE animation
+            let targetIndex = direction > 0 ? currentPageIndex + 1 : currentPageIndex - 1;
 
-            // Render content for the next page
             const pageData = catalogPages[targetIndex];
             if (pageData) {
                 const pageContentData = {
@@ -1159,19 +1221,55 @@
                 currentPageIndex--;
             }
 
-            // Apply flip animation
-            currentPage.classList.add(direction > 0 ? 'flipping-next' : 'flipping-prev');
+            // Apply flip animation - NEXT page flips to reveal new page
+            if (direction > 0) {
+                // Forward: current page flips away to left, next page revealed from underneath
+                nextPageEl.classList.add('flipping-next');
+                currentPage.classList.add('flipping-next');
+            } else {
+                // Backward: next page comes from right
+                nextPageEl.classList.add('flipping-prev');
+                currentPage.classList.add('flipping-prev');
+            }
 
-            // Swap pages after animation
+            // Update UI after animation
             setTimeout(() => {
-                // Move next page to current
+                // Move content
                 currentPage.innerHTML = nextPageContent.innerHTML;
                 nextPageContent.innerHTML = '';
+
+                // Reset classes
+                nextPageEl.classList.remove('flipping-next', 'flipping-prev');
                 currentPage.classList.remove('flipping-next', 'flipping-prev');
 
-                renderPageIndicator();
+                // Update indicator
+                updatePageCounter();
+                updateNavButtons();
                 isFlipping = false;
             }, 600);
+        }
+
+        function updatePageCounter() {
+            const counter = document.getElementById('pageCounter');
+            if (counter) {
+                const total = catalogPages.length || 1;
+                counter.textContent = `${currentPageIndex + 1} / ${total}`;
+            }
+        }
+
+        function updateNavButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const total = catalogPages.length || 1;
+
+            if (prevBtn) prevBtn.disabled = currentPageIndex <= 0;
+            if (nextBtn) nextBtn.disabled = currentPageIndex >= total - 1;
+        }
+
+        // Initialize counter on page load
+        function initBookViewer() {
+            updatePageCounter();
+            updateNavButtons();
         }
 
         function openKatalog() {
