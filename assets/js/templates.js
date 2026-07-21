@@ -428,9 +428,9 @@ const PageTemplates = {
         return `
         <div style="width:100%;height:100%;background:${style.bgColor};display:flex;flex-direction:column;">
             <!-- Image section (60%) -->
-            <div style="flex:0 0 60%;position:relative;overflow:hidden;">
-                ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:cover;">` : `
-                <div style="width:100%;height:100%;background:${style.bgDark || '#2a2a2a'};display:flex;align-items:center;justify-content:center;">
+            <div style="flex:0 0 60%;position:relative;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center;">
+                ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:contain;">` : `
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
                     <span style="font-size:3rem;opacity:0.2;">📷</span>
                 </div>`}
                 ${data.logo ? `<div style="position:absolute;top:5%;right:5%;"><img src="${data.logo}" style="${this.getLogoStyle(data)}opacity:0.9;"></div>` : ''}
@@ -464,10 +464,10 @@ const PageTemplates = {
                 </div>
             </div>
 
-            <!-- Image section (60%) -->
-            <div style="flex:0 0 60%;position:relative;overflow:hidden;">
-                ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:cover;">` : `
-                <div style="width:100%;height:100%;background:${style.bgDark || '#2a2a2a'};display:flex;align-items:center;justify-content:center;">
+            // Image section (60%) -->
+            <div style="flex:0 0 60%;position:relative;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center;">
+                ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:contain;">` : `
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
                     <span style="font-size:3rem;opacity:0.2;">📷</span>
                 </div>`}
             </div>
@@ -510,8 +510,8 @@ const PageTemplates = {
             <!-- Grid 2x2 - LEBIH BESAR -->
             <div style="flex:1;display:grid;grid-template-columns:repeat(2,1fr);gap:5%;overflow:hidden;">
                 ${imgs.map((img, i) => `
-                    <div style="background:${style.bgMuted};border-radius:6px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
-                        ${img ? `<img src="${img}" class="catalog-image" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:${style.bodySize};opacity:0.12;">📷</span>`}
+                    <div style="background:#f0f0f0;border-radius:6px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
+                        ${img ? `<img src="${img}" class="catalog-image" style="width:100%;height:100%;object-fit:contain;">` : `<span style="font-size:${style.bodySize};opacity:0.12;">📷</span>`}
                     </div>
                 `).join('')}
             </div>
@@ -537,8 +537,8 @@ const PageTemplates = {
             </div>
             <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:4%;overflow:hidden;">
                 ${imgs.map((img, i) => `
-                    <div style="background:${style.bgMuted};border-radius:6px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
-                        ${img ? `<img src="${img}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:${style.bodySize};opacity:0.12;">📷</span>`}
+                    <div style="background:#f0f0f0;border-radius:6px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
+                        ${img ? `<img src="${img}" style="width:100%;height:100%;object-fit:contain;">` : `<span style="font-size:${style.bodySize};opacity:0.12;">📷</span>`}
                     </div>
                 `).join('')}
             </div>
@@ -634,9 +634,9 @@ const PageTemplates = {
         return `
         <div style="width:100%;height:100%;display:flex;background:${style.bgCard};">
             <!-- Gambar -->
-            <div style="width:50%;height:100%;position:relative;overflow:hidden;">
-                ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:cover;">` : `
-                <div style="width:100%;height:100%;background:${style.bgMuted};display:flex;align-items:center;justify-content:center;">
+            <div style="width:50%;height:100%;position:relative;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center;">
+                ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:contain;">` : `
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
                     <span style="font-size:${style.titleSize};opacity:0.1;">📷</span>
                 </div>`}
                 ${data.logo ? `<div style="position:absolute;top:5%;left:5%;"><img src="${data.logo}" style="${this.getLogoStyle(data)}opacity:0.9;"></div>` : ''}
@@ -763,9 +763,9 @@ const PageTemplates = {
                 <p style="color:${style.accentAlt};font-size:${style.bodySize};margin-top:auto;padding-top:5%;border-top:1px solid ${style.bgMuted};">${data.footerText || 'www.company.com'}</p>
             </div>
             <!-- Kanan - Gambar -->
-            <div style="width:60%;height:100%;position:relative;overflow:hidden;">
-                ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:cover;">` : `
-                <div style="width:100%;height:100%;background:${style.bgMuted};display:flex;align-items:center;justify-content:center;">
+            <div style="width:60%;height:100%;position:relative;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center;">
+                ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:contain;">` : `
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
                     <span style="font-size:${style.titleSize};opacity:0.08;">📷</span>
                 </div>`}
             </div>
@@ -824,11 +824,11 @@ const PageTemplates = {
 
             <!-- Dual Images -->
             <div style="flex:1;display:flex;gap:4%;overflow:hidden;">
-                <div style="flex:1;background:${style.bgMuted};border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
-                    ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:${style.titleSize};opacity:0.1;">📷</span>`}
+                <div style="flex:1;background:#f0f0f0;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                    ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:contain;">` : `<span style="font-size:${style.titleSize};opacity:0.1;">📷</span>`}
                 </div>
-                <div style="flex:1;background:${style.bgMuted};border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
-                    ${data.images && data.images[0] ? `<img src="${data.images[0]}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:${style.titleSize};opacity:0.1;">📷</span>`}
+                <div style="flex:1;background:#f0f0f0;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                    ${data.images && data.images[0] ? `<img src="${data.images[0]}" style="width:100%;height:100%;object-fit:contain;">` : `<span style="font-size:${style.titleSize};opacity:0.1;">📷</span>`}
                 </div>
             </div>
 
