@@ -1238,9 +1238,16 @@
 
             // After animation completes
             setTimeout(() => {
-                // Move content from nextPageEl to currentPage
-                currentPage.innerHTML = nextPageContent.innerHTML;
-                nextPageContent.innerHTML = '';
+                if (direction > 0) {
+                    // Forward: nextPageEl already has content, just clean up
+                    // currentPage will use nextPageEl's content
+                    currentPage.innerHTML = nextPageContent.innerHTML;
+                    nextPageContent.innerHTML = '';
+                } else {
+                    // Backward: move content from nextPageContent to currentPage
+                    currentPage.innerHTML = nextPageContent.innerHTML;
+                    nextPageContent.innerHTML = '';
+                }
 
                 // Reset animation classes
                 nextPageEl.classList.remove('flipping-next', 'flipping-prev');
