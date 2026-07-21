@@ -1249,48 +1249,38 @@
 
             // Animation settings
             const animDuration = 600;
-            const revealDelay = animDuration * 0.3; // Start revealing page 2 at 30% of animation
 
             if (direction > 0) {
-                // FORWARD FLIP: Current page flips away, next page revealed
+                // FORWARD FLIP: Both pages rotate together smoothly
+                // Current page: 0° → -90° (flips away)
+                // Next page: 90° → 0° (revealed underneath)
 
                 // Set initial states
                 currentPage.style.transition = 'none';
                 currentPage.style.transform = 'rotateY(0deg)';
 
-                // Next page starts completely hidden (edge-on at 90deg)
                 nextPageEl.style.transition = 'none';
                 nextPageEl.style.transform = 'rotateY(90deg)';
-                nextPageEl.style.opacity = '0';
 
                 // Force reflow
                 currentPage.offsetHeight;
                 nextPageEl.offsetHeight;
 
-                // Start animation
+                // Start animation - both pages move together
                 requestAnimationFrame(() => {
-                    // Current page flips away
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transform = 'rotateY(-90deg)';
 
-                    // Next page stays hidden for first 30%, then snaps to visible
-                    setTimeout(() => {
-                        nextPageEl.style.transition = 'opacity 0.01s'; // Instant opacity change
-                        nextPageEl.style.opacity = '1';
-                        nextPageEl.style.transform = 'rotateY(90deg)';
-
-                        // Then rotate to reveal
-                        requestAnimationFrame(() => {
-                            nextPageEl.style.transition = `transform ${animDuration * 0.7}ms ease-out`;
-                            nextPageEl.style.transform = 'rotateY(0deg)';
-                        });
-                    }, revealDelay);
+                    nextPageEl.style.transition = `transform ${animDuration}ms ease-in-out`;
+                    nextPageEl.style.transform = 'rotateY(0deg)';
                 });
 
             } else {
-                // BACKWARD FLIP: Same logic, reverse direction
+                // BACKWARD FLIP: Both pages rotate together in reverse
+                // Current page: 0° → 90° (flips away to right)
+                // Next page: -90° → 0° (revealed underneath)
 
-                // For backward, put the previous page content in nextPageEl
+                // Put the previous page content in nextPageEl
                 nextPageEl.querySelector('.page-content').innerHTML = nextPageContent.innerHTML;
                 nextPageContent.innerHTML = '';
 
@@ -1299,10 +1289,8 @@
                 currentPage.style.transform = 'rotateY(0deg)';
                 currentPage.style.zIndex = '2';
 
-                // Next page starts hidden (edge-on at -90deg)
                 nextPageEl.style.transition = 'none';
                 nextPageEl.style.transform = 'rotateY(-90deg)';
-                nextPageEl.style.opacity = '0';
                 nextPageEl.style.zIndex = '1';
 
                 // Force reflow
@@ -1311,21 +1299,11 @@
 
                 // Start animation
                 requestAnimationFrame(() => {
-                    // Current page flips away to the right
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transform = 'rotateY(90deg)';
 
-                    // Next page stays hidden for first 30%, then reveals
-                    setTimeout(() => {
-                        nextPageEl.style.transition = 'opacity 0.01s';
-                        nextPageEl.style.opacity = '1';
-                        nextPageEl.style.transform = 'rotateY(-90deg)';
-
-                        requestAnimationFrame(() => {
-                            nextPageEl.style.transition = `transform ${animDuration * 0.7}ms ease-out`;
-                            nextPageEl.style.transform = 'rotateY(0deg)';
-                        });
-                    }, revealDelay);
+                    nextPageEl.style.transition = `transform ${animDuration}ms ease-in-out`;
+                    nextPageEl.style.transform = 'rotateY(0deg)';
                 });
             }
 
@@ -1345,14 +1323,13 @@
                     nextPageEl.querySelector('.page-content').innerHTML = '';
                 }
 
-                // Reset all transforms to initial state
+                // Reset all transforms
                 currentPage.style.transition = 'none';
                 currentPage.style.transform = 'rotateY(0deg)';
                 currentPage.style.zIndex = '2';
 
                 nextPageEl.style.transition = 'none';
                 nextPageEl.style.transform = 'rotateY(90deg)';
-                nextPageEl.style.opacity = '0';
                 nextPageEl.style.zIndex = '1';
 
                 // Force reflow
@@ -1363,7 +1340,7 @@
                 updatePageCounter();
                 updateNavButtons();
                 isFlipping = false;
-            }, animDuration + 50); // Small buffer
+            }, animDuration);
         }
 
         function updatePageCounter() {
