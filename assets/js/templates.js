@@ -345,6 +345,9 @@ const PageTemplates = {
         const logoStyle = logoPos === 'center' ? 'text-align:center;margin-bottom:auto;' :
                           logoPos === 'bottom' ? 'text-align:center;margin-top:auto;order:2;' :
                           'text-align:center;margin-bottom:auto;';
+        const logoHtml = data.logo
+            ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:3%;">`
+            : `<div style="width:60px;height:60px;border:2px dashed ${style.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 3%;opacity:0.4;"><span style="color:${style.accent};font-size:1.5rem;">📷</span></div>`;
         return `
         <div style="width:100%;height:100%;background:linear-gradient(180deg,${style.bgDark} 0%,${style.primary} 100%);padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
             <!-- Decorative corner -->
@@ -353,13 +356,13 @@ const PageTemplates = {
 
             <!-- Logo area - position based on setting -->
             <div style="${logoStyle}">
-                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:3%;">` : ''}
+                ${logoHtml}
             </div>
 
             <!-- Main content -->
             <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
-                <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:#fff;margin-bottom:2%;letter-spacing:0.05em;">${data.mainTitle || 'MOTIFKAIN'}</h1>
-                <p style="color:${style.accent};font-size:${style.bodySize};letter-spacing:0.3em;margin-bottom:4%;">${data.subtitle || 'KOLEKSI DESAIN'}</p>
+                <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:#fff;margin-bottom:2%;letter-spacing:0.05em;">${data.mainTitle || ''}</h1>
+                <p style="color:${style.accent};font-size:${style.bodySize};letter-spacing:0.3em;margin-bottom:4%;">${data.subtitle || ''}</p>
                 <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${style.accent},transparent);margin:0 auto;"></div>
                 ${data.description ? `<p style="color:rgba(255,255,255,0.5);font-size:${style.bodySize};margin-top:4%;line-height:1.6;">${data.description}</p>` : ''}
             </div>
@@ -375,6 +378,9 @@ const PageTemplates = {
         const logoStyle = logoPos === 'center' ? 'text-align:center;margin:0 auto;' :
                           logoPos === 'bottom' ? 'text-align:center;order:2;' :
                           'text-align:center;';
+        const logoHtml = data.logo
+            ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:3%;">`
+            : `<div style="width:60px;height:60px;border:2px dashed ${style.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 3%;opacity:0.4;"><span style="color:${style.accentAlt};font-size:1.5rem;">📷</span></div>`;
         return `
         <div style="width:100%;height:100%;background:${style.bgColor};padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
             <!-- Decorative -->
@@ -382,13 +388,13 @@ const PageTemplates = {
 
             <!-- Logo area -->
             <div style="${logoStyle}">
-                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:3%;">` : ''}
+                ${logoHtml}
             </div>
 
             <!-- Main content -->
             <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
-                <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:2%;">${data.mainTitle || 'MOTIFKAIN'}</h1>
-                <p style="color:${style.accentAlt};font-size:${style.bodySize};letter-spacing:0.3em;margin-bottom:4%;">${data.subtitle || 'KOLEKSI DESAIN'}</p>
+                <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:2%;">${data.mainTitle || ''}</h1>
+                <p style="color:${style.accentAlt};font-size:${style.bodySize};letter-spacing:0.3em;margin-bottom:4%;">${data.subtitle || ''}</p>
                 <div style="width:50px;height:2px;background:${style.accent};margin:0 auto;"></div>
                 ${data.description ? `<p style="color:${style.textMuted};font-size:${style.bodySize};margin-top:4%;line-height:1.6;">${data.description}</p>` : ''}
             </div>
@@ -553,6 +559,9 @@ const PageTemplates = {
     renderCoverSplit(data, num) {
         const style = this.getStyleProps(data);
         const logoPos = data.logoPosition || 'left';
+        const logoHtml = data.logo
+            ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:15%;margin-top:auto;">`
+            : `<div style="width:60px;height:60px;border:2px dashed rgba(255,255,255,0.3);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:15%;margin-top:auto;"><span style="color:rgba(255,255,255,0.4);font-size:1.5rem;">📷</span></div>`;
         if (logoPos === 'right') {
             return `
             <div style="width:100%;height:100%;display:flex;">
@@ -561,18 +570,18 @@ const PageTemplates = {
                     <div style="position:absolute;top:5%;right:5%;width:30px;height:30px;border-top:2px solid ${style.accentAlt};border-right:2px solid ${style.accentAlt};opacity:0.3;"></div>
                     ${data.image ? `<img src="${data.image}" style="position:absolute;top:0;right:0;width:60%;height:100%;object-fit:cover;opacity:0.1;">` : ''}
                     <div style="width:35px;height:1px;background:${style.bgMuted};margin-bottom:8%;"></div>
-                    <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:3%;line-height:1.1;">${data.mainTitle || 'CATALOGUE'}</h1>
-                    <p style="color:${style.accentAlt};font-size:${style.bodySize};letter-spacing:0.2em;margin-bottom:5%;">${data.subtitle || 'COMPANY PROFILE'}</p>
+                    <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:3%;line-height:1.1;">${data.mainTitle || ''}</h1>
+                    <p style="color:${style.accentAlt};font-size:${style.bodySize};letter-spacing:0.2em;margin-bottom:5%;">${data.subtitle || ''}</p>
                     <div style="width:40px;height:2px;background:${style.textColor};margin-bottom:8%;"></div>
-                    <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;">${data.description || 'Koleksi produk eksklusif kami'}</p>
+                    <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;">${data.description || ''}</p>
                 </div>
                 <!-- Kanan - Gelap -->
                 <div style="width:40%;height:100%;background:${style.bgDark};padding:6%;display:flex;flex-direction:column;position:relative;">
                     <div style="position:absolute;top:5%;right:5%;width:25px;height:25px;border-top:1px solid rgba(255,255,255,0.3);border-right:1px solid rgba(255,255,255,0.3);"></div>
-                    ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:15%;margin-top:auto;">` : `<span style="color:rgba(255,255,255,0.5);font-size:${style.bodySize};margin-bottom:15%;margin-top:auto;">LOGO</span>`}
+                    ${logoHtml}
                     <div style="width:25px;height:1px;background:${style.accent};margin-bottom:10%;"></div>
-                    <p style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};line-height:1.8;">${data.header || 'LOREM IPSUM'}</p>
-                    <p style="color:rgba(255,255,255,0.6);font-size:${style.bodySize};margin-top:5%;line-height:1.6;">${data.body || 'Deskripsi singkat tentang koleksi Anda.'}</p>
+                    <p style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};line-height:1.8;">${data.header || ''}</p>
+                    <p style="color:rgba(255,255,255,0.6);font-size:${style.bodySize};margin-top:5%;line-height:1.6;">${data.body || ''}</p>
                     <div style="position:absolute;bottom:5%;left:5%;width:25px;height:25px;border-bottom:1px solid rgba(255,255,255,0.3);border-left:1px solid rgba(255,255,255,0.3);"></div>
                 </div>
             </div>`;
@@ -583,10 +592,10 @@ const PageTemplates = {
             <!-- Kiri - Gelap -->
             <div style="width:40%;height:100%;background:${style.bgDark};padding:6%;display:flex;flex-direction:column;position:relative;">
                 <div style="position:absolute;top:5%;left:5%;width:25px;height:25px;border-top:1px solid rgba(255,255,255,0.3);border-left:1px solid rgba(255,255,255,0.3);"></div>
-                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:15%;margin-top:auto;">` : `<span style="color:rgba(255,255,255,0.5);font-size:${style.bodySize};margin-bottom:15%;margin-top:auto;">LOGO</span>`}
+                ${logoHtml}
                 <div style="width:25px;height:1px;background:${style.accent};margin-bottom:10%;"></div>
-                <p style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};line-height:1.8;">${data.header || 'LOREM IPSUM'}</p>
-                <p style="color:rgba(255,255,255,0.6);font-size:${style.bodySize};margin-top:5%;line-height:1.6;">${data.body || 'Deskripsi singkat tentang koleksi Anda.'}</p>
+                <p style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};line-height:1.8;">${data.header || ''}</p>
+                <p style="color:rgba(255,255,255,0.6);font-size:${style.bodySize};margin-top:5%;line-height:1.6;">${data.body || ''}</p>
                 <div style="position:absolute;bottom:5%;right:5%;width:25px;height:25px;border-bottom:1px solid rgba(255,255,255,0.3);border-right:1px solid rgba(255,255,255,0.3);"></div>
             </div>
             <!-- Kanan - Terang -->
@@ -595,10 +604,10 @@ const PageTemplates = {
                 ${data.image ? `<img src="${data.image}" style="position:absolute;top:0;right:0;width:60%;height:100%;object-fit:cover;opacity:0.1;">` : `
                 <div style="position:absolute;top:15%;right:10%;font-size:${style.titleSize};opacity:0.05;color:${style.textColor};">📷</div>`}
                 <div style="width:35px;height:1px;background:${style.bgMuted};margin-bottom:8%;"></div>
-                <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:3%;line-height:1.1;">${data.mainTitle || 'CATALOGUE'}</h1>
-                <p style="color:${style.accentAlt};font-size:${style.bodySize};letter-spacing:0.2em;margin-bottom:5%;">${data.subtitle || 'COMPANY PROFILE'}</p>
+                <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:3%;line-height:1.1;">${data.mainTitle || ''}</h1>
+                <p style="color:${style.accentAlt};font-size:${style.bodySize};letter-spacing:0.2em;margin-bottom:5%;">${data.subtitle || ''}</p>
                 <div style="width:40px;height:2px;background:${style.textColor};margin-bottom:8%;"></div>
-                <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;">${data.description || 'Koleksi produk eksklusif kami'}</p>
+                <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;">${data.description || ''}</p>
             </div>
         </div>`;
     },
@@ -609,24 +618,27 @@ const PageTemplates = {
         const largeNum = parseInt(data.titleSizePx || 36) + 20 + 'px';
         const logoPos = data.logoPosition || 'top';
         const logoStyle = logoPos === 'bottom' ? 'margin-top:auto;' : 'margin-bottom:auto;';
+        const logoHtml = data.logo
+            ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}opacity:0.9;">`
+            : `<div style="width:60px;height:60px;border:2px dashed ${style.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;opacity:0.4;"><span style="color:${style.accent};font-size:1.5rem;">📷</span></div>`;
         return `
         <div style="width:100%;height:100%;background:${style.bgDark};padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
             <!-- Garis diagonal dekoratif -->
             <div style="position:absolute;top:0;right:0;width:40%;height:100%;background:linear-gradient(135deg,transparent 49%,rgba(255,255,255,0.03) 50%,transparent 51%);"></div>
             <div style="${logoStyle}">
-                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}opacity:0.9;">` : ''}
+                ${logoHtml}
             </div>
             <div style="display:flex;align-items:flex-start;gap:5%;flex:1;">
                 <div style="width:30%;display:flex;flex-direction:column;justify-content:center;">
-                    <h2 style="font-family:'${style.fontFamily}',serif;font-size:${largeNum};color:#fff;font-weight:700;line-height:1;margin-bottom:5%;">${data.header || '01'}</h2>
+                    <h2 style="font-family:'${style.fontFamily}',serif;font-size:${largeNum};color:#fff;font-weight:700;line-height:1;margin-bottom:5%;">${data.header || ''}</h2>
                     <div style="width:40px;height:1px;background:${style.accent};margin-bottom:10%;"></div>
-                    <p style="color:rgba(255,255,255,0.5);font-size:${style.bodySize};line-height:1.8;">${data.body || 'Deskripsi koleksi produk'}</p>
+                    <p style="color:rgba(255,255,255,0.5);font-size:${style.bodySize};line-height:1.8;">${data.body || ''}</p>
                 </div>
                 <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
-                    <p style="color:${style.accent};font-size:${style.subtitleSize};letter-spacing:0.3em;margin-bottom:3%;">${data.mainTitle || 'CATALOGUE'}</p>
-                    <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:#fff;margin-bottom:5%;">${data.subtitle || 'Exhibition'}</h1>
+                    <p style="color:${style.accent};font-size:${style.subtitleSize};letter-spacing:0.3em;margin-bottom:3%;">${data.mainTitle || ''}</p>
+                    <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:#fff;margin-bottom:5%;">${data.subtitle || ''}</h1>
                     <div style="width:30px;height:1px;background:${style.accent};margin-bottom:5%;"></div>
-                    <p style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};line-height:1.8;">${data.description || 'Koleksi produk kami'}</p>
+                    <p style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};line-height:1.8;">${data.description || ''}</p>
                 </div>
             </div>
             ${logoPos === 'bottom' ? '<div></div>' : ''}
@@ -641,6 +653,9 @@ const PageTemplates = {
         const logoStyle = logoPos === 'center' ? 'text-align:center;margin:0 auto;' :
                           logoPos === 'bottom' ? 'text-align:center;order:2;' :
                           'text-align:center;';
+        const logoHtml = data.logo
+            ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:3%;">`
+            : `<div style="width:60px;height:60px;border:2px dashed ${style.textMuted};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 3%;opacity:0.4;"><span style="color:${style.textMuted};font-size:1.5rem;">📷</span></div>`;
         return `
         <div style="width:100%;height:100%;background:${style.bgColor};padding:10%;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
             <!-- Elemen dekoratif pojok -->
@@ -648,13 +663,13 @@ const PageTemplates = {
             <div style="position:absolute;bottom:8%;left:8%;width:40px;height:40px;border-bottom:1px solid ${style.textMuted};border-left:1px solid ${style.textMuted};"></div>
             <div style="position:absolute;top:5%;left:5%;opacity:0.03;font-size:${bigQuote};color:${style.textColor};">"</div>
             <div style="${logoStyle}">
-                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:3%;">` : ''}
+                ${logoHtml}
             </div>
             <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
-                <p style="color:${style.textMuted};font-size:${style.subtitleSize};letter-spacing:0.3em;margin-bottom:5%;text-transform:uppercase;">${data.subtitle || 'Company Name'}</p>
-                <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:8%;font-weight:300;">${data.mainTitle || 'CATALOGUE'}</h1>
+                <p style="color:${style.textMuted};font-size:${style.subtitleSize};letter-spacing:0.3em;margin-bottom:5%;text-transform:uppercase;">${data.subtitle || ''}</p>
+                <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:8%;font-weight:300;">${data.mainTitle || ''}</h1>
                 <div style="width:50px;height:1px;background:${style.accentAlt};margin-bottom:8%;"></div>
-                <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;font-style:italic;">${data.body || 'Tagline atau slogan perusahaan'}</p>
+                <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;font-style:italic;">${data.body || ''}</p>
             </div>
         </div>`;
     },
@@ -758,21 +773,24 @@ const PageTemplates = {
                              logoPos === 'center' ? 'text-align:center;margin:auto;' :
                              logoPos === 'bottom' ? 'text-align:center;margin-top:8%;' :
                              'text-align:center;'; // left default
+        const logoHtml = data.logo
+            ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}">`
+            : `<div style="width:80px;height:80px;border:2px dashed ${style.textMuted};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.4;"><span style="color:${style.textMuted};font-size:2rem;">📷</span></div>`;
         return `
         <div style="width:100%;height:100%;display:flex;flex-direction:column;background:${style.bgColor};">
             <!-- Logo Area (adjustable position) -->
             <div style="padding:8%;${logoAreaStyle}">
-                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}">` : ''}
+                ${logoHtml}
             </div>
             <!-- Main Content -->
             <div style="flex:1;padding:0 8% 8%;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
                 ${data.image ? `<img src="${data.image}" style="position:absolute;top:0;right:0;width:100%;height:100%;object-fit:cover;opacity:0.08;">` : ''}
                 <div style="position:absolute;top:8%;right:8%;width:50px;height:50px;border-top:2px solid ${style.bgMuted};border-right:2px solid ${style.bgMuted};"></div>
                 <div style="width:40px;height:1px;background:${style.bgMuted};margin-bottom:10%;"></div>
-                <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:3%;line-height:1.1;">${data.mainTitle || 'CATALOGUE'}</h1>
-                <p style="color:${style.accentAlt};font-size:${style.subtitleSize};letter-spacing:0.25em;margin-bottom:8%;">${data.subtitle || 'COMPANY PROFILE'}</p>
+                <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:3%;line-height:1.1;">${data.mainTitle || ''}</h1>
+                <p style="color:${style.accentAlt};font-size:${style.subtitleSize};letter-spacing:0.25em;margin-bottom:8%;">${data.subtitle || ''}</p>
                 <div style="width:50px;height:2px;background:${style.textColor};margin-bottom:8%;"></div>
-                <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;">${data.description || 'Koleksi produk eksklusif'}</p>
+                <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;">${data.description || ''}</p>
                 ${data.header ? `<p style="color:${style.textMuted};font-size:${style.bodySize};margin-top:5%;opacity:0.7;">${data.header}</p>` : ''}
                 ${data.body ? `<p style="color:${style.textMuted};font-size:${style.bodySize};margin-top:3%;opacity:0.7;">${data.body}</p>` : ''}
             </div>
