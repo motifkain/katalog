@@ -41,10 +41,47 @@
             padding: 1rem;
             background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
         }
+        /* Welcome container */
         .welcome-container {
             display: flex;
             flex-direction: column;
             align-items: center;
+        }
+
+        /* Sticky notes above book */
+        .sticky-notes {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .sticky-note {
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+            padding: 0.5rem 0.75rem;
+            border-radius: 2px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #5D4037;
+            cursor: pointer;
+            transform: rotate(-2deg);
+            box-shadow:
+                2px 2px 5px rgba(0,0,0,0.15),
+                inset 0 0 0 1px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .sticky-note:nth-child(2) { transform: rotate(1deg); }
+        .sticky-note:nth-child(3) { transform: rotate(-1deg); }
+        .sticky-note:nth-child(4) { transform: rotate(2deg); }
+
+        .sticky-note:hover {
+            transform: rotate(0deg) scale(1.05);
+            box-shadow:
+                3px 3px 8px rgba(0,0,0,0.2),
+                inset 0 0 0 1px rgba(0,0,0,0.05);
         }
 
         /* Book Container */
@@ -216,53 +253,29 @@
             height: 10px;
         }
 
-        /* Page counter - clean style */
+        /* Page counter - PDF style */
         .page-counter {
-            font-size: 0.6rem;
-            color: #999;
+            font-size: 0.8rem;
+            color: #8B7355;
+            font-weight: 500;
+            background: rgba(255,255,255,0.9);
+            padding: 4px 12px;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
 
         /* Book nav container */
         .book-nav-container {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            margin-top: 0.5rem;
+            gap: 1rem;
+            margin-top: 1rem;
         }
 
-        /* Arrow navigation buttons - transparent */
+        /* Navigation arrows - PDF style, more visible */
         .book-nav {
             display: flex;
-            gap: 0.3rem;
-        }
-
-        .book-nav-btn {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: none;
-            background: transparent;
-            color: #bbb;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .book-nav-btn:hover {
-            background: rgba(0,139,139,0.1);
-            color: var(--teal);
-        }
-
-        .book-nav-btn:disabled {
-            opacity: 0.2;
-            cursor: not-allowed;
-        }
-
-        .book-nav-btn:disabled:hover {
-            background: transparent;
-            color: #bbb;
+            gap: 0.5rem;
         }
 
         /* Swipe area indicators */
@@ -947,6 +960,21 @@
     <!-- WELCOME SCREEN - BOOK STYLE -->
     <div class="welcome-screen" id="welcomeScreen">
         <div class="welcome-container">
+            <!-- Sticky notes for categories -->
+            <div class="sticky-notes">
+                <div class="sticky-note" onclick="openKatalog(); selectCategory('desain-motif-kain')">
+                    <span>Desain Motif Kain</span>
+                </div>
+                <div class="sticky-note" onclick="openKatalog(); selectCategory('printing-kain')">
+                    <span>Printing Kain</span>
+                </div>
+                <div class="sticky-note" onclick="openKatalog(); selectCategory('pakaian-jadi')">
+                    <span>Pakaian Jadi</span>
+                </div>
+                <div class="sticky-note" onclick="openKatalog(); selectCategory('asesoris')">
+                    <span>Asesoris</span>
+                </div>
+            </div>
             <div class="book-container" id="bookContainer">
                 <div class="book-shadow"></div>
                 <div class="book" id="book">
@@ -969,20 +997,15 @@
                 <div class="swipe-right-area" id="swipeRight"></div>
                 <div class="page-hint">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
-                    <span>捲いてめくる</span>
                 </div>
             </div>
             <div class="book-nav-container">
                 <div class="book-nav">
-                    <button class="book-nav-btn" id="prevBtn" onclick="flipPage(-1)" title="前のページ">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                        </svg>
+                    <button class="book-nav-btn" id="prevBtn" onclick="flipPage(-1)" title="Halaman Sebelumnya">
+                        ‹
                     </button>
-                    <button class="book-nav-btn" id="nextBtn" onclick="flipPage(1)" title="次のページ">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                        </svg>
+                    <button class="book-nav-btn" id="nextBtn" onclick="flipPage(1)" title="Halaman Berikutnya">
+                        ›
                     </button>
                 </div>
                 <div class="page-counter" id="pageCounter">1 / 1</div>
