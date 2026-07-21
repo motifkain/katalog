@@ -1238,12 +1238,18 @@
                 nextPageEl.classList.add('flipping-next');
                 currentPage.classList.add('flipping-next');
             } else {
-                // Backward: instant swap (3D flip doesn't work well for going back)
-                currentPage.innerHTML = nextPageContent.innerHTML;
-                nextPageContent.innerHTML = '';
-                updatePageCounter();
-                updateNavButtons();
-                isFlipping = false;
+                // Backward: current page fades out, previous page fades in
+                currentPage.style.transition = 'opacity 0.3s ease';
+                currentPage.style.opacity = '0';
+
+                setTimeout(() => {
+                    currentPage.innerHTML = nextPageContent.innerHTML;
+                    nextPageContent.innerHTML = '';
+                    currentPage.style.opacity = '1';
+                    updatePageCounter();
+                    updateNavButtons();
+                    isFlipping = false;
+                }, 300);
                 return;
             }
 
