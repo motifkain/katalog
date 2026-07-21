@@ -9,8 +9,8 @@
 window.MOTIFKAIN_CONFIG = {
     // URL PocketBase API - PRODUCTION
     // LOCAL: http://127.0.0.1:8090
-    // PRODUCTION: https://pocketbase-katalog-production.up.railway.app
-    pocketbaseUrl: 'https://pocketbase-katalog-production.up.railway.app',
+    // PRODUCTION: https://katalog-production-104e.up.railway.app
+    pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
 
     // Nama collection (default: catalog_pages)
     pocketbaseCollection: 'catalog_pages',
