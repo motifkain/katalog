@@ -785,32 +785,6 @@
             padding: 3rem 1rem;
             color: var(--text-light);
         }
-        /* WA Settings */
-        .settings-btn {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 5rem;
-            z-index: 100;
-        }
-        .settings-btn button {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: 2px solid rgba(93,64,55,0.2);
-            background: var(--white);
-            color: var(--brown-dark);
-            font-size: 1rem;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: all 0.3s;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-        }
-        .settings-btn button:hover {
-            opacity: 1;
-            background: var(--teal);
-            color: white;
-        }
-        .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -993,26 +967,10 @@
     </div>
 
     <!-- Settings Button -->
-    <div class="settings-btn">
-        <button onclick="openSettings()" title="Pengaturan">&#9881;</button>
-    </div>
 
     <!-- Admin Button -->
     <div class="admin-access">
         <a href="admin.html" class="admin-btn" title="Admin">&#128736;</a>
-    </div>
-
-    <!-- WA Settings Modal -->
-    <div class="modal-overlay" id="settingsModal">
-        <div class="modal-content">
-            <h3>&#9881; Pengaturan WhatsApp</h3>
-            <input type="text" id="waNumberInput" placeholder="Contoh: 6281234567890">
-            <p style="font-size: 0.75rem; color: #999; margin-bottom: 1rem;">
-                Masukkan nomor WhatsApp tanpa + (contoh: 6281234567890)
-            </p>
-            <button class="btn-save" onclick="saveWASettings()">Simpan</button>
-            <button class="btn-cancel" onclick="closeSettings()">Batal</button>
-        </div>
     </div>
 
     <script src="config.js"></script>
@@ -1049,7 +1007,6 @@
             setupCategoryTabs();
             await loadWelcomeData();
             await loadProducts();
-            setupSettingsModal();
             setupBookNavigation();
         });
 
@@ -1549,41 +1506,8 @@
             if (e.target === this) closeDetail();
         });
 
-        // ===== SETTINGS =====
-        function setupSettingsModal() {
-            document.getElementById("settingsModal").addEventListener("click", function(e) {
-                if (e.target === this) closeSettings();
-            });
-        }
-
-        function openSettings() {
-            document.getElementById("waNumberInput").value = waNumber;
-            document.getElementById("settingsModal").classList.add("active");
-        }
-
-        function closeSettings() {
-            document.getElementById("settingsModal").classList.remove("active");
-        }
-
-        function saveWASettings() {
-            let num = document.getElementById("waNumberInput").value.trim();
-            num = num.replace(/^\+/, "").replace(/[\s-]/g, "");
-            if (!num) {
-                alert("Masukkan nomor WhatsApp yang valid!");
-                return;
-            }
-            waNumber = num;
-            localStorage.setItem("motifkain_wa", waNumber);
-            closeSettings();
-            alert("Nomor WhatsApp berhasil disimpan!");
-        }
-
         // ===== WHATSAPP =====
         function sendToWhatsApp() {
-            if (!waNumber) {
-                openSettings();
-                return;
-            }
             if (!selectedProduct) return;
 
             let message = "Halo, saya tertarik dengan produk berikut dari Katalog MotifKain:\n\n";
@@ -1600,7 +1524,6 @@
         document.addEventListener("keydown", function(e) {
             if (e.key === "Escape") {
                 closeDetail();
-                closeSettings();
             }
         });
     </script>
