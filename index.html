@@ -92,10 +92,10 @@
                 0 8px 20px rgba(0,0,0,0.15);
         }
 
-        /* Next page underneath - starts hidden with 90deg rotation */
+        /* Next page underneath - hidden by default */
         .book-page.next-page {
             z-index: 1;
-            transform: rotateY(90deg);
+            transform: none;
             opacity: 0;
             box-shadow:
                 0 0 0 1px rgba(0,0,0,0.02),
@@ -106,7 +106,7 @@
         /* Current page is on top, fully visible */
         .book-page:not(.next-page) {
             z-index: 2;
-            transform: rotateY(0deg);
+            transform: none;
             opacity: 1;
         }
 
