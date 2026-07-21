@@ -523,7 +523,8 @@
             <h1>Dashboard MotifKain</h1>
             <div class="header-actions">
                 <span id="userEmail" style="font-size: .8rem; opacity: 0.8;"></span>
-                <button class="btn btn-secondary btn-sm" onclick="admin.openCatalog()">Lihat Katalog</button>
+                <button class="btn btn-secondary btn-sm" onclick="admin.openCatalog()">👁️ Lihat Katalog</button>
+                <button class="btn btn-outline btn-sm" onclick="admin.refreshCatalog()">🔄 Refresh</button>
                 <button class="btn btn-outline btn-sm" onclick="admin.logout()">Logout</button>
             </div>
         </header>
@@ -1674,7 +1675,14 @@
             }
 
             openCatalog() {
-                window.open('index.html', '_blank');
+                // Open catalog in the same tab
+                window.location.href = 'index.html';
+            }
+
+            refreshCatalog() {
+                // Dispatch event to refresh the flipbook if it's open in another tab
+                localStorage.setItem('motifkain_refresh', Date.now());
+                this.showNotification('Katalog di-refresh!', 'success');
             }
 
             showNotification(message, type = '') {
