@@ -1313,7 +1313,11 @@
             if (direction > 0) {
                 // FORWARD: Buka buku dari kanan
                 // Engsel di KIRI (spine)
-                // - Halaman rotate dari 0° ke -180°
+
+                // CRITICAL: Swap content FIRST before animation
+                const currentFront = currentPage.querySelector('.page-front');
+                currentFront.innerHTML = nextPageContent.innerHTML;
+                nextPageContent.innerHTML = '';
 
                 // Set initial states
                 currentPage.style.transition = 'none';
@@ -1332,7 +1336,6 @@
 
                 // Start animation
                 requestAnimationFrame(() => {
-                    // Halaman rotate ke kiri (seperti halaman buku terbuka)
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transformOrigin = 'left center';
                     currentPage.style.transform = 'rotateY(-180deg)';
@@ -1341,15 +1344,23 @@
             } else {
                 // BACKWARD: Putar halaman kembali
                 // Engsel di KIRI (spine) - sama seperti forward!
-                // - Halaman rotate dari -180° ke 0° (reverse dari forward)
 
-                // Put the previous page content in nextPageEl first
-                nextPageEl.querySelector('.page-front').innerHTML = nextPageContent.innerHTML;
+                // CRITICAL: Swap content FIRST before animation
+                // This ensures we show content, not backface white
+                const currentFront = currentPage.querySelector('.page-front');
+                const nextFront = nextPageEl.querySelector('.page-front');
+
+                // Save current page content, swap with previous
+                const prevContent = nextPageContent.innerHTML;
+                const currentContent = currentFront.innerHTML;
+
+                // Put previous page content in current page
+                currentFront.innerHTML = prevContent;
                 nextPageContent.innerHTML = '';
 
-                // Set initial states - mulai dari posisi terbuka
+                // Set initial states - starts from 0° (showing content)
                 currentPage.style.transition = 'none';
-                currentPage.style.transform = 'rotateY(-180deg)';
+                currentPage.style.transform = 'rotateY(0deg)';
                 currentPage.style.opacity = '1';
                 currentPage.style.zIndex = '2';
 
@@ -1362,11 +1373,11 @@
                 currentPage.offsetHeight;
                 nextPageEl.offsetHeight;
 
-                // Start animation - rotate kembali ke 0°
+                // Start animation - rotate like closing book
                 requestAnimationFrame(() => {
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transformOrigin = 'left center';
-                    currentPage.style.transform = 'rotateY(0deg)';
+                    currentPage.style.transform = 'rotateY(-180deg)';
                 });
             }
 
@@ -1375,18 +1386,7 @@
                 // Update currentPageIndex
                 currentPageIndex = targetIndex;
 
-                // Swap the pages content
-                if (direction > 0) {
-                    const contentDiv = currentPage.querySelector('.page-front');
-                    contentDiv.innerHTML = nextPageContent.innerHTML;
-                    nextPageContent.innerHTML = '';
-                } else {
-                    const contentDiv = currentPage.querySelector('.page-front');
-                    contentDiv.innerHTML = nextPageEl.querySelector('.page-front').innerHTML;
-                    nextPageEl.querySelector('.page-front').innerHTML = '';
-                }
-
-                // Reset - halaman baru menjadi "current page" yang stationer
+                // Reset transforms - both pages back to 0°
                 currentPage.style.transition = 'none';
                 currentPage.style.transform = 'rotateY(0deg)';
                 currentPage.style.transformOrigin = 'left center';
