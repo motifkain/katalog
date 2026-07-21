@@ -75,6 +75,7 @@
             overflow: hidden;
             transform-style: preserve-3d;
             transform-origin: left center;
+            backface-visibility: hidden;
             z-index: 2;
         }
 
@@ -86,9 +87,10 @@
             width: 100%;
             height: 100%;
             background: #fff;
+            z-index: 1;
         }
 
-        /* Back face of page (white/blank - shows when page is flipped) */
+        /* Back face of page (white - shows when page is flipped to 180°) */
         .book-page .page-back {
             position: absolute;
             top: 0;
@@ -98,6 +100,7 @@
             background: #fff;
             transform: rotateY(180deg);
             backface-visibility: hidden;
+            z-index: 2;
         }
 
         /* Fixed shadow behind the book - doesn't move during animation */
