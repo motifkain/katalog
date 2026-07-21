@@ -1016,7 +1016,14 @@
 
             if (catalogPages.length > 0 && index < catalogPages.length) {
                 const page = catalogPages[index];
-                content.innerHTML = `<div class="catalog-page">${PageTemplates.renderPage(page, index + 1)}</div>`;
+                // Convert image URLs to full PocketBase URLs
+                const pageData = {
+                    ...page,
+                    image: page.image ? `${CONFIG.pocketbaseUrl}/api/files/catalog_pages/${page.id}/${page.image}` : '',
+                    images: (page.images || []).map(img => `${CONFIG.pocketbaseUrl}/api/files/catalog_pages/${page.id}/${img}`),
+                    logo: page.logo ? `${CONFIG.pocketbaseUrl}/api/files/catalog_pages/${page.id}/${page.logo}` : ''
+                };
+                content.innerHTML = `<div class="catalog-page">${PageTemplates.renderPage(pageData, index + 1)}</div>`;
             } else {
                 // Show welcome/cover page
                 const templateId = welcomeData?.template || 'cover-dark';
