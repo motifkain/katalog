@@ -1312,44 +1312,10 @@
 
             if (direction > 0) {
                 // FORWARD: Buka buku dari kanan
-                // Engsel di KIRI
-                // - Halaman atas: rotate dari 0° ke -180°
-                // - Halaman bawah: STATIONER (selalu visible di belakang)
+                // Engsel di KIRI (spine)
+                // - Halaman rotate dari 0° ke -180°
 
-                // Set initial states - AMBA PAGE TERLIHAT
-                currentPage.style.transition = 'none';
-                currentPage.style.transform = 'rotateY(0deg)';
-                currentPage.style.opacity = '1';
-                currentPage.style.zIndex = '2';
-
-                nextPageEl.style.transition = 'none';
-                nextPageEl.style.transform = 'rotateY(0deg)';
-                nextPageEl.style.opacity = '1';
-                nextPageEl.style.zIndex = '1';
-
-                // Force reflow
-                currentPage.offsetHeight;
-                nextPageEl.offsetHeight;
-
-                // Start animation - AMBA PAGE MOVE BERSAMAAN
-                requestAnimationFrame(() => {
-                    // Halaman atas rotate ke kiri (seperti halaman buku terbuka)
-                    currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    currentPage.style.transformOrigin = 'left center';
-                    currentPage.style.transform = 'rotateY(-180deg)';
-                });
-
-            } else {
-                // BACKWARD: Buka buku dari kiri
-                // Engsel di KANAN
-                // - Halaman atas: rotate dari 0° ke 180°
-                // - Halaman bawah: STATIONER
-
-                // Put the previous page content in nextPageEl first
-                nextPageEl.querySelector('.page-front').innerHTML = nextPageContent.innerHTML;
-                nextPageContent.innerHTML = '';
-
-                // Set initial states - AMBA PAGE TERLIHAT
+                // Set initial states
                 currentPage.style.transition = 'none';
                 currentPage.style.transform = 'rotateY(0deg)';
                 currentPage.style.opacity = '1';
@@ -1366,10 +1332,41 @@
 
                 // Start animation
                 requestAnimationFrame(() => {
-                    // Halaman atas rotate ke kanan (seperti halaman buku terbuka)
+                    // Halaman rotate ke kiri (seperti halaman buku terbuka)
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    currentPage.style.transformOrigin = 'right center';
-                    currentPage.style.transform = 'rotateY(180deg)';
+                    currentPage.style.transformOrigin = 'left center';
+                    currentPage.style.transform = 'rotateY(-180deg)';
+                });
+
+            } else {
+                // BACKWARD: Putar halaman kembali
+                // Engsel di KIRI (spine) - sama seperti forward!
+                // - Halaman rotate dari -180° ke 0° (reverse dari forward)
+
+                // Put the previous page content in nextPageEl first
+                nextPageEl.querySelector('.page-front').innerHTML = nextPageContent.innerHTML;
+                nextPageContent.innerHTML = '';
+
+                // Set initial states - mulai dari posisi terbuka
+                currentPage.style.transition = 'none';
+                currentPage.style.transform = 'rotateY(-180deg)';
+                currentPage.style.opacity = '1';
+                currentPage.style.zIndex = '2';
+
+                nextPageEl.style.transition = 'none';
+                nextPageEl.style.transform = 'rotateY(0deg)';
+                nextPageEl.style.opacity = '1';
+                nextPageEl.style.zIndex = '1';
+
+                // Force reflow
+                currentPage.offsetHeight;
+                nextPageEl.offsetHeight;
+
+                // Start animation - rotate kembali ke 0°
+                requestAnimationFrame(() => {
+                    currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
+                    currentPage.style.transformOrigin = 'left center';
+                    currentPage.style.transform = 'rotateY(0deg)';
                 });
             }
 
