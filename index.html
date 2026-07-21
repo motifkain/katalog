@@ -989,20 +989,7 @@
                     }
                 }
             } catch (e) {
-                console.log('Catalog pages not found, using welcome data only');
-            }
-
-            // Also try welcome_screen collection
-            try {
-                const res = await fetch(`${CONFIG.pocketbaseUrl}/api/collections/welcome_screen/records?sort=-created&per_page=1`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.items && data.items.length > 0) {
-                        welcomeData = data.items[0];
-                    }
-                }
-            } catch (e) {
-                console.log('Welcome data not found');
+                console.log('Catalog pages not found');
             }
 
             // Render first page
