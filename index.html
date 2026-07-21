@@ -1251,13 +1251,12 @@
             const animDuration = 600;
 
             if (direction > 0) {
-                // FORWARD FLIP:
-                // - Current page: rotates 0° → -90° (flip away like opening a book)
-                // - Next page: only fades in (appears underneath)
+                // FORWARD: Open from right side
+                // Hinge at LEFT edge, rotate 0° → 180° (page opens to front)
 
                 // Set initial states
                 currentPage.style.transition = 'none';
-                currentPage.style.transform = 'rotateY(0deg)';
+                currentPage.style.transform = 'perspective(1500px) rotateY(0deg)';
 
                 nextPageEl.style.transition = 'none';
                 nextPageEl.style.opacity = '0';
@@ -1266,23 +1265,20 @@
                 currentPage.offsetHeight;
                 nextPageEl.offsetHeight;
 
-                // Start animation
+                // Start animation - hinge at LEFT, rotate to 180°
                 requestAnimationFrame(() => {
-                    // Current page rotates (like turning a real book page)
-                    // Pivot from left edge (spine), rotate to reveal underneath
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transformOrigin = 'left center';
-                    currentPage.style.transform = 'perspective(1500px) rotateY(-105deg)';
+                    currentPage.style.transform = 'perspective(1500px) rotateY(180deg)';
 
-                    // Next page just fades in
-                    nextPageEl.style.transition = `opacity ${animDuration * 0.7}ms ease-in`;
+                    // Next page fades in
+                    nextPageEl.style.transition = `opacity ${animDuration * 0.6}ms ease-in`;
                     nextPageEl.style.opacity = '1';
                 });
 
             } else {
-                // BACKWARD FLIP:
-                // - Current page: rotates 0° → 90° (flip away to right)
-                // - Next page: only fades in
+                // BACKWARD: Open from left side
+                // Hinge at RIGHT edge, rotate 0° → -180° (page opens to front from left)
 
                 // Put the previous page content in nextPageEl
                 nextPageEl.querySelector('.page-content').innerHTML = nextPageContent.innerHTML;
@@ -1290,8 +1286,7 @@
 
                 // Set initial states
                 currentPage.style.transition = 'none';
-                currentPage.style.transform = 'rotateY(0deg)';
-                currentPage.style.transformOrigin = 'left center';
+                currentPage.style.transform = 'perspective(1500px) rotateY(0deg)';
                 currentPage.style.zIndex = '2';
 
                 nextPageEl.style.transition = 'none';
@@ -1302,14 +1297,14 @@
                 currentPage.offsetHeight;
                 nextPageEl.offsetHeight;
 
-                // Start animation
+                // Start animation - hinge at RIGHT, rotate to -180°
                 requestAnimationFrame(() => {
-                    // Current page rotates away (flip from left edge like closing a book)
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    currentPage.style.transform = 'rotateY(90deg)';
+                    currentPage.style.transformOrigin = 'right center';
+                    currentPage.style.transform = 'perspective(1500px) rotateY(-180deg)';
 
-                    // Next page just fades in
-                    nextPageEl.style.transition = `opacity ${animDuration * 0.7}ms ease-in`;
+                    // Next page fades in
+                    nextPageEl.style.transition = `opacity ${animDuration * 0.6}ms ease-in`;
                     nextPageEl.style.opacity = '1';
                 });
             }
@@ -1332,7 +1327,7 @@
 
                 // Reset all transforms
                 currentPage.style.transition = 'none';
-                currentPage.style.transform = 'rotateY(0deg)';
+                currentPage.style.transform = 'perspective(1500px) rotateY(0deg)';
                 currentPage.style.transformOrigin = 'left center';
                 currentPage.style.zIndex = '2';
 
