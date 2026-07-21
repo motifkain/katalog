@@ -1228,12 +1228,11 @@
 
             // Apply flip animation
             if (direction > 0) {
-                // Forward: current page flips to left
+                // Forward: current page flips to left, next page underneath revealed
                 nextPageEl.classList.add('flipping-next');
                 currentPage.classList.add('flipping-next');
             } else {
-                // Backward: current page flips to right, prev page revealed
-                nextPageEl.classList.add('flipping-prev');
+                // Backward: only current page flips to right, previous page underneath is already visible
                 currentPage.classList.add('flipping-prev');
             }
 
