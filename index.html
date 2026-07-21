@@ -41,47 +41,52 @@
             padding: 1rem;
             background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
         }
-        /* Welcome container */
-        .welcome-container {
+        /* Sticky notes - BOOKMARK TABS on edge of book */
+        .sticky-notes {
+            position: absolute;
+            top: 0;
+            right: -40px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-        }
-
-        /* Sticky notes above book */
-        .sticky-notes {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            justify-content: center;
+            gap: 8px;
+            z-index: 30;
         }
 
         .sticky-note {
-            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
-            padding: 0.5rem 0.75rem;
-            border-radius: 2px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: #5D4037;
+            width: 35px;
+            height: 24px;
+            border-radius: 4px 4px 0 0;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: white;
             cursor: pointer;
-            transform: rotate(-2deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.1;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
             box-shadow:
-                2px 2px 5px rgba(0,0,0,0.15),
-                inset 0 0 0 1px rgba(0,0,0,0.05);
+                2px 2px 4px rgba(0,0,0,0.2),
+                -1px 0 2px rgba(0,0,0,0.1);
             transition: all 0.2s;
-            position: relative;
         }
 
-        .sticky-note:nth-child(2) { transform: rotate(1deg); }
-        .sticky-note:nth-child(3) { transform: rotate(-1deg); }
-        .sticky-note:nth-child(4) { transform: rotate(2deg); }
+        .sticky-note:nth-child(1) { background: #4A90D9; } /* Blue */
+        .sticky-note:nth-child(2) { background: #F5C242; color: #333; } /* Yellow */
+        .sticky-note:nth-child(3) { background: #E57373; } /* Pink */
+        .sticky-note:nth-child(4) { background: #81C784; } /* Green */
 
         .sticky-note:hover {
-            transform: rotate(0deg) scale(1.05);
-            box-shadow:
-                3px 3px 8px rgba(0,0,0,0.2),
-                inset 0 0 0 1px rgba(0,0,0,0.05);
+            transform: rotate(180deg) scale(1.1);
+            filter: brightness(1.1);
+        }
+
+        /* Page indicator - remove or style */
+        .page-indicator {
+            display: none;
         }
 
         /* Book Container */
@@ -960,22 +965,22 @@
     <!-- WELCOME SCREEN - BOOK STYLE -->
     <div class="welcome-screen" id="welcomeScreen">
         <div class="welcome-container">
-            <!-- Sticky notes for categories -->
-            <div class="sticky-notes">
-                <div class="sticky-note" onclick="openKatalog(); selectCategory('desain-motif-kain')">
-                    <span>Desain Motif Kain</span>
-                </div>
-                <div class="sticky-note" onclick="openKatalog(); selectCategory('printing-kain')">
-                    <span>Printing Kain</span>
-                </div>
-                <div class="sticky-note" onclick="openKatalog(); selectCategory('pakaian-jadi')">
-                    <span>Pakaian Jadi</span>
-                </div>
-                <div class="sticky-note" onclick="openKatalog(); selectCategory('asesoris')">
-                    <span>Asesoris</span>
-                </div>
-            </div>
             <div class="book-container" id="bookContainer">
+                <!-- Sticky notes / bookmark tabs on the right edge -->
+                <div class="sticky-notes">
+                    <div class="sticky-note" onclick="openKatalog(); selectCategory('desain-motif-kain')">
+                        Motif
+                    </div>
+                    <div class="sticky-note" onclick="openKatalog(); selectCategory('printing-kain')">
+                        Print
+                    </div>
+                    <div class="sticky-note" onclick="openKatalog(); selectCategory('pakaian-jadi')">
+                        Pakaian
+                    </div>
+                    <div class="sticky-note" onclick="openKatalog(); selectCategory('asesoris')">
+                        Asesoris
+                    </div>
+                </div>
                 <div class="book-shadow"></div>
                 <div class="book" id="book">
                     <div class="book-spine"></div>
