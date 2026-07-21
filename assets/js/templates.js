@@ -429,10 +429,7 @@ const PageTemplates = {
         <div style="width:100%;height:100%;background:${style.bgColor};display:flex;flex-direction:column;">
             <!-- Image section (60%) -->
             <div style="flex:0 0 60%;position:relative;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center;">
-                ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:contain;">` : `
-                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-                    <span style="font-size:3rem;opacity:0.2;">📷</span>
-                </div>`}
+                ${data.image ? `<img src="${data.image}" class="catalog-image" style="width:100%;height:100%;object-fit:contain;">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><span style="font-size:3rem;opacity:0.2;">📷</span></div>`}
                 ${data.logo ? `<div style="position:absolute;top:5%;right:5%;"><img src="${data.logo}" style="${this.getLogoStyle(data)}opacity:0.9;"></div>` : ''}
             </div>
 
