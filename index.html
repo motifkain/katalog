@@ -1268,12 +1268,13 @@
 
                 // Start animation
                 requestAnimationFrame(() => {
-                    // Current page rotates (like opening a book from right edge)
+                    // Current page rotates (like turning a real book page)
+                    // Pivot from left edge (spine), rotate to reveal underneath
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    currentPage.style.transformOrigin = 'right center';
-                    currentPage.style.transform = 'rotateY(-90deg)';
+                    currentPage.style.transformOrigin = 'left center';
+                    currentPage.style.transform = 'perspective(1500px) rotateY(-105deg)';
 
-                    // Next page just fades in (stays flat, like pages underneath)
+                    // Next page just fades in
                     nextPageEl.style.transition = `opacity ${animDuration * 0.7}ms ease-in`;
                     nextPageEl.style.opacity = '1';
                 });
