@@ -112,6 +112,9 @@
             0% {
                 transform: rotateY(0deg);
             }
+            50% {
+                transform: rotateY(-90deg);
+            }
             100% {
                 transform: rotateY(-180deg);
             }
@@ -120,6 +123,9 @@
         @keyframes flipToPrev {
             0% {
                 transform: rotateY(0deg);
+            }
+            50% {
+                transform: rotateY(90deg);
             }
             100% {
                 transform: rotateY(180deg);
@@ -1228,26 +1234,23 @@
 
             // Apply flip animation
             if (direction > 0) {
-                // Forward: current page flips to left, next page underneath revealed
+                // Forward: 3D flip animation
                 nextPageEl.classList.add('flipping-next');
                 currentPage.classList.add('flipping-next');
             } else {
-                // Backward: only current page flips to right, previous page underneath is already visible
-                currentPage.classList.add('flipping-prev');
+                // Backward: instant swap (3D flip doesn't work well for going back)
+                currentPage.innerHTML = nextPageContent.innerHTML;
+                nextPageContent.innerHTML = '';
+                updatePageCounter();
+                updateNavButtons();
+                isFlipping = false;
+                return;
             }
 
-            // After animation completes
+            // After animation completes (only for forward)
             setTimeout(() => {
-                if (direction > 0) {
-                    // Forward: nextPageEl already has content, just clean up
-                    // currentPage will use nextPageEl's content
-                    currentPage.innerHTML = nextPageContent.innerHTML;
-                    nextPageContent.innerHTML = '';
-                } else {
-                    // Backward: move content from nextPageContent to currentPage
-                    currentPage.innerHTML = nextPageContent.innerHTML;
-                    nextPageContent.innerHTML = '';
-                }
+                currentPage.innerHTML = nextPageContent.innerHTML;
+                nextPageContent.innerHTML = '';
 
                 // Reset animation classes
                 nextPageEl.classList.remove('flipping-next', 'flipping-prev');
