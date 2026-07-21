@@ -52,7 +52,6 @@
             position: relative;
             width: 320px;
             height: 480px;
-            overflow: hidden;
         }
 
         /* The Book */
@@ -60,11 +59,6 @@
             position: relative;
             width: 100%;
             height: 100%;
-        }
-
-        /* Page Stack */
-        .page-stack {
-            display: none; /* Hidden, just for visual reference */
         }
 
         /* Current Page */
@@ -76,29 +70,47 @@
             height: 100%;
             background: #fff;
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow:
+                0 0 0 1px rgba(0,0,0,0.05),
+                0 4px 20px rgba(0,0,0,0.1),
+                0 8px 40px rgba(0,0,0,0.08);
             overflow: hidden;
-            transition: opacity 0.4s ease, transform 0.4s ease;
-        }
-
-        .book-page.slide-out-left {
-            transform: translateX(-100%);
-            opacity: 0;
-        }
-
-        .book-page.slide-out-right {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-
-        .book-page.slide-in {
-            transform: translateX(0);
-            opacity: 1;
         }
 
         .book-page .page-content {
             width: 100%;
             height: 100%;
+        }
+
+        /* Page flip animation */
+        .book-page.entering {
+            animation: pageEnter 0.5s ease forwards;
+        }
+
+        .book-page.exiting {
+            animation: pageExit 0.5s ease forwards;
+        }
+
+        @keyframes pageEnter {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pageExit {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(1.05);
+            }
         }
 
         /* Page Edge */
@@ -1034,48 +1046,54 @@
             const container = document.getElementById('bookContainer');
             const leftArea = document.getElementById('swipeLeft');
             const rightArea = document.getElementById('swipeRight');
-            const page = document.getElementById('bookPage');
 
             if (!container) return;
 
+            let touchStartX = 0;
+            let touchStartY = 0;
+
             // Touch events
             container.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
             }, { passive: true });
+
+            container.addEventListener('touchmove', (e) => {
+                // Prevent scrolling if horizontal swipe
+                const diffX = Math.abs(e.touches[0].clientX - touchStartX);
+                const diffY = Math.abs(e.touches[0].clientY - touchStartY);
+                if (diffX > diffY && diffX > 10) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
 
             container.addEventListener('touchend', (e) => {
-                touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                const diffX = Math.abs(touchEndX - touchStartX);
+                const diffY = Math.abs(touchEndY - touchStartY);
+
+                // Only handle as swipe if horizontal movement is greater
+                if (diffX > diffY && diffX > 50) {
+                    if (touchEndX < touchStartX) {
+                        flipPage(1); // Swipe left = next
+                    } else {
+                        flipPage(-1); // Swipe right = previous
+                    }
+                }
             }, { passive: true });
 
-            // Mouse events for desktop
-            let mouseDown = false;
-            let mouseStartX = 0;
-
-            container.addEventListener('mousedown', (e) => {
-                mouseDown = true;
-                mouseStartX = e.clientX;
-            });
-
-            document.addEventListener('mouseup', (e) => {
-                if (mouseDown) {
-                    touchEndX = e.clientX;
-                    handleSwipe();
-                }
-                mouseDown = false;
-            });
-
-            // Click areas - tap on left half = previous, right half = next
+            // Click areas for navigation
             if (leftArea) {
                 leftArea.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    flipPage(-1); // Previous page
+                    flipPage(-1); // Left side = previous
                 });
             }
             if (rightArea) {
                 rightArea.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    flipPage(1); // Next page
+                    flipPage(1); // Right side = next
                 });
             }
 
@@ -1084,21 +1102,6 @@
                 if (e.key === 'ArrowRight') flipPage(1);
                 if (e.key === 'ArrowLeft') flipPage(-1);
             });
-        }
-
-        function handleSwipe() {
-            if (isFlipping) return;
-
-            const diff = touchStartX - touchEndX;
-            const threshold = 50;
-
-            if (Math.abs(diff) > threshold) {
-                if (diff > 0) {
-                    flipPage(1); // Next page
-                } else {
-                    flipPage(-1); // Previous page
-                }
-            }
         }
 
         function flipPage(direction) {
@@ -1112,39 +1115,29 @@
 
             isFlipping = true;
 
-            if (direction > 0) {
-                // Slide out to left, new page slides in from right
-                page.classList.add('slide-out-left');
-                currentPageIndex++;
+            // Exit animation
+            page.classList.add('exiting');
+
+            setTimeout(() => {
+                // Update page content
+                if (direction > 0) {
+                    currentPageIndex++;
+                } else {
+                    currentPageIndex--;
+                }
+
+                renderBookPage(currentPageIndex);
+                renderPageIndicator();
+
+                // Enter animation
+                page.classList.remove('exiting');
+                page.classList.add('entering');
 
                 setTimeout(() => {
-                    renderBookPage(currentPageIndex);
-                    page.classList.remove('slide-out-left');
-                    page.classList.add('slide-in');
-                    renderPageIndicator();
-
-                    setTimeout(() => {
-                        page.classList.remove('slide-in');
-                        isFlipping = false;
-                    }, 400);
-                }, 400);
-            } else {
-                // Slide out to right, new page slides in from left
-                page.classList.add('slide-out-right');
-                currentPageIndex--;
-
-                setTimeout(() => {
-                    renderBookPage(currentPageIndex);
-                    page.classList.remove('slide-out-right');
-                    page.classList.add('slide-in');
-                    renderPageIndicator();
-
-                    setTimeout(() => {
-                        page.classList.remove('slide-in');
-                        isFlipping = false;
-                    }, 400);
-                }, 400);
-            }
+                    page.classList.remove('entering');
+                    isFlipping = false;
+                }, 500);
+            }, 500);
         }
 
         function openKatalog() {
