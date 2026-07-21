@@ -92,18 +92,18 @@
                 0 8px 20px rgba(0,0,0,0.15);
         }
 
-        /* Next page underneath - hidden by default */
+        /* Next page underneath - always visible */
         .book-page.next-page {
             z-index: 1;
             transform: none;
-            opacity: 0;
+            opacity: 1;
             box-shadow:
                 0 0 0 1px rgba(0,0,0,0.02),
                 0 6px 25px rgba(0,0,0,0.1),
                 0 2px 8px rgba(0,0,0,0.08);
         }
 
-        /* Current page is on top, fully visible */
+        /* Current page is on top */
         .book-page:not(.next-page) {
             z-index: 2;
             transform: none;
@@ -1249,58 +1249,55 @@
 
             // Animation settings
             const animDuration = 600;
-            const bookWidth = 320; // width of book container in px
 
             if (direction > 0) {
-                // FORWARD: Open from right side
+                // FORWARD: Buka buku dari kanan
                 // Engsel di KIRI
-                // - Halaman atas: rotate dari engsel kiri 0° → 180°
-                // - Halaman bawah: slide dari kanan + fade in
+                // - Halaman atas: rotate dari 0° ke -180°
+                // - Halaman bawah: STATIONER (selalu visible di belakang)
 
-                // Set initial states
+                // Set initial states - AMBA PAGE TERLIHAT
                 currentPage.style.transition = 'none';
-                currentPage.style.transform = 'perspective(1500px) rotateY(0deg)';
-                currentPage.style.transformOrigin = 'left center';
+                currentPage.style.transform = 'rotateY(0deg)';
+                currentPage.style.opacity = '1';
+                currentPage.style.zIndex = '2';
 
                 nextPageEl.style.transition = 'none';
-                nextPageEl.style.opacity = '0';
-                nextPageEl.style.transform = `translateX(${bookWidth}px)`; // Mulai dari kanan
+                nextPageEl.style.transform = 'rotateY(0deg)';
+                nextPageEl.style.opacity = '1';
+                nextPageEl.style.zIndex = '1';
 
                 // Force reflow
                 currentPage.offsetHeight;
                 nextPageEl.offsetHeight;
 
-                // Start animation
+                // Start animation - AMBA PAGE MOVE BERSAMAAN
                 requestAnimationFrame(() => {
-                    // Halaman atas rotate dari engsel kiri (arah negatif agar terlihat keluar)
+                    // Halaman atas rotate ke kiri (seperti halaman buku terbuka)
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    currentPage.style.transform = 'perspective(1500px) rotateY(-180deg)';
-
-                    // Halaman bawah slide dari kanan + fade in (waktunya sama)
-                    nextPageEl.style.transition = `transform ${animDuration}ms ease-in-out, opacity ${animDuration}ms ease-in-out`;
-                    nextPageEl.style.transform = 'translateX(0px)';
-                    nextPageEl.style.opacity = '1';
+                    currentPage.style.transformOrigin = 'left center';
+                    currentPage.style.transform = 'rotateY(-180deg)';
                 });
 
             } else {
-                // BACKWARD: Open from left side
+                // BACKWARD: Buka buku dari kiri
                 // Engsel di KANAN
-                // - Halaman atas: rotate dari engsel kanan 0° → -180°
-                // - Halaman bawah: slide dari kiri + fade in
+                // - Halaman atas: rotate dari 0° ke 180°
+                // - Halaman bawah: STATIONER
 
-                // Put the previous page content in nextPageEl
+                // Put the previous page content in nextPageEl first
                 nextPageEl.querySelector('.page-content').innerHTML = nextPageContent.innerHTML;
                 nextPageContent.innerHTML = '';
 
-                // Set initial states
+                // Set initial states - AMBA PAGE TERLIHAT
                 currentPage.style.transition = 'none';
-                currentPage.style.transform = 'perspective(1500px) rotateY(0deg)';
-                currentPage.style.transformOrigin = 'right center';
+                currentPage.style.transform = 'rotateY(0deg)';
+                currentPage.style.opacity = '1';
                 currentPage.style.zIndex = '2';
 
                 nextPageEl.style.transition = 'none';
-                nextPageEl.style.opacity = '0';
-                nextPageEl.style.transform = `translateX(-${bookWidth}px)`; // Mulai dari kiri
+                nextPageEl.style.transform = 'rotateY(0deg)';
+                nextPageEl.style.opacity = '1';
                 nextPageEl.style.zIndex = '1';
 
                 // Force reflow
@@ -1309,14 +1306,10 @@
 
                 // Start animation
                 requestAnimationFrame(() => {
-                    // Halaman atas rotate dari engsel kanan (arah positif agar terlihat keluar)
+                    // Halaman atas rotate ke kanan (seperti halaman buku terbuka)
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    currentPage.style.transform = 'perspective(1500px) rotateY(180deg)';
-
-                    // Halaman bawah slide dari kiri + fade in
-                    nextPageEl.style.transition = `transform ${animDuration}ms ease-in-out, opacity ${animDuration}ms ease-in-out`;
-                    nextPageEl.style.transform = 'translateX(0px)';
-                    nextPageEl.style.opacity = '1';
+                    currentPage.style.transformOrigin = 'right center';
+                    currentPage.style.transform = 'rotateY(180deg)';
                 });
             }
 
@@ -1336,15 +1329,16 @@
                     nextPageEl.querySelector('.page-content').innerHTML = '';
                 }
 
-                // Reset all transforms
+                // Reset - halaman baru menjadi "current page" yang stationer
                 currentPage.style.transition = 'none';
-                currentPage.style.transform = 'perspective(1500px) rotateY(0deg)';
+                currentPage.style.transform = 'rotateY(0deg)';
                 currentPage.style.transformOrigin = 'left center';
+                currentPage.style.opacity = '1';
                 currentPage.style.zIndex = '2';
 
                 nextPageEl.style.transition = 'none';
-                nextPageEl.style.opacity = '0';
-                nextPageEl.style.transform = 'translateX(320px)';
+                nextPageEl.style.transform = 'rotateY(0deg)';
+                nextPageEl.style.opacity = '1';
                 nextPageEl.style.zIndex = '1';
 
                 // Force reflow
@@ -1355,7 +1349,7 @@
                 updatePageCounter();
                 updateNavButtons();
                 isFlipping = false;
-            }, animDuration + 50);
+            }, animDuration);
         }
 
         function updatePageCounter() {
