@@ -52,8 +52,7 @@
             position: relative;
             width: 320px;
             height: 480px;
-            perspective: 2000px;
-            cursor: pointer;
+            overflow: hidden;
         }
 
         /* The Book */
@@ -61,45 +60,40 @@
             position: relative;
             width: 100%;
             height: 100%;
-            transform-style: preserve-3d;
         }
 
-        /* Page Stack (pages behind) */
+        /* Page Stack */
         .page-stack {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, #f0f0f0 0%, #fff 2%, #f8f8f8 98%, #e0e0e0 100%);
-            border-radius: 4px 12px 12px 4px;
-            box-shadow:
-                2px 0 4px rgba(0,0,0,0.1),
-                4px 0 8px rgba(0,0,0,0.05),
-                8px 0 16px rgba(0,0,0,0.03);
+            display: none; /* Hidden, just for visual reference */
         }
 
         /* Current Page */
         .book-page {
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             background: #fff;
-            border-radius: 4px 12px 12px 4px;
-            box-shadow:
-                0 0 0 1px rgba(0,0,0,0.08),
-                2px 0 8px rgba(0,0,0,0.1),
-                0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             overflow: hidden;
-            transform-origin: left center;
-            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
-            backface-visibility: hidden;
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
-        .book-page.flipping {
-            transform: rotateY(-180deg);
-            box-shadow:
-                0 0 0 1px rgba(0,0,0,0.08),
-                -2px 0 8px rgba(0,0,0,0.1),
-                0 4px 20px rgba(0,0,0,0.1);
+        .book-page.slide-out-left {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        .book-page.slide-out-right {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        .book-page.slide-in {
+            transform: translateX(0);
+            opacity: 1;
         }
 
         .book-page .page-content {
@@ -1100,11 +1094,9 @@
 
             if (Math.abs(diff) > threshold) {
                 if (diff > 0) {
-                    // Swipe left -> next page
-                    flipPage(1);
+                    flipPage(1); // Next page
                 } else {
-                    // Swipe right -> previous page
-                    flipPage(-1);
+                    flipPage(-1); // Previous page
                 }
             }
         }
@@ -1115,43 +1107,43 @@
 
             const totalPages = catalogPages.length || 1;
 
-            if (direction > 0 && currentPageIndex >= totalPages - 1) {
-                // Already at last page
-                return;
-            }
-            if (direction < 0 && currentPageIndex <= 0) {
-                // Already at first page
-                return;
-            }
+            if (direction > 0 && currentPageIndex >= totalPages - 1) return;
+            if (direction < 0 && currentPageIndex <= 0) return;
 
             isFlipping = true;
 
             if (direction > 0) {
-                // Flip forward (current page flips away to left, next page appears)
-                page.classList.add('flipping');
+                // Slide out to left, new page slides in from right
+                page.classList.add('slide-out-left');
                 currentPageIndex++;
 
                 setTimeout(() => {
                     renderBookPage(currentPageIndex);
-                    page.classList.remove('flipping');
+                    page.classList.remove('slide-out-left');
+                    page.classList.add('slide-in');
                     renderPageIndicator();
-                    isFlipping = false;
-                }, 400);
-            } else {
-                // Flip backward
-                currentPageIndex--;
-                renderBookPage(currentPageIndex);
-                // Quick flip animation backward
-                page.style.transform = 'rotateY(90deg)';
-                setTimeout(() => {
-                    page.style.transition = 'transform 0.4s ease';
-                    page.style.transform = 'rotateY(0deg)';
-                    renderPageIndicator();
+
                     setTimeout(() => {
-                        page.style.transition = '';
+                        page.classList.remove('slide-in');
                         isFlipping = false;
                     }, 400);
-                }, 50);
+                }, 400);
+            } else {
+                // Slide out to right, new page slides in from left
+                page.classList.add('slide-out-right');
+                currentPageIndex--;
+
+                setTimeout(() => {
+                    renderBookPage(currentPageIndex);
+                    page.classList.remove('slide-out-right');
+                    page.classList.add('slide-in');
+                    renderPageIndicator();
+
+                    setTimeout(() => {
+                        page.classList.remove('slide-in');
+                        isFlipping = false;
+                    }, 400);
+                }, 400);
             }
         }
 
