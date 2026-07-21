@@ -1252,16 +1252,14 @@
 
             if (direction > 0) {
                 // FORWARD FLIP:
-                // - Current page: rotates (flip away)
+                // - Current page: rotates 0° → -90° (flip away like opening a book)
                 // - Next page: only fades in (appears underneath)
 
                 // Set initial states
                 currentPage.style.transition = 'none';
                 currentPage.style.transform = 'rotateY(0deg)';
 
-                // Next page stays flat (no rotation), only opacity changes
                 nextPageEl.style.transition = 'none';
-                nextPageEl.style.transform = 'rotateY(0deg)';
                 nextPageEl.style.opacity = '0';
 
                 // Force reflow
@@ -1270,18 +1268,19 @@
 
                 // Start animation
                 requestAnimationFrame(() => {
-                    // Current page flips away
+                    // Current page rotates (like opening a book from right edge)
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
+                    currentPage.style.transformOrigin = 'right center';
                     currentPage.style.transform = 'rotateY(-90deg)';
 
-                    // Next page just fades in (appears underneath)
+                    // Next page just fades in (stays flat, like pages underneath)
                     nextPageEl.style.transition = `opacity ${animDuration * 0.7}ms ease-in`;
                     nextPageEl.style.opacity = '1';
                 });
 
             } else {
                 // BACKWARD FLIP:
-                // - Current page: rotates (flip away to right)
+                // - Current page: rotates 0° → 90° (flip away to right)
                 // - Next page: only fades in
 
                 // Put the previous page content in nextPageEl
@@ -1291,11 +1290,10 @@
                 // Set initial states
                 currentPage.style.transition = 'none';
                 currentPage.style.transform = 'rotateY(0deg)';
+                currentPage.style.transformOrigin = 'left center';
                 currentPage.style.zIndex = '2';
 
-                // Next page stays flat, hidden
                 nextPageEl.style.transition = 'none';
-                nextPageEl.style.transform = 'rotateY(0deg)';
                 nextPageEl.style.opacity = '0';
                 nextPageEl.style.zIndex = '1';
 
@@ -1305,7 +1303,7 @@
 
                 // Start animation
                 requestAnimationFrame(() => {
-                    // Current page flips away
+                    // Current page rotates away (flip from left edge like closing a book)
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transform = 'rotateY(90deg)';
 
@@ -1334,10 +1332,10 @@
                 // Reset all transforms
                 currentPage.style.transition = 'none';
                 currentPage.style.transform = 'rotateY(0deg)';
+                currentPage.style.transformOrigin = 'left center';
                 currentPage.style.zIndex = '2';
 
                 nextPageEl.style.transition = 'none';
-                nextPageEl.style.transform = 'rotateY(0deg)';
                 nextPageEl.style.opacity = '0';
                 nextPageEl.style.zIndex = '1';
 
