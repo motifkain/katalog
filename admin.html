@@ -1350,6 +1350,7 @@
                         html += this.createInput('mainTitle', 'Judul Utama', page.mainTitle);
                         html += this.createInput('subtitle', 'Subtitle', page.subtitle);
                         html += this.createTextarea('description', 'Deskripsi', page.description);
+                        html += this.createSelect('logoPosition', 'Posisi Logo', page.logoPosition, ['top', 'center', 'bottom']);
                         break;
                     case 'cover-split':
                         html += this.createInput('mainTitle', 'Judul Utama', page.mainTitle);
@@ -1357,18 +1358,20 @@
                         html += this.createInput('header', 'Header Kiri', page.header);
                         html += this.createTextarea('body', 'Deskripsi Kiri', page.body);
                         html += this.createTextarea('description', 'Deskripsi Kanan', page.description);
+                        html += this.createSelect('logoPosition', 'Posisi Logo', page.logoPosition, ['left', 'right']);
                         break;
                     case 'cover-numbered':
                         html += this.createInput('mainTitle', 'Judul Utama', page.mainTitle);
                         html += this.createInput('subtitle', 'Subtitle', page.subtitle);
                         html += this.createInput('header', 'Nomor (01, 02...)', page.header);
                         html += this.createTextarea('body', 'Deskripsi', page.body);
-                        html += this.createInput('footerText', 'Footer URL', page.footerText);
+                        html += this.createSelect('logoPosition', 'Posisi Logo', page.logoPosition, ['top', 'bottom']);
                         break;
                     case 'cover-minimal':
                         html += this.createInput('mainTitle', 'Judul Utama', page.mainTitle);
                         html += this.createInput('subtitle', 'Subtitle', page.subtitle);
                         html += this.createTextarea('body', 'Tagline / Slogan', page.body);
+                        html += this.createSelect('logoPosition', 'Posisi Logo', page.logoPosition, ['top', 'center', 'bottom']);
                         break;
                     case 'cover-logo-left':
                         html += this.createInput('mainTitle', 'Judul Utama', page.mainTitle);
@@ -1376,6 +1379,7 @@
                         html += this.createInput('header', 'Header Kiri', page.header);
                         html += this.createTextarea('body', 'Deskripsi Kiri', page.body);
                         html += this.createTextarea('description', 'Deskripsi Kanan', page.description);
+                        html += this.createSelect('logoPosition', 'Posisi Logo', page.logoPosition, ['left', 'top-center', 'center', 'bottom']);
                         break;
                     // Content Templates
                     case 'image-full':

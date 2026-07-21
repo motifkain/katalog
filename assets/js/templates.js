@@ -340,14 +340,19 @@ const PageTemplates = {
     // Cover Dark - Gradient gelap premium
     renderCoverDark(data, num) {
         const style = this.getStyleProps(data);
+        // Logo position: top, center, or bottom
+        const logoPos = data.logoPosition || 'top';
+        const logoStyle = logoPos === 'center' ? 'text-align:center;margin-bottom:auto;' :
+                          logoPos === 'bottom' ? 'text-align:center;margin-top:auto;order:2;' :
+                          'text-align:center;margin-bottom:auto;';
         return `
         <div style="width:100%;height:100%;background:linear-gradient(180deg,${style.bgDark} 0%,${style.primary} 100%);padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
             <!-- Decorative corner -->
             <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${style.accent};border-left:2px solid ${style.accent};opacity:0.4;"></div>
             <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${style.accent};border-right:2px solid ${style.accent};opacity:0.4;"></div>
 
-            <!-- Logo area -->
-            <div style="text-align:center;margin-bottom:auto;">
+            <!-- Logo area - position based on setting -->
+            <div style="${logoStyle}">
                 ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:3%;">` : ''}
             </div>
 
@@ -359,23 +364,24 @@ const PageTemplates = {
                 ${data.description ? `<p style="color:rgba(255,255,255,0.5);font-size:${style.bodySize};margin-top:4%;line-height:1.6;">${data.description}</p>` : ''}
             </div>
 
-            <!-- Footer -->
-            <div style="text-align:center;padding-top:5%;border-top:1px solid rgba(255,255,255,0.1);">
-                <span style="color:rgba(255,255,255,0.3);font-size:${style.bodySize};">motifkain.com</span>
-            </div>
+            ${logoPos === 'bottom' ? `<div></div>` : ''}
         </div>`;
     },
 
     // Cover Light - Cream/beige premium
     renderCoverLight(data, num) {
         const style = this.getStyleProps(data);
+        const logoPos = data.logoPosition || 'top';
+        const logoStyle = logoPos === 'center' ? 'text-align:center;margin:0 auto;' :
+                          logoPos === 'bottom' ? 'text-align:center;order:2;' :
+                          'text-align:center;';
         return `
         <div style="width:100%;height:100%;background:${style.bgColor};padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
             <!-- Decorative -->
             <div style="position:absolute;top:5%;right:5%;width:30px;height:30px;border-top:2px solid ${style.accentAlt};border-right:2px solid ${style.accentAlt};opacity:0.3;"></div>
 
             <!-- Logo area -->
-            <div style="text-align:center;margin-bottom:auto;">
+            <div style="${logoStyle}">
                 ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:3%;">` : ''}
             </div>
 
@@ -385,11 +391,6 @@ const PageTemplates = {
                 <p style="color:${style.accentAlt};font-size:${style.bodySize};letter-spacing:0.3em;margin-bottom:4%;">${data.subtitle || 'KOLEKSI DESAIN'}</p>
                 <div style="width:50px;height:2px;background:${style.accent};margin:0 auto;"></div>
                 ${data.description ? `<p style="color:${style.textMuted};font-size:${style.bodySize};margin-top:4%;line-height:1.6;">${data.description}</p>` : ''}
-            </div>
-
-            <!-- Footer -->
-            <div style="text-align:center;padding-top:5%;border-top:1px solid ${style.bgMuted};">
-                <span style="color:${style.textMuted};font-size:${style.bodySize};">motifkain.com</span>
             </div>
         </div>`;
     },
@@ -551,6 +552,32 @@ const PageTemplates = {
     // Cover Split - Kiri gelap, kanan terang
     renderCoverSplit(data, num) {
         const style = this.getStyleProps(data);
+        const logoPos = data.logoPosition || 'left';
+        if (logoPos === 'right') {
+            return `
+            <div style="width:100%;height:100%;display:flex;">
+                <!-- Kiri - Terang -->
+                <div style="width:60%;height:100%;background:${style.bgCard};padding:8%;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
+                    <div style="position:absolute;top:5%;right:5%;width:30px;height:30px;border-top:2px solid ${style.accentAlt};border-right:2px solid ${style.accentAlt};opacity:0.3;"></div>
+                    ${data.image ? `<img src="${data.image}" style="position:absolute;top:0;right:0;width:60%;height:100%;object-fit:cover;opacity:0.1;">` : ''}
+                    <div style="width:35px;height:1px;background:${style.bgMuted};margin-bottom:8%;"></div>
+                    <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:3%;line-height:1.1;">${data.mainTitle || 'CATALOGUE'}</h1>
+                    <p style="color:${style.accentAlt};font-size:${style.bodySize};letter-spacing:0.2em;margin-bottom:5%;">${data.subtitle || 'COMPANY PROFILE'}</p>
+                    <div style="width:40px;height:2px;background:${style.textColor};margin-bottom:8%;"></div>
+                    <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;">${data.description || 'Koleksi produk eksklusif kami'}</p>
+                </div>
+                <!-- Kanan - Gelap -->
+                <div style="width:40%;height:100%;background:${style.bgDark};padding:6%;display:flex;flex-direction:column;position:relative;">
+                    <div style="position:absolute;top:5%;right:5%;width:25px;height:25px;border-top:1px solid rgba(255,255,255,0.3);border-right:1px solid rgba(255,255,255,0.3);"></div>
+                    ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:15%;margin-top:auto;">` : `<span style="color:rgba(255,255,255,0.5);font-size:${style.bodySize};margin-bottom:15%;margin-top:auto;">LOGO</span>`}
+                    <div style="width:25px;height:1px;background:${style.accent};margin-bottom:10%;"></div>
+                    <p style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};line-height:1.8;">${data.header || 'LOREM IPSUM'}</p>
+                    <p style="color:rgba(255,255,255,0.6);font-size:${style.bodySize};margin-top:5%;line-height:1.6;">${data.body || 'Deskripsi singkat tentang koleksi Anda.'}</p>
+                    <div style="position:absolute;bottom:5%;left:5%;width:25px;height:25px;border-bottom:1px solid rgba(255,255,255,0.3);border-left:1px solid rgba(255,255,255,0.3);"></div>
+                </div>
+            </div>`;
+        }
+        // Default: logo on left
         return `
         <div style="width:100%;height:100%;display:flex;">
             <!-- Kiri - Gelap -->
@@ -560,7 +587,6 @@ const PageTemplates = {
                 <div style="width:25px;height:1px;background:${style.accent};margin-bottom:10%;"></div>
                 <p style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};line-height:1.8;">${data.header || 'LOREM IPSUM'}</p>
                 <p style="color:rgba(255,255,255,0.6);font-size:${style.bodySize};margin-top:5%;line-height:1.6;">${data.body || 'Deskripsi singkat tentang koleksi Anda.'}</p>
-                <p style="color:rgba(255,255,255,0.3);font-size:${style.bodySize};margin-top:auto;">website.motifkain.com</p>
                 <div style="position:absolute;bottom:5%;right:5%;width:25px;height:25px;border-bottom:1px solid rgba(255,255,255,0.3);border-right:1px solid rgba(255,255,255,0.3);"></div>
             </div>
             <!-- Kanan - Terang -->
@@ -573,7 +599,6 @@ const PageTemplates = {
                 <p style="color:${style.accentAlt};font-size:${style.bodySize};letter-spacing:0.2em;margin-bottom:5%;">${data.subtitle || 'COMPANY PROFILE'}</p>
                 <div style="width:40px;height:2px;background:${style.textColor};margin-bottom:8%;"></div>
                 <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;">${data.description || 'Koleksi produk eksklusif kami'}</p>
-                <p style="color:${style.textMuted};font-size:${style.bodySize};margin-top:auto;">www.motifkain.com</p>
             </div>
         </div>`;
     },
@@ -582,11 +607,15 @@ const PageTemplates = {
     renderCoverNumbered(data, num) {
         const style = this.getStyleProps(data);
         const largeNum = parseInt(data.titleSizePx || 36) + 20 + 'px';
+        const logoPos = data.logoPosition || 'top';
+        const logoStyle = logoPos === 'bottom' ? 'margin-top:auto;' : 'margin-bottom:auto;';
         return `
         <div style="width:100%;height:100%;background:${style.bgDark};padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
             <!-- Garis diagonal dekoratif -->
             <div style="position:absolute;top:0;right:0;width:40%;height:100%;background:linear-gradient(135deg,transparent 49%,rgba(255,255,255,0.03) 50%,transparent 51%);"></div>
-            ${data.logo ? `<div style="margin-bottom:auto;"><img src="${data.logo}" style="${this.getLogoStyle(data)}opacity:0.9;"></div>` : ''}
+            <div style="${logoStyle}">
+                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}opacity:0.9;">` : ''}
+            </div>
             <div style="display:flex;align-items:flex-start;gap:5%;flex:1;">
                 <div style="width:30%;display:flex;flex-direction:column;justify-content:center;">
                     <h2 style="font-family:'${style.fontFamily}',serif;font-size:${largeNum};color:#fff;font-weight:700;line-height:1;margin-bottom:5%;">${data.header || '01'}</h2>
@@ -600,7 +629,7 @@ const PageTemplates = {
                     <p style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};line-height:1.8;">${data.description || 'Koleksi produk kami'}</p>
                 </div>
             </div>
-            <p style="color:rgba(255,255,255,0.3);font-size:${style.bodySize};margin-top:auto;">${data.footerText || 'website.motifkain.com'}</p>
+            ${logoPos === 'bottom' ? '<div></div>' : ''}
         </div>`;
     },
 
@@ -608,20 +637,25 @@ const PageTemplates = {
     renderCoverMinimal(data, num) {
         const style = this.getStyleProps(data);
         const bigQuote = parseInt(style.titleSize) + 60 + 'px';
+        const logoPos = data.logoPosition || 'top';
+        const logoStyle = logoPos === 'center' ? 'text-align:center;margin:0 auto;' :
+                          logoPos === 'bottom' ? 'text-align:center;order:2;' :
+                          'text-align:center;';
         return `
         <div style="width:100%;height:100%;background:${style.bgColor};padding:10%;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
             <!-- Elemen dekoratif pojok -->
             <div style="position:absolute;top:8%;right:8%;width:40px;height:40px;border-top:1px solid ${style.textMuted};border-right:1px solid ${style.textMuted};"></div>
             <div style="position:absolute;bottom:8%;left:8%;width:40px;height:40px;border-bottom:1px solid ${style.textMuted};border-left:1px solid ${style.textMuted};"></div>
             <div style="position:absolute;top:5%;left:5%;opacity:0.03;font-size:${bigQuote};color:${style.textColor};">"</div>
-            ${data.logo ? `<div style="margin-bottom:15%;"><img src="${data.logo}" style="${this.getLogoStyle(data)}"></div>` : ''}
+            <div style="${logoStyle}">
+                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:3%;">` : ''}
+            </div>
             <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
                 <p style="color:${style.textMuted};font-size:${style.subtitleSize};letter-spacing:0.3em;margin-bottom:5%;text-transform:uppercase;">${data.subtitle || 'Company Name'}</p>
                 <h1 style="font-family:'${style.fontFamily}',serif;font-size:${style.titleSize};color:${style.textColor};margin-bottom:8%;font-weight:300;">${data.mainTitle || 'CATALOGUE'}</h1>
                 <div style="width:50px;height:1px;background:${style.accentAlt};margin-bottom:8%;"></div>
                 <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;font-style:italic;">${data.body || 'Tagline atau slogan perusahaan'}</p>
             </div>
-            <p style="color:${style.textMuted};font-size:${style.bodySize};margin-top:auto;">www.motifkain.com</p>
         </div>`;
     },
 
@@ -718,22 +752,20 @@ const PageTemplates = {
     // Cover Logo Left - Logo di kiri, teks di kanan
     renderCoverLogoLeft(data, num) {
         const style = this.getStyleProps(data);
+        const logoPos = data.logoPosition || 'left';
+        // Position options: left, right, top-center, center, bottom
+        const logoAreaStyle = logoPos === 'top-center' ? 'text-align:center;margin-bottom:8%;' :
+                             logoPos === 'center' ? 'text-align:center;margin:auto;' :
+                             logoPos === 'bottom' ? 'text-align:center;margin-top:8%;' :
+                             'text-align:center;'; // left default
         return `
-        <div style="width:100%;height:100%;display:flex;">
-            <!-- Kiri - Area Logo -->
-            <div style="width:35%;height:100%;background:${style.bgDark};padding:8%;display:flex;flex-direction:column;justify-content:space-between;">
-                <div>
-                    ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}margin-bottom:15%;">` : `<div style="padding:15% 20%;background:rgba(255,255,255,0.1);border-radius:8px;margin-bottom:15%;"><span style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};">LOGO</span></div>`}
-                    <div style="width:30px;height:1px;background:${style.accent};margin-bottom:10%;"></div>
-                </div>
-                <div>
-                    <p style="color:rgba(255,255,255,0.4);font-size:${style.bodySize};line-height:1.8;letter-spacing:0.1em;">${data.header || 'LOREM IPSUM'}</p>
-                    <p style="color:rgba(255,255,255,0.6);font-size:${style.bodySize};margin-top:8%;line-height:1.6;">${data.body || 'Deskripsi singkat'}</p>
-                </div>
-                <p style="color:rgba(255,255,255,0.25);font-size:${style.bodySize};">website.motifkain.com</p>
+        <div style="width:100%;height:100%;display:flex;flex-direction:column;background:${style.bgColor};">
+            <!-- Logo Area (adjustable position) -->
+            <div style="padding:8%;${logoAreaStyle}">
+                ${data.logo ? `<img src="${data.logo}" style="${this.getLogoStyle(data)}">` : ''}
             </div>
-            <!-- Kanan - Area Teks -->
-            <div style="width:65%;height:100%;background:${style.bgCard};padding:10%;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
+            <!-- Main Content -->
+            <div style="flex:1;padding:0 8% 8%;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
                 ${data.image ? `<img src="${data.image}" style="position:absolute;top:0;right:0;width:100%;height:100%;object-fit:cover;opacity:0.08;">` : ''}
                 <div style="position:absolute;top:8%;right:8%;width:50px;height:50px;border-top:2px solid ${style.bgMuted};border-right:2px solid ${style.bgMuted};"></div>
                 <div style="width:40px;height:1px;background:${style.bgMuted};margin-bottom:10%;"></div>
@@ -741,7 +773,8 @@ const PageTemplates = {
                 <p style="color:${style.accentAlt};font-size:${style.subtitleSize};letter-spacing:0.25em;margin-bottom:8%;">${data.subtitle || 'COMPANY PROFILE'}</p>
                 <div style="width:50px;height:2px;background:${style.textColor};margin-bottom:8%;"></div>
                 <p style="color:${style.textMuted};font-size:${style.bodySize};line-height:1.8;">${data.description || 'Koleksi produk eksklusif'}</p>
-                <p style="position:absolute;bottom:8%;right:10%;color:${style.textMuted};font-size:${style.bodySize};opacity:0.5;">www.motifkain.com</p>
+                ${data.header ? `<p style="color:${style.textMuted};font-size:${style.bodySize};margin-top:5%;opacity:0.7;">${data.header}</p>` : ''}
+                ${data.body ? `<p style="color:${style.textMuted};font-size:${style.bodySize};margin-top:3%;opacity:0.7;">${data.body}</p>` : ''}
             </div>
         </div>`;
     },

@@ -85,21 +85,24 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.875rem 2.5rem;
-            background: var(--teal);
-            color: white;
+            padding: 0.875rem 2rem;
+            background: transparent;
+            color: var(--teal);
             border: none;
-            border-radius: 50px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,139,139,0.3);
             transition: all 0.3s;
         }
         .welcome-btn:hover {
-            background: var(--teal-light);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,139,139,0.4);
+            color: var(--teal-light);
+        }
+        .welcome-btn::after {
+            content: "→";
+            transition: transform 0.3s;
+        }
+        .welcome-btn:hover::after {
+            transform: translateX(4px);
         }
 
         /* ===== MAIN APP (Hidden initially) ===== */
@@ -695,33 +698,6 @@
             padding: 3rem 1rem;
             color: var(--text-light);
         }
-        .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        .empty-state h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-        }
-        .empty-state p {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .products-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.75rem;
-            }
-            .product-info {
-                padding: 0.5rem;
-            }
-            .product-name {
-                font-size: 0.8rem;
-            }
-        }
-
         /* WA Settings */
         .settings-btn {
             position: fixed;
