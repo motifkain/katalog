@@ -178,22 +178,28 @@
             position: absolute;
             left: 0;
             top: 0;
-            width: 4px;
+            width: 6px;
             height: 100%;
-            background: linear-gradient(90deg, #8B7355, #A0896C, #8B7355);
-            z-index: 10;
+            background: linear-gradient(90deg, #6B5344, #8B7355, #A0896C, #8B7355);
+            z-index: 20;
             border-radius: 4px 0 0 4px;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.3);
         }
 
-        /* Page Edge */
-        .page-edge {
+        /* Inner page edge effect - visible when book is open */
+        .inner-edge {
             position: absolute;
-            right: 0;
-            top: 5%;
-            width: 3px;
-            height: 90%;
-            background: linear-gradient(90deg, #ddd, #fff, #ddd);
-            border-radius: 0 2px 2px 0;
+            left: 6px;
+            top: 0;
+            width: 30px;
+            height: 100%;
+            background: linear-gradient(90deg,
+                rgba(139, 115, 85, 0.4) 0%,
+                rgba(139, 115, 85, 0.2) 30%,
+                rgba(139, 115, 85, 0.1) 60%,
+                transparent 100%);
+            z-index: 5;
+            pointer-events: none;
         }
 
         /* Book edge effect - visible when page is open */
@@ -210,9 +216,9 @@
         .book-edge::before {
             content: '';
             position: absolute;
-            left: 0;
+            left: 6px;
             top: 0;
-            width: 2px;
+            width: 20px;
             height: 100%;
             background: linear-gradient(90deg, rgba(0,0,0,0.15), rgba(0,0,0,0.05), transparent);
         }
@@ -964,8 +970,9 @@
         <div class="welcome-container">
             <div class="book-container" id="bookContainer">
                 <div class="book-shadow"></div>
-                <div class="book-spine"></div>
                 <div class="book" id="book">
+                    <div class="book-spine"></div>
+                    <div class="inner-edge"></div>
                     <div class="book-edge"></div>
                     <!-- Next page (underneath) -->
                     <div class="book-page next-page" id="nextPage">
