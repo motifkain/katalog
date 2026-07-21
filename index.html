@@ -1071,12 +1071,18 @@
                 mouseDown = false;
             });
 
-            // Click areas
+            // Click areas - tap on left half = previous, right half = next
             if (leftArea) {
-                leftArea.addEventListener('click', () => flipPage(1)); // Next page
+                leftArea.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    flipPage(-1); // Previous page
+                });
             }
             if (rightArea) {
-                rightArea.addEventListener('click', () => flipPage(-1)); // Previous page
+                rightArea.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    flipPage(1); // Next page
+                });
             }
 
             // Keyboard navigation
@@ -1087,10 +1093,12 @@
         }
 
         function handleSwipe() {
+            if (isFlipping) return;
+
             const diff = touchStartX - touchEndX;
             const threshold = 50;
 
-            if (Math.abs(diff) > threshold && !isFlipping) {
+            if (Math.abs(diff) > threshold) {
                 if (diff > 0) {
                     // Swipe left -> next page
                     flipPage(1);
@@ -1119,9 +1127,9 @@
             isFlipping = true;
 
             if (direction > 0) {
-                // Flip forward
-                currentPageIndex++;
+                // Flip forward (current page flips away to left, next page appears)
                 page.classList.add('flipping');
+                currentPageIndex++;
 
                 setTimeout(() => {
                     renderBookPage(currentPageIndex);
@@ -1132,14 +1140,18 @@
             } else {
                 // Flip backward
                 currentPageIndex--;
-                page.classList.add('flipping');
-
+                renderBookPage(currentPageIndex);
+                // Quick flip animation backward
+                page.style.transform = 'rotateY(90deg)';
                 setTimeout(() => {
-                    renderBookPage(currentPageIndex);
-                    page.classList.remove('flipping');
+                    page.style.transition = 'transform 0.4s ease';
+                    page.style.transform = 'rotateY(0deg)';
                     renderPageIndicator();
-                    isFlipping = false;
-                }, 400);
+                    setTimeout(() => {
+                        page.style.transition = '';
+                        isFlipping = false;
+                    }, 400);
+                }, 50);
             }
         }
 
