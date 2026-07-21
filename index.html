@@ -74,8 +74,32 @@
             border-radius: 6px;
             overflow: hidden;
             transform-style: preserve-3d;
+            backface-visibility: hidden;
             transform-origin: left center;
             z-index: 2;
+        }
+
+        /* Front face of page (shows content) */
+        .book-page .page-front {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            backface-visibility: hidden;
+        }
+
+        /* Back face of page (white/blank - shows when page is flipped) */
+        .book-page .page-back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            transform: rotateY(180deg);
+            backface-visibility: hidden;
         }
 
         /* Fixed shadow behind the book - doesn't move during animation */
@@ -111,7 +135,7 @@
             opacity: 1;
         }
 
-        .book-page .page-content {
+        .book-page .page-front {
             width: 100%;
             height: 100%;
         }
@@ -912,13 +936,15 @@
                 <div class="book" id="book">
                     <!-- Next page (underneath) -->
                     <div class="book-page next-page" id="nextPage">
-                        <div class="page-content" id="nextPageContent"></div>
+                        <div class="page-front" id="nextPageContent"></div>
+                        <div class="page-back"></div>
                     </div>
                     <!-- Current page (on top) -->
                     <div class="book-page" id="bookPage">
-                        <div class="page-content" id="bookPageContent">
+                        <div class="page-front" id="bookPageContent">
                             <div class="loading"><div class="spinner"></div></div>
                         </div>
+                        <div class="page-back"></div>
                     </div>
                 </div>
                 <div class="swipe-left-area" id="swipeLeft"></div>
@@ -1288,7 +1314,7 @@
                 // - Halaman bawah: STATIONER
 
                 // Put the previous page content in nextPageEl first
-                nextPageEl.querySelector('.page-content').innerHTML = nextPageContent.innerHTML;
+                nextPageEl.querySelector('.page-front').innerHTML = nextPageContent.innerHTML;
                 nextPageContent.innerHTML = '';
 
                 // Set initial states - AMBA PAGE TERLIHAT
@@ -1322,13 +1348,13 @@
 
                 // Swap the pages content
                 if (direction > 0) {
-                    const contentDiv = currentPage.querySelector('.page-content');
+                    const contentDiv = currentPage.querySelector('.page-front');
                     contentDiv.innerHTML = nextPageContent.innerHTML;
                     nextPageContent.innerHTML = '';
                 } else {
-                    const contentDiv = currentPage.querySelector('.page-content');
-                    contentDiv.innerHTML = nextPageEl.querySelector('.page-content').innerHTML;
-                    nextPageEl.querySelector('.page-content').innerHTML = '';
+                    const contentDiv = currentPage.querySelector('.page-front');
+                    contentDiv.innerHTML = nextPageEl.querySelector('.page-front').innerHTML;
+                    nextPageEl.querySelector('.page-front').innerHTML = '';
                 }
 
                 // Reset - halaman baru menjadi "current page" yang stationer
