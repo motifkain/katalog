@@ -31,57 +31,149 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
-        /* ===== WELCOME SCREEN ===== */
+        /* ===== WELCOME SCREEN - BOOK STYLE ===== */
         .welcome-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            padding: 2rem 1rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
         }
         .welcome-container {
-            width: 100%;
-            max-width: 420px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1.5rem;
         }
-        .welcome-badge {
-            display: inline-block;
-            padding: 0.5rem 1.25rem;
-            background: var(--white);
-            border-radius: 25px;
-            font-size: 0.75rem;
-            color: var(--teal);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            font-weight: 500;
+
+        /* Book Container */
+        .book-container {
+            position: relative;
+            width: 320px;
+            height: 480px;
+            perspective: 2000px;
+            cursor: pointer;
         }
-        .welcome-cover {
+
+        /* The Book */
+        .book {
+            position: relative;
             width: 100%;
-            max-width: 400px;
-            aspect-ratio: 4 / 5;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow:
-                0 0 0 1px rgba(0,0,0,0.05),
-                0 4px 20px rgba(0,0,0,0.1),
-                0 8px 40px rgba(0,0,0,0.15),
-                0 16px 60px rgba(0,0,0,0.1);
+            height: 100%;
+            transform-style: preserve-3d;
         }
-        .welcome-cover .catalog-page {
+
+        /* Page Stack (pages behind) */
+        .page-stack {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #f0f0f0 0%, #fff 2%, #f8f8f8 98%, #e0e0e0 100%);
+            border-radius: 4px 12px 12px 4px;
+            box-shadow:
+                2px 0 4px rgba(0,0,0,0.1),
+                4px 0 8px rgba(0,0,0,0.05),
+                8px 0 16px rgba(0,0,0,0.03);
+        }
+
+        /* Current Page */
+        .book-page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 4px 12px 12px 4px;
+            box-shadow:
+                0 0 0 1px rgba(0,0,0,0.08),
+                2px 0 8px rgba(0,0,0,0.1),
+                0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transform-origin: left center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            backface-visibility: hidden;
+        }
+
+        .book-page.flipping {
+            transform: rotateY(-180deg);
+            box-shadow:
+                0 0 0 1px rgba(0,0,0,0.08),
+                -2px 0 8px rgba(0,0,0,0.1),
+                0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .book-page .page-content {
             width: 100%;
             height: 100%;
         }
-        .welcome-description {
-            text-align: center;
-            color: var(--text-light);
-            font-size: 0.9rem;
-            max-width: 300px;
-            line-height: 1.6;
+
+        /* Page Edge */
+        .page-edge {
+            position: absolute;
+            right: 0;
+            top: 5%;
+            width: 3px;
+            height: 90%;
+            background: linear-gradient(90deg, #ddd, #fff, #ddd);
+            border-radius: 0 2px 2px 0;
         }
+
+        /* Navigation Hint */
+        .page-hint {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        .page-hint svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Swipe area indicators */
+        .swipe-left-area, .swipe-right-area {
+            position: absolute;
+            top: 0;
+            width: 40%;
+            height: 100%;
+            z-index: 100;
+        }
+        .swipe-left-area { left: 0; }
+        .swipe-right-area { right: 0; }
+
+        /* Page indicator */
+        .page-indicator {
+            display: flex;
+            gap: 6px;
+            margin-top: 50px;
+        }
+        .page-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+            transition: all 0.3s;
+        }
+        .page-dot.active {
+            background: var(--teal);
+            transform: scale(1.2);
+        }
+
+        /* Catalog page inside book */
+        .book-page .catalog-page {
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 2 / 3;
+        }
+
         .welcome-btn {
+            margin-top: 60px;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
@@ -782,12 +874,26 @@
     </style>
 </head>
 <body>
-    <!-- WELCOME SCREEN -->
+    <!-- WELCOME SCREEN - BOOK STYLE -->
     <div class="welcome-screen" id="welcomeScreen">
         <div class="welcome-container">
-            <div class="welcome-cover" id="welcomeCover">
-                <div class="loading"><div class="spinner"></div></div>
+            <div class="book-container" id="bookContainer">
+                <div class="book" id="book">
+                    <div class="page-stack"></div>
+                    <div class="book-page" id="bookPage">
+                        <div class="page-content" id="bookPageContent">
+                            <div class="loading"><div class="spinner"></div></div>
+                        </div>
+                    </div>
+                    <div class="page-edge"></div>
+                </div>
+                <div class="swipe-left-area" id="swipeLeft"></div>
+                <div class="swipe-right-area" id="swipeRight"></div>
+                <div class="page-hint">
+                    <span>Geser untuk membalik halaman</span>
+                </div>
             </div>
+            <div class="page-indicator" id="pageIndicator"></div>
             <button class="welcome-btn" onclick="openKatalog()">
                 Lihat Katalog
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -937,18 +1043,39 @@
         let currentImageIndex = 0;
         let isZoomed = false;
 
+        // Book navigation state
+        let catalogPages = [];
+        let currentPageIndex = 0;
+        let isFlipping = false;
+        let touchStartX = 0;
+        let touchEndX = 0;
+
         // ===== INITIALIZATION =====
         document.addEventListener('DOMContentLoaded', async () => {
             setupCategoryTabs();
             await loadWelcomeData();
             await loadProducts();
             setupSettingsModal();
+            setupBookNavigation();
         });
 
-        // ===== WELCOME SCREEN =====
+        // ===== WELCOME SCREEN - BOOK STYLE =====
         async function loadWelcomeData() {
             try {
-                // Try to fetch from welcome_screen collection
+                // Fetch all catalog pages for book navigation
+                const res = await fetch(`${CONFIG.pocketbaseUrl}/api/collections/catalog_pages/records?sort=order`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.items && data.items.length > 0) {
+                        catalogPages = data.items;
+                    }
+                }
+            } catch (e) {
+                console.log('Catalog pages not found, using welcome data only');
+            }
+
+            // Also try welcome_screen collection
+            try {
                 const res = await fetch(`${CONFIG.pocketbaseUrl}/api/collections/welcome_screen/records?sort=-created&per_page=1`);
                 if (res.ok) {
                     const data = await res.json();
@@ -957,32 +1084,150 @@
                     }
                 }
             } catch (e) {
-                console.log('Welcome data not found, using default');
+                console.log('Welcome data not found');
             }
 
-            // Render welcome cover with template
-            renderWelcomeCover();
+            // Render first page
+            renderBookPage(0);
+            renderPageIndicator();
         }
 
-        function renderWelcomeCover() {
-            const container = document.getElementById('welcomeCover');
-            const descEl = document.getElementById('welcomeDescription');
+        function renderBookPage(index) {
+            const content = document.getElementById('bookPageContent');
+            if (!content) return;
 
-            // Default template
-            const templateId = welcomeData?.template || 'cover-dark';
-            const pageData = {
-                ...welcomeData,
-                template: templateId,
-                mainTitle: welcomeData?.mainTitle || 'MOTIFKAIN',
-                subtitle: welcomeData?.subtitle || 'KOLEKSI DESAIN',
-                description: welcomeData?.description || 'Desain motif kain eksklusif',
-                colorTheme: welcomeData?.colorTheme || 'elegant-gold'
-            };
+            if (catalogPages.length > 0 && index < catalogPages.length) {
+                const page = catalogPages[index];
+                content.innerHTML = `<div class="catalog-page">${PageTemplates.renderPage(page, index + 1)}</div>`;
+            } else {
+                // Show welcome/cover page
+                const templateId = welcomeData?.template || 'cover-dark';
+                const pageData = {
+                    ...welcomeData,
+                    template: templateId,
+                    mainTitle: welcomeData?.mainTitle || '',
+                    subtitle: welcomeData?.subtitle || '',
+                    description: welcomeData?.description || '',
+                    colorTheme: welcomeData?.colorTheme || 'elegant-gold'
+                };
+                content.innerHTML = `<div class="catalog-page">${PageTemplates.renderPage(pageData, 1)}</div>`;
+            }
+        }
 
-            container.innerHTML = `<div class="catalog-page">${PageTemplates.renderPage(pageData, 1)}</div>`;
+        function renderPageIndicator() {
+            const indicator = document.getElementById('pageIndicator');
+            if (!indicator) return;
 
-            if (welcomeData?.description) {
-                descEl.textContent = welcomeData.description;
+            const totalPages = catalogPages.length || 1;
+            indicator.innerHTML = Array.from({length: Math.min(totalPages, 10)}, (_, i) =>
+                `<div class="page-dot ${i === currentPageIndex ? 'active' : ''}"></div>`
+            ).join('');
+        }
+
+        function setupBookNavigation() {
+            const container = document.getElementById('bookContainer');
+            const leftArea = document.getElementById('swipeLeft');
+            const rightArea = document.getElementById('swipeRight');
+            const page = document.getElementById('bookPage');
+
+            if (!container) return;
+
+            // Touch events
+            container.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            container.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+
+            // Mouse events for desktop
+            let mouseDown = false;
+            let mouseStartX = 0;
+
+            container.addEventListener('mousedown', (e) => {
+                mouseDown = true;
+                mouseStartX = e.clientX;
+            });
+
+            document.addEventListener('mouseup', (e) => {
+                if (mouseDown) {
+                    touchEndX = e.clientX;
+                    handleSwipe();
+                }
+                mouseDown = false;
+            });
+
+            // Click areas
+            if (leftArea) {
+                leftArea.addEventListener('click', () => flipPage(1)); // Next page
+            }
+            if (rightArea) {
+                rightArea.addEventListener('click', () => flipPage(-1)); // Previous page
+            }
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight') flipPage(1);
+                if (e.key === 'ArrowLeft') flipPage(-1);
+            });
+        }
+
+        function handleSwipe() {
+            const diff = touchStartX - touchEndX;
+            const threshold = 50;
+
+            if (Math.abs(diff) > threshold && !isFlipping) {
+                if (diff > 0) {
+                    // Swipe left -> next page
+                    flipPage(1);
+                } else {
+                    // Swipe right -> previous page
+                    flipPage(-1);
+                }
+            }
+        }
+
+        function flipPage(direction) {
+            const page = document.getElementById('bookPage');
+            if (!page || isFlipping) return;
+
+            const totalPages = catalogPages.length || 1;
+
+            if (direction > 0 && currentPageIndex >= totalPages - 1) {
+                // Already at last page
+                return;
+            }
+            if (direction < 0 && currentPageIndex <= 0) {
+                // Already at first page
+                return;
+            }
+
+            isFlipping = true;
+
+            if (direction > 0) {
+                // Flip forward
+                currentPageIndex++;
+                page.classList.add('flipping');
+
+                setTimeout(() => {
+                    renderBookPage(currentPageIndex);
+                    page.classList.remove('flipping');
+                    renderPageIndicator();
+                    isFlipping = false;
+                }, 400);
+            } else {
+                // Flip backward
+                currentPageIndex--;
+                page.classList.add('flipping');
+
+                setTimeout(() => {
+                    renderBookPage(currentPageIndex);
+                    page.classList.remove('flipping');
+                    renderPageIndicator();
+                    isFlipping = false;
+                }, 400);
             }
         }
 
