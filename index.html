@@ -1272,9 +1272,9 @@
 
                 // Start animation
                 requestAnimationFrame(() => {
-                    // Halaman atas rotate dari engsel kiri
+                    // Halaman atas rotate dari engsel kiri (arah negatif agar terlihat keluar)
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    currentPage.style.transform = 'perspective(1500px) rotateY(180deg)';
+                    currentPage.style.transform = 'perspective(1500px) rotateY(-180deg)';
 
                     // Halaman bawah slide dari kanan + fade in (waktunya sama)
                     nextPageEl.style.transition = `transform ${animDuration}ms ease-in-out, opacity ${animDuration}ms ease-in-out`;
@@ -1309,9 +1309,9 @@
 
                 // Start animation
                 requestAnimationFrame(() => {
-                    // Halaman atas rotate dari engsel kanan
+                    // Halaman atas rotate dari engsel kanan (arah positif agar terlihat keluar)
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    currentPage.style.transform = 'perspective(1500px) rotateY(-180deg)';
+                    currentPage.style.transform = 'perspective(1500px) rotateY(180deg)';
 
                     // Halaman bawah slide dari kiri + fade in
                     nextPageEl.style.transition = `transform ${animDuration}ms ease-in-out, opacity ${animDuration}ms ease-in-out`;
