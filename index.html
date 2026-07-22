@@ -1311,35 +1311,14 @@
             const animDuration = 1000;
 
             if (direction > 0) {
-                // FORWARD: Buka buku dari kanan
-                // Engsel di KIRI (spine)
+                // FORWARD: Buka buku
+                // Animation: page moves from 0° to -180° (opens to left)
 
-                // Set initial states - current page shows current content
-                currentPage.style.transition = 'none';
-                currentPage.style.transform = 'rotateY(0deg)';
-                currentPage.style.opacity = '1';
-                currentPage.style.zIndex = '2';
-
-                // Next page already has next content in nextPageContent
-                nextPageEl.style.transition = 'none';
-                nextPageEl.style.transform = 'rotateY(0deg)';
-                nextPageEl.style.opacity = '1';
-                nextPageEl.style.zIndex = '1';
-
-                // Force reflow
-                currentPage.offsetHeight;
-                nextPageEl.offsetHeight;
-
-                // Start animation - page rotates away, revealing next page underneath
-                requestAnimationFrame(() => {
-                    currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    currentPage.style.transformOrigin = 'left center';
-                    currentPage.style.transform = 'rotateY(-180deg)';
-                });
-
-            } else {
-                // BACKWARD: Putar halaman kembali
-                // Engsel di KIRI (spine)
+                // Prepare next page content FIRST
+                const currentFront = currentPage.querySelector('.page-front');
+                const nextFront = nextPageEl.querySelector('.page-front');
+                nextFront.innerHTML = nextPageContent.innerHTML;
+                nextPageContent.innerHTML = '';
 
                 // Set initial states
                 currentPage.style.transition = 'none';
@@ -1356,11 +1335,42 @@
                 currentPage.offsetHeight;
                 nextPageEl.offsetHeight;
 
-                // Start animation
+                // Start animation - opens to left
                 requestAnimationFrame(() => {
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transformOrigin = 'left center';
                     currentPage.style.transform = 'rotateY(-180deg)';
+                });
+
+            } else {
+                // BACKWARD: Tutup buku (kebalikan dari membuka)
+                // Animation: current page moves from -180° back to 0° (closes/returns)
+
+                // Prepare previous page content in current page FIRST
+                const currentFront = currentPage.querySelector('.page-front');
+                currentFront.innerHTML = nextPageContent.innerHTML;
+                nextPageContent.innerHTML = '';
+
+                // Set initial states - current page starts at -180° (flipped position)
+                currentPage.style.transition = 'none';
+                currentPage.style.transform = 'rotateY(-180deg)';
+                currentPage.style.opacity = '1';
+                currentPage.style.zIndex = '2';
+
+                nextPageEl.style.transition = 'none';
+                nextPageEl.style.transform = 'rotateY(0deg)';
+                nextPageEl.style.opacity = '1';
+                nextPageEl.style.zIndex = '1';
+
+                // Force reflow
+                currentPage.offsetHeight;
+                nextPageEl.offsetHeight;
+
+                // Start animation - closes/returns to 0°
+                requestAnimationFrame(() => {
+                    currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
+                    currentPage.style.transformOrigin = 'left center';
+                    currentPage.style.transform = 'rotateY(0deg)';
                 });
             }
 
@@ -1368,18 +1378,6 @@
             setTimeout(() => {
                 // Update currentPageIndex
                 currentPageIndex = targetIndex;
-
-                // NOW swap content after animation is done
-                if (direction > 0) {
-                    const currentFront = currentPage.querySelector('.page-front');
-                    currentFront.innerHTML = nextPageContent.innerHTML;
-                    nextPageContent.innerHTML = '';
-                } else {
-                    // For backward, move previous page content
-                    const currentFront = currentPage.querySelector('.page-front');
-                    currentFront.innerHTML = nextPageContent.innerHTML;
-                    nextPageContent.innerHTML = '';
-                }
 
                 // Reset transforms
                 currentPage.style.transition = 'none';
