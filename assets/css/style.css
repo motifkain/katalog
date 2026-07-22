@@ -111,246 +111,172 @@ img {
     to { transform: rotate(360deg); }
 }
 
-/* ===== WELCOME SCREEN ===== */
+/* ===== WELCOME SCREEN - SIMPEL SPLIT LAYOUT ===== */
 .welcome-screen {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     min-height: 100vh;
-    padding: 1rem;
-    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
 }
 
-.welcome-container {
+.welcome-left {
+    width: 45%;
+    background: #1a2a3a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-left-content {
+    width: 100%;
+    max-width: 280px;
+    text-align: center;
+}
+
+.welcome-logo-area {
+    width: 100%;
+    min-height: 200px;
+    border: 3px dashed rgba(255,255,255,0.3);
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-/* Sticky Notes */
-.sticky-notes {
-    position: absolute;
-    top: -20px;
-    left: 0;
-    display: flex;
-    gap: 0;
-    z-index: 30;
-}
-
-.sticky-note {
-    height: 22px;
-    padding: 0 10px;
-    border-radius: 6px 6px 0 0;
-    font-size: 0.65rem;
-    font-weight: 600;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    text-align: center;
-    box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
-    transition: all 0.2s;
-    margin-right: 2px;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.85rem;
+    padding: 20px;
+    margin-bottom: 30px;
 }
 
-.sticky-note:nth-child(1) { background: #4A90D9; }
-.sticky-note:nth-child(2) { background: #F5C242; color: #333; }
-.sticky-note:nth-child(3) { background: #E57373; }
-.sticky-note:nth-child(4) { background: #81C784; }
-
-.sticky-note:hover {
-    filter: brightness(1.1);
-    transform: translateY(-2px);
+.welcome-logo-area img {
+    max-width: 100%;
+    max-height: 180px;
+    object-fit: contain;
+    border-radius: 4px;
 }
 
-/* Slide Container */
-.slide-container {
+.welcome-left-text {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.9rem;
+    line-height: 1.8;
+}
+
+.welcome-right {
+    width: 55%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 80px;
+    background: #fff;
     position: relative;
-    width: 320px;
-    height: 480px;
     overflow: hidden;
 }
 
-.paper-stack {
+.welcome-right::before {
+    content: '';
     position: absolute;
-    top: 0;
-    left: 0;
+    bottom: 0;
+    right: 0;
     width: 100%;
-    height: 100%;
-    pointer-events: none;
+    height: 180px;
+    background: linear-gradient(135deg, #fce4ec 25%, transparent 25%) -20px 0,
+        linear-gradient(225deg, #fce4ec 25%, transparent 25%) -20px 0,
+        linear-gradient(315deg, #e1bee7 25%, transparent 25%),
+        linear-gradient(45deg, #e1bee7 25%, transparent 25%);
+    background-size: 40px 40px;
+    background-color: #fff8e1;
+    opacity: 0.5;
 }
 
-.paper-shadow {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 6px;
-    background: #fff;
-}
-
-.paper-shadow:nth-child(1) { top: 6px; left: 3px; background: #e8e8e8; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.paper-shadow:nth-child(2) { top: 4px; left: 2px; background: #f0f0f0; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-.paper-shadow:nth-child(3) { top: 2px; left: 1px; background: #f5f5f5; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-
-.slide-page {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #fff;
-    border-radius: 6px;
-    overflow: hidden;
+.welcome-header {
+    position: relative;
     z-index: 1;
 }
 
-.slide-page.incoming-slide {
-    z-index: 0;
-    opacity: 0;
+.welcome-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a2a3a;
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
 }
 
-.slide-page.sliding-next {
-    animation: slideOutRight 0.4s ease-in forwards;
-    z-index: 10;
+.welcome-subtitle {
+    font-size: 0.9rem;
+    color: #4CAF50;
+    letter-spacing: 0.2em;
+    margin-bottom: 20px;
+    text-transform: uppercase;
 }
 
-.slide-page.sliding-prev {
-    animation: slideOutLeft 0.4s ease-in forwards;
-    z-index: 10;
+.welcome-divider {
+    width: 50px;
+    height: 2px;
+    background: #1a2a3a;
+    margin-bottom: 20px;
 }
 
-@keyframes slideOutRight {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-100%); }
+.welcome-description {
+    font-size: 0.85rem;
+    color: #888;
+    line-height: 1.8;
+    max-width: 320px;
+    position: relative;
+    z-index: 1;
 }
 
-@keyframes slideOutLeft {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(100%); }
-}
-
-.slide-page.incoming-next {
-    animation: slideInLeft 0.4s ease-out forwards;
-    z-index: 5;
-}
-
-.slide-page.incoming-prev {
-    animation: slideInRight 0.4s ease-out forwards;
-    z-index: 5;
-}
-
-@keyframes slideInLeft {
-    0% { transform: translateX(100%); opacity: 1; }
-    100% { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes slideInRight {
-    0% { transform: translateX(-100%); opacity: 1; }
-    100% { transform: translateX(0); opacity: 1; }
-}
-
-/* Navigation */
-.book-nav-container {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.book-nav {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.book-nav-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--card);
-    border: 2px solid var(--divider);
-    color: var(--text-primary);
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    cursor: pointer;
-}
-
-.book-nav-btn:hover:not(:disabled) {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: white;
-}
-
-.book-nav-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.page-counter {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-    background: rgba(255,255,255,0.9);
-    padding: 4px 12px;
-    border-radius: 4px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-
-.page-indicator {
-    display: flex;
-    gap: 6px;
-    margin-top: 50px;
-}
-
-.page-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #ccc;
-    transition: all 0.3s;
-}
-
-.page-dot.active {
-    background: var(--primary);
-    transform: scale(1.2);
-}
-
-.swipe-left-area, .swipe-right-area {
-    position: absolute;
-    top: 0;
-    width: 40%;
-    height: 100%;
-    z-index: 100;
-    cursor: pointer;
-}
-.swipe-left-area { left: 0; }
-.swipe-right-area { right: 0; }
-
-/* Enter Catalog Button */
-.enter-catalog-btn {
-    margin-top: 2rem;
-    padding: 14px 48px;
-    background: var(--primary);
+.welcome-btn {
+    margin-top: 30px;
+    padding: 12px 32px;
+    background: #1B5E20;
     color: white;
     border: none;
-    border-radius: var(--border-radius-sm);
-    font-size: 1rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
-    box-shadow: 0 4px 15px rgba(27, 94, 32, 0.3);
+    box-shadow: 0 4px 12px rgba(27, 94, 32, 0.3);
+    position: relative;
+    z-index: 1;
+    width: fit-content;
 }
 
-.enter-catalog-btn:hover {
-    background: var(--primary-light);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(27, 94, 32, 0.4);
+.welcome-btn:hover {
+    background: #2E7D32;
+    transform: translateY(-1px);
+}
+
+/* Back button in dashboard */
+.back-btn-container {
+    padding: 12px 16px;
+    background: white;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.back-btn {
+    padding: 8px 16px;
+    background: white;
+    color: #1B5E20;
+    border: 1px solid #1B5E20;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.back-btn:hover {
+    background: #1B5E20;
+    color: white;
+}
+
+/* Welcome screen old styles - hidden */
+.welcome-screen.old-style {
+    display: none;
 }
 
 /* ===== MAIN APP SCREEN ===== */

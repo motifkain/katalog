@@ -9,37 +9,49 @@
 </head>
 <body>
     <div id="welcomeScreen" class="welcome-screen">
-        <div class="welcome-left">
-            <div class="welcome-left-content">
-                <div class="welcome-logo-area" id="welcomeLogo">
-                    <img id="welcomeLogoImg" src="" style="display:none;">
-                    <span id="welcomeLogoPlaceholder">Upload Logo</span>
+        <div class="welcome-container">
+            <div class="slide-container" id="slideContainer">
+                <div class="sticky-notes" id="stickyNotes">
+                    <div class="sticky-note">Panel Atasan Wanita</div>
+                    <div class="sticky-note">Panel Gamis</div>
+                    <div class="sticky-note">Seamless</div>
+                    <div class="sticky-note">Portfolio</div>
                 </div>
-                <p class="welcome-left-text" id="welcomeLeftText">
-                    Deskripsi singkat tentang<br>koleksi atau perusahaan Anda.
-                </p>
+                <div class="paper-stack">
+                    <div class="paper-shadow"></div>
+                    <div class="paper-shadow"></div>
+                    <div class="paper-shadow"></div>
+                </div>
+                <div class="slide-page" id="currentSlide">
+                    <div id="slideContent"><div class="loading"><div class="spinner"></div></div></div>
+                </div>
+                <div class="slide-page incoming-slide" id="incomingSlide">
+                    <div id="incomingSlideContent"></div>
+                </div>
+                <div class="swipe-left-area" id="swipeLeft"></div>
+                <div class="swipe-right-area" id="swipeRight"></div>
             </div>
-        </div>
-        <div class="welcome-right">
-            <div class="welcome-header">
-                <h1 class="welcome-title" id="welcomeTitle">CATALOG</h1>
-                <p class="welcome-subtitle" id="welcomeSubtitle">Company Profile</p>
-                <div class="welcome-divider"></div>
-                <p class="welcome-description" id="welcomeDesc">
-                    Koleksi produk eksklusif kami
-                </p>
+            <div class="book-nav-container">
+                <div class="book-nav">
+                    <button class="book-nav-btn" id="prevBtn" onclick="slidePage(-1)">&lt;</button>
+                    <button class="book-nav-btn" id="nextBtn" onclick="slidePage(1)">&gt;</button>
+                </div>
+                <div class="page-counter" id="pageCounter">1 / 1</div>
             </div>
-            <button class="welcome-btn" onclick="openKatalog()">Lihat Katalog</button>
+            <div class="page-indicator" id="pageIndicator"></div>
+            <button class="enter-catalog-btn" onclick="openKatalog()">Masuk Katalog</button>
         </div>
     </div>
 
     <div id="appScreen" class="app-screen">
         <header class="app-header">
             <div class="header-top">
-                <span class="header-title">MotifKain</span>
+                <button class="home-btn" onclick="backToWelcome()">H</button>
+                <div class="header-logo"><span class="header-title">MotifKain</span></div>
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="Cari produk..." oninput="filterProducts()">
                 </div>
+                <button class="filter-btn" id="filterBtn" onclick="toggleFilters()">F</button>
             </div>
             <nav class="category-tabs" id="categoryTabs">
                 <button class="category-tab active" data-category="desain-motif">Desain Motif</button>
@@ -48,12 +60,16 @@
                 <button class="category-tab" data-category="asesoris">Asesoris</button>
             </nav>
         </header>
-
-        <div class="back-btn-container">
-            <button class="back-btn" onclick="backToWelcome()">&lt; Kembali ke Welcome</button>
-        </div>
-
         <div class="subcategory-bar" id="subcategoryBar"></div>
+        <div class="filter-section" id="filterSection">
+            <div class="filter-title">Subkategori</div>
+            <div class="filter-chips" id="filterChips"></div>
+        </div>
+        <div class="active-filters" id="activeFilters" style="display:none;">
+            <span>Filter aktif:</span>
+            <div id="activeFilterTags"></div>
+            <button class="reset-filters" onclick="resetFilters()">Reset</button>
+        </div>
         <main class="products-section">
             <div class="products-grid" id="productsGrid">
                 <div class="loading"><div class="spinner"></div></div>
@@ -67,19 +83,24 @@
             <button class="detail-close" onclick="closeDetail()">X</button>
             <div class="detail-gallery" id="detailGallery">
                 <img id="detailImage" src="" alt="">
+                <div class="gallery-badge" id="galleryBadge" style="display:none;"></div>
+                <div class="gallery-dots" id="galleryDots"></div>
             </div>
+            <div class="thumbnail-gallery" id="thumbnailGallery"></div>
             <div class="detail-info">
                 <h2 class="detail-name" id="detailName"></h2>
                 <p class="detail-price" id="detailPrice"></p>
                 <span class="detail-badge" id="detailBadge"></span>
-                <div class="store-card">
+                <div class="store-card" onclick="openWhatsApp()">
                     <div class="store-avatar" id="storeAvatar">M</div>
                     <div class="store-info">
                         <div class="store-name" id="storeName">MotifKain</div>
                         <div class="store-location" id="storeLocation"></div>
                     </div>
+                    <div class="store-arrow">&gt;</div>
                 </div>
                 <div class="detail-section">
+                    <h3 class="detail-section-title">Deskripsi</h3>
                     <p class="detail-description" id="detailDescription"></p>
                 </div>
             </div>
@@ -90,6 +111,7 @@
     </div>
 
     <script src="config.js"></script>
+    <script src="assets/js/templates.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 </html>
