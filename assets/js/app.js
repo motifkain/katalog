@@ -606,7 +606,7 @@ function formatRupiah(num) {
 }
 
 // ===== PRODUCT DETAIL =====
-let currentImageIndex = 0;
+// removed duplicate - already declared at line 27
 let productImages = [];
 let zoomLevel = 1;
 let isDragging = false;
