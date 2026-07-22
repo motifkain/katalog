@@ -22,6 +22,9 @@ let welcomeSettings = window.WELCOME_SETTINGS || {
 
 let products = [];
 let filteredProducts = [];
+let categories = [];
+let productCarousels = {};
+let currentImageIndex = 0;
 let currentCategory = 'desain-motif';
 let currentSubcategory = null;
 
@@ -110,14 +113,58 @@ async function loadCategories() {
     }
 
     // Default categories if none loaded
-    if (categories.length === 0) {
+    if (!categories || categories.length === 0) {
         categories = [
-            { id: 'desain-motif', name: 'Desain Motif', parent: null },
-            { id: 'printing', name: 'Printing Kain', parent: null },
-            { id: 'pakaian', name: 'Pakaian Jadi', parent: null },
-            { id: 'asesoris', name: 'Asesoris', parent: null }
+            { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif' },
+            { id: 'printing', name: 'Printing Kain', slug: 'printing' },
+            { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian' },
+            { id: 'asesoris', name: 'Asesoris', slug: 'asesoris' }
         ];
     }
+
+    // Render category tabs
+    renderCategoryTabs();
+}
+
+function renderCategoryTabs() {
+    const tabs = document.getElementById('categoryTabs');
+    if (!tabs) return;
+
+    tabs.innerHTML = categories.map(cat => `
+        <button class="category-tab ${currentCategory === cat.slug ? 'active' : ''}"
+                data-category="${cat.slug}"
+                onclick="selectCategory('${cat.slug}')">
+            ${cat.name}
+        </button>
+    `).join('');
+}
+
+function selectCategory(slug) {
+    currentCategory = slug;
+    currentSubcategory = null;
+    renderCategoryTabs();
+    renderSubcategories();
+    filterProducts();
+}
+
+function renderSubcategories() {
+    const bar = document.getElementById('subcategoryBar');
+    if (!bar) return;
+
+    const subs = getSubcategories(currentCategory);
+
+    if (subs.length === 0) {
+        bar.style.display = 'none';
+        return;
+    }
+
+    bar.style.display = 'flex';
+    bar.innerHTML = subs.map(sub => `
+        <button class="subcategory-btn ${currentSubcategory === sub.id ? 'active' : ''}"
+                onclick="selectSubcategory('${sub.id}')">
+            ${sub.name}
+        </button>
+    `).join('');
 }
 
 async function loadProducts() {
@@ -155,41 +202,6 @@ function getSampleProducts() {
         { id: "7", nama: "Kain Batik Tulis", harga: 450000, kategori: "printing", subkategori: "katun", deskripsi: "Kain batik tulis handmade", image: "https://picsum.photos/400/400?random=7", images: [], namatoko: "MotifKain", daerah: "Solo" },
         { id: "8", nama: "Rok Batik Femine", harga: 285000, kategori: "pakaian", subkategori: "bawahan", deskripsi: "Rok batik elegant untuk acara formal", image: "https://picsum.photos/400/400?random=8", images: [], namatoko: "MotifKain", daerah: "Yogyakarta" },
     ];
-}
-
-function setupCategoryTabs() {
-    const tabs = document.querySelectorAll('.category-tab');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentCategory = tab.dataset.category;
-            currentSubcategory = null;
-            renderSubcategories();
-            filterProducts();
-        });
-    });
-}
-
-function renderSubcategories() {
-    const bar = document.getElementById('subcategoryBar');
-    if (!bar) return;
-
-    // Get subcategories for current category
-    const subs = getSubcategories(currentCategory);
-
-    if (subs.length === 0) {
-        bar.style.display = 'none';
-        return;
-    }
-
-    bar.style.display = 'flex';
-    bar.innerHTML = subs.map(sub => `
-        <button class="subcategory-btn ${currentSubcategory === sub.id ? 'active' : ''}"
-                onclick="selectSubcategory('${sub.id}')">
-            ${sub.name}
-        </button>
-    `).join('');
 }
 
 function getSubcategories(category) {
