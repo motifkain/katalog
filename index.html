@@ -962,10 +962,10 @@
             <div class="book-container" id="bookContainer">
                 <!-- Sticky notes / bookmark tabs on top edge -->
                 <div class="sticky-notes">
-                    <div class="sticky-note">Desain Motif Kain</div>
-                    <div class="sticky-note">Printing Kain</div>
-                    <div class="sticky-note">Pakaian Jadi</div>
-                    <div class="sticky-note">Asesoris</div>
+                    <div class="sticky-note">Panel Atasan Wanita</div>
+                    <div class="sticky-note">Panel Gamis</div>
+                    <div class="sticky-note">Seamless</div>
+                    <div class="sticky-note">Portopholio</div>
                 </div>
                 <div class="book-shadow"></div>
                 <div class="book" id="book">
@@ -1104,6 +1104,66 @@
             </div>
         </div>
     </div>
+
+    <!-- Image Zoom Modal -->
+    <div class="zoom-modal" id="zoomModal" onclick="closeZoom()">
+        <div class="zoom-content" onclick="event.stopPropagation()">
+            <button class="zoom-close" onclick="closeZoom()">&times;</button>
+            <img id="zoomImage" src="" alt="Zoomed Image">
+        </div>
+    </div>
+
+    <style>
+        /* Zoom Modal Styles */
+        .zoom-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+        .zoom-modal.active {
+            display: flex;
+        }
+        .zoom-content {
+            position: relative;
+            max-width: 95%;
+            max-height: 95%;
+            cursor: default;
+        }
+        .zoom-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .zoom-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .zoom-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
 
     <!-- Settings Button -->
 
@@ -1264,15 +1324,34 @@
                 if (e.key === 'ArrowLeft') flipPage(-1);
             });
 
-            // Click on image to zoom (coming soon)
+            // Click on image to zoom
             const bookPage = document.getElementById('bookPage');
             if (bookPage) {
                 bookPage.addEventListener('click', (e) => {
                     // Check if clicked on an image
                     if (e.target.tagName === 'IMG') {
-                        alert('Fitur zoom gambar akan segera hadir! 📸');
+                        openImageZoom(e.target.src);
                     }
                 });
+            }
+        }
+
+        // ===== IMAGE ZOOM =====
+        function openImageZoom(src) {
+            const modal = document.getElementById('zoomModal');
+            const zoomImg = document.getElementById('zoomImage');
+            if (modal && zoomImg) {
+                zoomImg.src = src;
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeZoom() {
+            const modal = document.getElementById('zoomModal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
             }
         }
 
