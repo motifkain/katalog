@@ -140,53 +140,71 @@
             z-index: 1;
         }
 
-        /* Slide animation - outgoing page slides out */
+        /* Incoming slide - starts behind current */
+        .slide-page.incoming-slide {
+            z-index: 0;
+            opacity: 0;
+        }
+
+        /* Outgoing slide - slides out */
         .slide-page.sliding-next {
-            animation: slideOutNext 0.4s ease-in forwards;
+            animation: slideOutRight 0.4s ease-in forwards;
             z-index: 10;
         }
 
         .slide-page.sliding-prev {
-            animation: slideOutPrev 0.4s ease-in forwards;
+            animation: slideOutLeft 0.4s ease-in forwards;
             z-index: 10;
         }
 
-        @keyframes slideOutNext {
+        @keyframes slideOutRight {
             0% {
                 transform: translateX(0);
-                opacity: 1;
             }
             100% {
-                transform: translateX(-30%);
-                opacity: 0;
+                transform: translateX(-100%);
             }
         }
 
-        @keyframes slideOutPrev {
+        @keyframes slideOutLeft {
             0% {
                 transform: translateX(0);
-                opacity: 1;
             }
             100% {
-                transform: translateX(30%);
-                opacity: 0;
+                transform: translateX(100%);
             }
         }
 
-        /* Incoming slide - fade in from same direction */
-        .slide-page.incoming {
-            animation: fadeInSlide 0.4s ease-out forwards;
+        /* Incoming slide - slides in from opposite direction */
+        .slide-page.incoming-next {
+            animation: slideInLeft 0.4s ease-out forwards;
             z-index: 5;
         }
 
-        @keyframes fadeInSlide {
+        .slide-page.incoming-prev {
+            animation: slideInRight 0.4s ease-out forwards;
+            z-index: 5;
+        }
+
+        @keyframes slideInLeft {
             0% {
-                opacity: 0;
-                transform: translateX(0);
+                transform: translateX(100%);
+                opacity: 1;
             }
             100% {
-                opacity: 1;
                 transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInRight {
+            0% {
+                transform: translateX(-100%);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
             }
         }
 
@@ -996,11 +1014,16 @@
                     <div class="paper-shadow"></div>
                 </div>
 
-                <!-- Main slide page -->
+                <!-- Main slide page (outgoing) -->
                 <div class="slide-page" id="currentSlide">
                     <div id="slideContent">
                         <div class="loading"><div class="spinner"></div></div>
                     </div>
+                </div>
+
+                <!-- Incoming slide page -->
+                <div class="slide-page incoming-slide" id="incomingSlide">
+                    <div id="incomingSlideContent"></div>
                 </div>
 
                 <!-- Swipe areas -->
@@ -1371,9 +1394,11 @@
             if (isFlipping) return;
 
             const currentSlide = document.getElementById('currentSlide');
+            const incomingSlide = document.getElementById('incomingSlide');
             const slideContent = document.getElementById('slideContent');
+            const incomingContent = document.getElementById('incomingSlideContent');
 
-            if (!currentSlide || !slideContent) return;
+            if (!currentSlide || !incomingSlide || !slideContent || !incomingContent) return;
 
             const totalPages = catalogPages.length || 1;
 
@@ -1401,31 +1426,48 @@
             // Animation duration
             const animDuration = 400;
 
-            // Start slide out animation
-            currentSlide.classList.add(direction > 0 ? 'sliding-next' : 'sliding-prev');
+            // Set up incoming slide with new content
+            incomingContent.innerHTML = targetContent;
 
-            // After slide out, set new content and fade in
+            // Position incoming slide
+            if (direction > 0) {
+                // Going forward: incoming slides in from right
+                incomingSlide.style.transform = 'translateX(100%)';
+                incomingSlide.style.opacity = '1';
+            } else {
+                // Going backward: incoming slides in from left
+                incomingSlide.style.transform = 'translateX(-100%)';
+                incomingSlide.style.opacity = '1';
+            }
+
+            // Start animations
+            requestAnimationFrame(() => {
+                // Current slide goes out
+                currentSlide.classList.add(direction > 0 ? 'sliding-next' : 'sliding-prev');
+                // Incoming slide comes in
+                incomingSlide.classList.add(direction > 0 ? 'incoming-next' : 'incoming-prev');
+            });
+
+            // After animation completes, swap slides
             setTimeout(() => {
+                // Update current slide with new content
                 slideContent.innerHTML = targetContent;
+
+                // Reset current slide
                 currentSlide.classList.remove('sliding-next', 'sliding-prev');
                 currentSlide.style.transform = 'translateX(0)';
-                currentSlide.style.opacity = '0';
 
-                // Fade in
-                requestAnimationFrame(() => {
-                    currentSlide.classList.add('incoming');
-                });
+                // Reset incoming slide
+                incomingSlide.classList.remove('incoming-next', 'incoming-prev');
+                incomingSlide.style.transform = 'translateX(0)';
+                incomingSlide.style.opacity = '0';
 
-                // After fade in completes
-                setTimeout(() => {
-                    currentPageIndex = targetIndex;
-                    currentSlide.classList.remove('incoming');
-                    currentSlide.style.opacity = '1';
+                // Update index
+                currentPageIndex = targetIndex;
 
-                    updatePageCounter();
-                    updateNavButtons();
-                    isFlipping = false;
-                }, animDuration);
+                updatePageCounter();
+                updateNavButtons();
+                isFlipping = false;
             }, animDuration);
         }
 
