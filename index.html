@@ -66,8 +66,15 @@
             <div class="detail-handle"><div class="detail-handle-bar"></div></div>
             <button class="detail-close" onclick="closeDetail()">X</button>
             <div class="detail-gallery" id="detailGallery">
-                <img id="detailImage" src="" alt="">
+                <img id="detailImage" src="" alt="" onclick="openImageZoom(this.src)">
+                <div class="gallery-badge" id="galleryBadge" style="display:none;"></div>
             </div>
+            <div class="gallery-nav" id="galleryNav" style="display:none;">
+                <button class="gallery-btn prev" onclick="prevImage()">&lt;</button>
+                <div class="gallery-dots" id="galleryDots"></div>
+                <button class="gallery-btn next" onclick="nextImage()">&gt;</button>
+            </div>
+            <div class="thumbnail-gallery" id="thumbnailGallery" style="display:none;"></div>
             <div class="detail-info">
                 <h2 class="detail-name" id="detailName"></h2>
                 <p class="detail-price" id="detailPrice"></p>
@@ -87,6 +94,18 @@
                 <button class="wa-button" onclick="openWhatsApp()">Hubungi via WhatsApp</button>
             </div>
         </div>
+    </div>
+
+    <!-- Zoom Modal -->
+    <div class="zoom-modal" id="zoomModal" onclick="closeImageZoom(event)">
+        <button class="zoom-close" onclick="closeImageZoom(event)">&times;</button>
+        <button class="zoom-nav zoom-prev" onclick="event.stopPropagation(); zoomPrevImage()">&lt;</button>
+        <div class="zoom-container" onclick="event.stopPropagation()">
+            <img id="zoomImage" src="" alt="" class="zoom-image">
+        </div>
+        <button class="zoom-nav zoom-next" onclick="event.stopPropagation(); zoomNextImage()">&gt;</button>
+        <div class="zoom-counter" id="zoomCounter">1 / 1</div>
+        <div class="zoom-hint">Geser untuk zoom • Geser untuk pan</div>
     </div>
 
     <script src="config.js"></script>

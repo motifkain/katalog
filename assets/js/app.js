@@ -606,12 +606,19 @@ function formatRupiah(num) {
 }
 
 // ===== PRODUCT DETAIL =====
+let currentImageIndex = 0;
+let productImages = [];
+let zoomLevel = 1;
+let isDragging = false;
+let startX, startY, translateX = 0, translateY = 0;
+
 function openDetail(productId) {
     selectedProduct = filteredProducts.find(p => p.id === productId) || products.find(p => p.id === productId);
     if (!selectedProduct) return;
 
     const images = getProductImages(selectedProduct);
     currentImageIndex = 0;
+    productImages = images;
 
     // Gallery
     document.getElementById('detailImage').src = images[0] || 'https://via.placeholder.com/400x400?text=No+Image';
@@ -625,11 +632,17 @@ function openDetail(productId) {
         badge.style.display = 'none';
     }
 
-    // Dots
+    // Render dots
     renderGalleryDots(images.length);
 
     // Thumbnails
     renderThumbnails(images);
+
+    // Show gallery navigation if multiple images
+    const nav = document.getElementById('galleryNav');
+    if (nav) {
+        nav.style.display = images.length > 1 ? 'flex' : 'none';
+    }
 
     // Info
     document.getElementById('detailName').textContent = selectedProduct.nama || '';
@@ -651,6 +664,34 @@ function openDetail(productId) {
     // Show modal
     document.getElementById('detailModal').classList.add('active');
     document.body.style.overflow = 'hidden';
+}
+
+function prevImage() {
+    if (productImages.length <= 1) return;
+    currentImageIndex = (currentImageIndex - 1 + productImages.length) % productImages.length;
+    updateGalleryImage();
+}
+
+function nextImage() {
+    if (productImages.length <= 1) return;
+    currentImageIndex = (currentImageIndex + 1) % productImages.length;
+    updateGalleryImage();
+}
+
+function updateGalleryImage() {
+    document.getElementById('detailImage').src = productImages[currentImageIndex] || '';
+
+    // Update badge
+    const badge = document.getElementById('galleryBadge');
+    if (badge) badge.textContent = `${currentImageIndex + 1}/${productImages.length}`;
+
+    // Update dots
+    document.querySelectorAll('.gallery-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentImageIndex);
+    });
+
+    // Reset zoom when changing images
+    resetZoom();
 }
 
 function renderGalleryDots(count) {
@@ -682,11 +723,9 @@ function renderThumbnails(images) {
 function selectGalleryImage(index) {
     if (!selectedProduct) return;
 
-    const images = getProductImages(selectedProduct);
     currentImageIndex = index;
-
-    document.getElementById('detailImage').src = images[index] || '';
-    document.getElementById('galleryBadge').textContent = `${index + 1}/${images.length}`;
+    document.getElementById('detailImage').src = productImages[index] || '';
+    document.getElementById('galleryBadge').textContent = `${index + 1}/${productImages.length}`;
 
     // Update dots
     document.querySelectorAll('.gallery-dot').forEach((dot, i) => {
@@ -697,42 +736,167 @@ function selectGalleryImage(index) {
     document.querySelectorAll('.thumbnail').forEach((thumb, i) => {
         thumb.classList.toggle('active', i === index);
     });
+
+    // Reset zoom
+    resetZoom();
 }
 
 function closeDetail() {
     document.getElementById('detailModal').classList.remove('active');
     document.body.style.overflow = '';
+    resetZoom();
 }
 
-function openWhatsApp() {
-    if (!selectedProduct) return;
+// ===== IMAGE ZOOM =====
+function openImageZoom(src) {
+    if (!src || src.includes('placeholder')) return;
 
-    let message = `Halo, saya tertarik dengan produk berikut dari Katalog MotifKain:\n\n`;
-    message += `Nama: ${selectedProduct.nama || '-'}\n`;
-    if (selectedProduct.harga) message += `Harga: ${formatRupiah(selectedProduct.harga)}\n`;
-    message += `\nMohon info lebih lanjut. Terima kasih!`;
+    const zoomModal = document.getElementById('zoomModal');
+    const zoomImage = document.getElementById('zoomImage');
+    const zoomCounter = document.getElementById('zoomCounter');
 
-    const waNumber = CONFIG.whatsappNumber || '6281234567890';
-    const encodedMsg = encodeURIComponent(message);
-    window.open(`https://wa.me/${waNumber}?text=${encodedMsg}`, '_blank');
+    zoomImage.src = src;
+    zoomImage.style.transform = 'scale(1)';
+    zoomImage.style.cursor = 'grab';
+
+    if (zoomCounter) zoomCounter.textContent = `${currentImageIndex + 1} / ${productImages.length}`;
+
+    zoomModal.classList.add('active');
+    zoomLevel = 1;
+    translateX = 0;
+    translateY = 0;
+
+    // Add event listeners
+    setupZoomControls(zoomImage);
 }
 
-// Close modal on backdrop
-document.getElementById('detailModal')?.addEventListener('click', function(e) {
-    if (e.target === this) closeDetail();
-});
+function closeImageZoom(event) {
+    if (event && event.target !== event.currentTarget && !event.target.classList.contains('zoom-close')) {
+        return;
+    }
 
-// Close on Escape
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeDetail();
-});
+    const zoomModal = document.getElementById('zoomModal');
+    zoomModal.classList.remove('active');
+    resetZoom();
+}
 
-// ===== ZOOM =====
-function openZoom(src) {
+function zoomPrevImage() {
+    prevImage();
+    const src = productImages[currentImageIndex];
     document.getElementById('zoomImage').src = src;
-    document.getElementById('zoomModal').classList.add('active');
+    document.getElementById('zoomCounter').textContent = `${currentImageIndex + 1} / ${productImages.length}`;
+    resetZoom();
 }
 
-function closeZoom() {
-    document.getElementById('zoomModal').classList.remove('active');
+function zoomNextImage() {
+    nextImage();
+    const src = productImages[currentImageIndex];
+    document.getElementById('zoomImage').src = src;
+    document.getElementById('zoomCounter').textContent = `${currentImageIndex + 1} / ${productImages.length}`;
+    resetZoom();
+}
+
+function resetZoom() {
+    zoomLevel = 1;
+    translateX = 0;
+    translateY = 0;
+    const zoomImage = document.getElementById('zoomImage');
+    if (zoomImage) {
+        zoomImage.style.transform = 'scale(1) translate(0, 0)';
+    }
+}
+
+function setupZoomControls(zoomImage) {
+    if (!zoomImage) return;
+
+    // Mouse wheel zoom
+    zoomImage.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.2 : 0.2;
+        zoomLevel = Math.max(0.5, Math.min(4, zoomLevel + delta));
+        applyZoom();
+    });
+
+    // Double click to toggle zoom
+    zoomImage.addEventListener('dblclick', function(e) {
+        e.preventDefault();
+        if (zoomLevel > 1) {
+            zoomLevel = 1;
+            translateX = 0;
+            translateY = 0;
+        } else {
+            zoomLevel = 2;
+        }
+        applyZoom();
+    });
+
+    // Drag to pan when zoomed
+    zoomImage.addEventListener('mousedown', function(e) {
+        if (zoomLevel > 1) {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            zoomImage.style.cursor = 'grabbing';
+        }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (isDragging && zoomLevel > 1) {
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            applyZoom();
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        isDragging = false;
+        if (zoomImage) zoomImage.style.cursor = 'grab';
+    });
+
+    // Touch support for mobile
+    let touchStartX, touchStartY;
+    let initialDistance = 0;
+    let initialZoom = 1;
+
+    zoomImage.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1 && zoomLevel > 1) {
+            isDragging = true;
+            touchStartX = e.touches[0].clientX - translateX;
+            touchStartY = e.touches[0].clientY - translateY;
+        } else if (e.touches.length === 2) {
+            // Pinch to zoom
+            initialDistance = getDistance(e.touches[0], e.touches[1]);
+            initialZoom = zoomLevel;
+        }
+    });
+
+    zoomImage.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        if (e.touches.length === 1 && isDragging && zoomLevel > 1) {
+            translateX = e.touches[0].clientX - touchStartX;
+            translateY = e.touches[0].clientY - touchStartY;
+            applyZoom();
+        } else if (e.touches.length === 2) {
+            const currentDistance = getDistance(e.touches[0], e.touches[1]);
+            const scale = currentDistance / initialDistance;
+            zoomLevel = Math.max(0.5, Math.min(4, initialZoom * scale));
+            applyZoom();
+        }
+    });
+
+    zoomImage.addEventListener('touchend', function() {
+        isDragging = false;
+    });
+}
+
+function getDistance(touch1, touch2) {
+    return Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+}
+
+function applyZoom() {
+    const zoomImage = document.getElementById('zoomImage');
+    if (!zoomImage) return;
+
+    zoomImage.style.transform = `scale(${zoomLevel}) translate(${translateX / zoomLevel}px, ${translateY / zoomLevel}px)`;
+    zoomImage.classList.toggle('zoomed', zoomLevel > 1);
 }
