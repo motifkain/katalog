@@ -6,221 +6,90 @@
 // ===== CONFIG =====
 const CONFIG = window.MOTIFKAIN_CONFIG || {
     pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
-    pocketbaseCollection: 'catalog_pages',
+    welcomeCollection: 'welcome_settings',
     produkCollection: 'produk',
     kategoriCollection: 'kategori'
 };
 
 // ===== STATE =====
-let catalogPages = [];
-let currentPageIndex = 0;
-let isFlipping = false;
+let welcomeSettings = window.WELCOME_SETTINGS || {
+    logoUrl: '',
+    leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
+    title: 'CATALOG',
+    subtitle: 'Company Profile',
+    description: 'Koleksi produk eksklusif kami'
+};
 
 let products = [];
 let filteredProducts = [];
 let currentCategory = 'desain-motif';
 let currentSubcategory = null;
-let categories = []; // Dari database
-let subcategories = []; // Dari database
 
 let selectedProduct = null;
-let currentImageIndex = 0;
-let productCarousels = {}; // Track carousel state per product
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadCatalogPages();
+    await loadWelcomeSettings();
     await loadCategories();
     await loadProducts();
     setupCategoryTabs();
-    setupSlideNavigation();
     setupSearch();
-    initBookViewer();
+    renderWelcomeScreen();
 });
 
-// ===== CATALOG PAGES (Welcome Screen) =====
-async function loadCatalogPages() {
+// ===== WELCOME SCREEN =====
+async function loadWelcomeSettings() {
     try {
-        const res = await fetch(`${CONFIG.pocketbaseUrl}/api/collections/${CONFIG.pocketbaseCollection}/records?sort=order`);
+        const res = await fetch(`${CONFIG.pocketbaseUrl}/api/collections/${CONFIG.welcomeCollection}/records?per-page=1`);
         if (res.ok) {
             const data = await res.json();
             if (data.items && data.items.length > 0) {
-                catalogPages = data.items;
+                const item = data.items[0];
+                welcomeSettings = {
+                    logoUrl: item.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${item.id}/${item.logo}` : '',
+                    leftText: item.left_text || window.WELCOME_SETTINGS?.leftText || '',
+                    title: item.title || 'CATALOG',
+                    subtitle: item.subtitle || 'Company Profile',
+                    description: item.description || 'Koleksi produk eksklusif kami'
+                };
             }
         }
     } catch (e) {
-        console.log('Catalog pages not found, using default');
-    }
-
-    // Update sticky notes
-    updateStickyNotes();
-    renderSlidePage(0);
-}
-
-function updateStickyNotes() {
-    const container = document.getElementById('stickyNotes');
-    if (!container) return;
-
-    // Get unique categories/titles from pages
-    const titles = catalogPages.length > 0
-        ? catalogPages.slice(0, 4).map(p => p.mainTitle || p.title || 'Cover')
-        : ['Panel Atasan Wanita', 'Panel Gamis', 'Seamless', 'Portfolio'];
-
-    container.innerHTML = titles.map((title, i) =>
-        `<div class="sticky-note" onclick="slidePage(${i})">${title}</div>`
-    ).join('');
-}
-
-function renderSlidePage(index) {
-    const content = document.getElementById('slideContent');
-    if (!content) return;
-
-    if (catalogPages.length > 0 && index < catalogPages.length) {
-        const page = catalogPages[index];
-        const pageData = {
-            ...page,
-            image: page.image ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${page.id}/${page.image}` : '',
-            images: (page.images || []).map(img => `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${page.id}/${img}`),
-            logo: page.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${page.id}/${page.logo}` : ''
-        };
-        content.innerHTML = `<div class="catalog-page">${PageTemplates.renderPage(pageData, index + 1)}</div>`;
-    } else {
-        // Default cover
-        const pageData = {
-            template: 'cover-dark',
-            mainTitle: 'MOTIFKAIN',
-            subtitle: 'Koleksi Desain 2024',
-            description: 'Desain motif kain eksklusif',
-            colorTheme: 'elegant-gold'
-        };
-        content.innerHTML = `<div class="catalog-page">${PageTemplates.renderPage(pageData, 1)}</div>`;
+        console.log('Welcome settings from config file');
     }
 }
 
-function setupSlideNavigation() {
-    const container = document.getElementById('slideContainer');
-    const leftArea = document.getElementById('swipeLeft');
-    const rightArea = document.getElementById('swipeRight');
+function renderWelcomeScreen() {
+    // Update title & subtitle
+    const titleEl = document.getElementById('welcomeTitle');
+    const subtitleEl = document.getElementById('welcomeSubtitle');
+    const descEl = document.getElementById('welcomeDesc');
+    const leftTextEl = document.getElementById('welcomeLeftText');
+    const logoImg = document.getElementById('welcomeLogoImg');
+    const logoPlaceholder = document.getElementById('welcomeLogoPlaceholder');
 
-    if (!container) return;
+    if (titleEl) titleEl.textContent = welcomeSettings.title;
+    if (subtitleEl) subtitleEl.textContent = welcomeSettings.subtitle;
+    if (descEl) descEl.textContent = welcomeSettings.description;
+    if (leftTextEl) leftTextEl.innerHTML = welcomeSettings.leftText?.replace(/\n/g, '<br>') || '';
 
-    let touchStartX = 0;
-
-    container.addEventListener('touchstart', (e) => {
-        touchStartX = e.touches[0].clientX;
-    }, { passive: true });
-
-    container.addEventListener('touchend', (e) => {
-        const diffX = e.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(diffX) > 50) {
-            slidePage(diffX > 0 ? -1 : 1);
+    // Logo
+    if (logoImg && logoPlaceholder) {
+        if (welcomeSettings.logoUrl) {
+            logoImg.src = welcomeSettings.logoUrl;
+            logoImg.style.display = 'block';
+            logoPlaceholder.style.display = 'none';
+        } else {
+            logoImg.style.display = 'none';
+            logoPlaceholder.style.display = 'flex';
         }
-    }, { passive: true });
-
-    if (leftArea) leftArea.addEventListener('click', () => slidePage(-1));
-    if (rightArea) rightArea.addEventListener('click', () => slidePage(1));
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight') slidePage(1);
-        if (e.key === 'ArrowLeft') slidePage(-1);
-    });
-}
-
-function slidePage(direction) {
-    if (isFlipping) return;
-
-    const currentSlide = document.getElementById('currentSlide');
-    const incomingSlide = document.getElementById('incomingSlide');
-    const slideContent = document.getElementById('slideContent');
-    const incomingContent = document.getElementById('incomingSlideContent');
-
-    if (!currentSlide || !incomingSlide) return;
-
-    const totalPages = catalogPages.length || 1;
-
-    if (direction > 0 && currentPageIndex >= totalPages - 1) return;
-    if (direction < 0 && currentPageIndex <= 0) return;
-
-    isFlipping = true;
-
-    const targetIndex = currentPageIndex + direction;
-
-    // Prepare content
-    let targetContent = '';
-    if (catalogPages.length > 0 && targetIndex < catalogPages.length) {
-        const page = catalogPages[targetIndex];
-        const pageData = {
-            ...page,
-            image: page.image ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${page.id}/${page.image}` : '',
-            logo: page.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${page.id}/${page.logo}` : ''
-        };
-        targetContent = `<div class="catalog-page">${PageTemplates.renderPage(pageData, targetIndex + 1)}</div>`;
     }
-
-    incomingContent.innerHTML = targetContent;
-
-    if (direction > 0) {
-        incomingSlide.style.transform = 'translateX(100%)';
-    } else {
-        incomingSlide.style.transform = 'translateX(-100%)';
-    }
-    incomingSlide.style.opacity = '1';
-
-    requestAnimationFrame(() => {
-        currentSlide.classList.add(direction > 0 ? 'sliding-next' : 'sliding-prev');
-        incomingSlide.classList.add(direction > 0 ? 'incoming-next' : 'incoming-prev');
-    });
-
-    setTimeout(() => {
-        slideContent.innerHTML = targetContent;
-        currentSlide.classList.remove('sliding-next', 'sliding-prev');
-        currentSlide.style.transform = 'translateX(0)';
-        incomingSlide.classList.remove('incoming-next', 'incoming-prev');
-        incomingSlide.style.transform = 'translateX(0)';
-        incomingSlide.style.opacity = '0';
-
-        currentPageIndex = targetIndex;
-        updatePageCounter();
-        updateNavButtons();
-        renderPageIndicator();
-        isFlipping = false;
-    }, 400);
-}
-
-function updatePageCounter() {
-    const counter = document.getElementById('pageCounter');
-    if (counter) {
-        counter.textContent = `${currentPageIndex + 1} / ${catalogPages.length || 1}`;
-    }
-}
-
-function updateNavButtons() {
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    if (prevBtn) prevBtn.disabled = currentPageIndex <= 0;
-    if (nextBtn) nextBtn.disabled = currentPageIndex >= (catalogPages.length || 1) - 1;
-}
-
-function renderPageIndicator() {
-    const indicator = document.getElementById('pageIndicator');
-    if (!indicator) return;
-    const total = catalogPages.length || 1;
-    indicator.innerHTML = Array.from({length: Math.min(total, 10)}, (_, i) =>
-        `<div class="page-dot ${i === currentPageIndex ? 'active' : ''}"></div>`
-    ).join('');
-}
-
-function initBookViewer() {
-    updatePageCounter();
-    updateNavButtons();
-    renderPageIndicator();
 }
 
 // ===== NAVIGATION =====
 function openKatalog() {
     document.getElementById('welcomeScreen').style.display = 'none';
     document.getElementById('appScreen').classList.add('active');
-    renderSubcategories();
 }
 
 function backToWelcome() {

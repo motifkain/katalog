@@ -6,10 +6,10 @@ window.MOTIFKAIN_CONFIG = {
     // URL PocketBase API - Railway Production
     pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
 
-    // Nama collection untuk produk
-    pocketbaseCollection: 'catalog_pages',
+    // Collection untuk welcome screen settings
+    welcomeCollection: 'welcome_settings',
 
-    // Collection untuk kategori (jika ada)
+    // Collection untuk kategori
     kategoriCollection: 'kategori',
 
     // Collection untuk produk
@@ -24,6 +24,18 @@ window.MOTIFKAIN_CONFIG = {
 
     // Debug mode
     debug: true
+};
+
+// Default Welcome Screen Settings (bisa diedit dari admin)
+window.WELCOME_SETTINGS = {
+    // Left side - Logo area
+    logoUrl: '',
+    leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
+
+    // Right side - Text area
+    title: 'CATALOG',
+    subtitle: 'Company Profile',
+    description: 'Koleksi produk eksklusif kami'
 };
 
 // ===== THEME COLORS (Tiru iswaraapp) =====
