@@ -1295,7 +1295,7 @@
             // Calculate target index first
             const targetIndex = direction > 0 ? currentPageIndex + 1 : currentPageIndex - 1;
 
-            // Prepare target page content BEFORE animation
+            // Prepare content for BOTH directions
             const pageData = catalogPages[targetIndex];
             if (pageData) {
                 const pageContentData = {
@@ -1308,14 +1308,12 @@
             }
 
             // Animation settings
-            const animDuration = 1000;
+            const animDuration = 800;
 
             if (direction > 0) {
-                // FORWARD: Buka buku
-                // Animation: current page rotates 0° → -180°
-                // Content moves from current to next page underneath
+                // FORWARD: Beautiful book flip animation
 
-                // Prepare: put next content in the underneath page
+                // Prepare next content in underneath page
                 const nextFront = nextPageEl.querySelector('.page-front');
                 nextFront.innerHTML = nextPageContent.innerHTML;
                 nextPageContent.innerHTML = '';
@@ -1335,81 +1333,52 @@
                 currentPage.offsetHeight;
                 nextPageEl.offsetHeight;
 
-                // Start animation
+                // Start flip animation
                 requestAnimationFrame(() => {
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transformOrigin = 'left center';
                     currentPage.style.transform = 'rotateY(-180deg)';
                 });
+
+                // After animation
+                setTimeout(() => {
+                    currentPageIndex = targetIndex;
+
+                    currentPage.style.transition = 'none';
+                    currentPage.style.transform = 'rotateY(0deg)';
+                    currentPage.style.zIndex = '2';
+                    nextPageEl.style.transform = 'rotateY(0deg)';
+                    nextPageEl.style.zIndex = '1';
+
+                    updatePageCounter();
+                    updateNavButtons();
+                    isFlipping = false;
+                }, animDuration);
 
             } else {
-                // BACKWARD: Kembali ke halaman sebelumnya
-                // Animation: current page rotates 0° → -180° (same as forward, but shows previous)
-                // The previous page content should be in the underneath page
+                // BACKWARD: Smooth fade transition
 
-                // For backward, the "previous" page content should already be in nextPageContent
-                // We show it in the underneath page, then current page rotates away to reveal it
-
-                // Swap: current content goes to underneath, previous content becomes current
+                // Set content directly - no swap needed for fade
                 const currentFront = currentPage.querySelector('.page-front');
-                const nextFront = nextPageEl.querySelector('.page-front');
-
-                // Save current content
-                const tempContent = currentFront.innerHTML;
-
-                // Put previous content (in nextPageContent) to current page
                 currentFront.innerHTML = nextPageContent.innerHTML;
-                nextPageContent.innerHTML = tempContent; // Save for next time
+                nextPageContent.innerHTML = '';
 
-                // Set initial states
-                currentPage.style.transition = 'none';
-                currentPage.style.transform = 'rotateY(0deg)';
-                currentPage.style.opacity = '1';
-                currentPage.style.zIndex = '2';
+                // Fade out current
+                currentPage.style.transition = `opacity ${animDuration * 0.4}ms ease-out`;
+                currentPage.style.opacity = '0';
 
-                nextPageEl.style.transition = 'none';
-                nextPageEl.style.transform = 'rotateY(0deg)';
-                nextPageEl.style.opacity = '1';
-                nextPageEl.style.zIndex = '1';
+                // After fade out, fade in new content
+                setTimeout(() => {
+                    currentPageIndex = targetIndex;
 
-                // Force reflow
-                currentPage.offsetHeight;
-                nextPageEl.offsetHeight;
+                    currentPage.style.transition = `opacity ${animDuration * 0.4}ms ease-in`;
+                    currentPage.style.opacity = '1';
 
-                // Start animation - same rotation as forward
-                requestAnimationFrame(() => {
-                    currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    currentPage.style.transformOrigin = 'left center';
-                    currentPage.style.transform = 'rotateY(-180deg)';
-                });
+                    updatePageCounter();
+                    updateNavButtons();
+                    isFlipping = false;
+                }, animDuration * 0.4);
             }
-
-            // After animation completes
-            setTimeout(() => {
-                // Update currentPageIndex
-                currentPageIndex = targetIndex;
-
-                // Reset transforms
-                currentPage.style.transition = 'none';
-                currentPage.style.transform = 'rotateY(0deg)';
-                currentPage.style.transformOrigin = 'left center';
-                currentPage.style.opacity = '1';
-                currentPage.style.zIndex = '2';
-
-                nextPageEl.style.transition = 'none';
-                nextPageEl.style.transform = 'rotateY(0deg)';
-                nextPageEl.style.opacity = '1';
-                nextPageEl.style.zIndex = '1';
-
-                // Force reflow
-                currentPage.offsetHeight;
-                nextPageEl.offsetHeight;
-
-                // Update UI
-                updatePageCounter();
-                updateNavButtons();
-                isFlipping = false;
-            }, animDuration);
         }
 
         function updatePageCounter() {
