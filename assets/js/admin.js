@@ -1,378 +1,524 @@
 /**
  * MOTIFKAIN ADMIN DASHBOARD
- * Hidden dashboard for managing catalog products
+ * Logic untuk Dashboard Admin
  */
 
 class AdminDashboard {
     constructor() {
-        this.products = [];
-        this.isAuthenticated = false;
-        this.adminPassword = 'motifkain2024'; // Change this for production
-
+        this.kategori = [];
+        this.produk = [];
+        this.pages = [];
+        this.currentKategori = null;
+        this.currentProduk = null;
+        this.pocketbaseToken = '';
+        this.pocketbaseUrl = '';
         this.init();
     }
 
     init() {
-        // Check authentication
-        const auth = sessionStorage.getItem('motifkain_auth');
-        if (auth === 'authenticated') {
-            this.isAuthenticated = true;
+        const savedToken = sessionStorage.getItem('motifkain_admin_token');
+        const savedUrl = sessionStorage.getItem('motifkain_admin_url');
+        const savedEmail = sessionStorage.getItem('motifkain_admin_email');
+
+        if (savedToken && savedUrl) {
+            this.pocketbaseToken = savedToken;
+            this.pocketbaseUrl = savedUrl;
             this.showDashboard();
+            if (savedEmail) {
+                document.getElementById('userEmail').textContent = savedEmail;
+            }
+            this.loadData();
         } else {
             this.showLogin();
         }
 
-        this.loadProducts();
+        this.setupTabs();
+        this.setupForms();
     }
 
     showLogin() {
         document.getElementById('loginSection').style.display = 'flex';
         document.getElementById('dashboardSection').style.display = 'none';
-        document.getElementById('loginError').style.display = 'none';
     }
 
     showDashboard() {
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('dashboardSection').style.display = 'block';
-        this.isAuthenticated = true;
     }
 
-    login(password) {
-        if (password === this.adminPassword) {
-            sessionStorage.setItem('motifkain_auth', 'authenticated');
-            this.isAuthenticated = true;
-            this.showDashboard();
-            this.loadProducts();
-        } else {
-            document.getElementById('loginError').style.display = 'block';
-            document.getElementById('loginError').textContent = 'Password salah!';
+    async login(email, password) {
+        const url = window.MOTIFKAIN_CONFIG?.pocketbaseUrl;
+        if (!url) {
+            this.showNotification('PocketBase URL belum diset di config.js', 'error');
+            return;
+        }
+
+        this.pocketbaseUrl = url.replace(/\/$/, '');
+
+        try {
+            const response = await fetch(this.pocketbaseUrl + '/api/admins/auth-with-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identity: email, password: password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.pocketbaseToken = data.token;
+                sessionStorage.setItem('motifkain_admin_token', data.token);
+                sessionStorage.setItem('motifkain_admin_url', this.pocketbaseUrl);
+                sessionStorage.setItem('motifkain_admin_email', email);
+                document.getElementById('userEmail').textContent = email;
+                this.showDashboard();
+                this.loadData();
+            } else {
+                this.showNotification('Email atau password salah!', 'error');
+            }
+        } catch (e) {
+            this.showNotification('Tidak dapat terhubung ke server', 'error');
         }
     }
 
     logout() {
-        sessionStorage.removeItem('motifkain_auth');
-        this.isAuthenticated = false;
+        sessionStorage.removeItem('motifkain_admin_token');
+        sessionStorage.removeItem('motifkain_admin_url');
+        sessionStorage.removeItem('motifkain_admin_email');
         this.showLogin();
-    }
-
-    loadProducts() {
-        const stored = localStorage.getItem('motifkain_products');
-        if (stored) {
-            this.products = JSON.parse(stored);
-        } else {
-            // Load from file as fallback
-            fetch('data/products.json')
-                .then(res => res.json())
-                .then(data => {
-                    this.products = data.products || [];
-                    this.renderProducts();
-                    this.updateStats();
-                })
-                .catch(() => {
-                    this.products = [];
-                    this.renderProducts();
-                    this.updateStats();
-                });
-            return;
-        }
-        this.renderProducts();
-        this.updateStats();
-    }
-
-    saveProducts() {
-        localStorage.setItem('motifkain_products', JSON.stringify(this.products));
-
-        // Also update the products.json file for static hosting
-        this.syncToFile();
-    }
-
-    async syncToFile() {
-        try {
-            const data = { products: this.products, settings: { template: localStorage.getItem('motifkain_template') || 'split' } };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-
-            // Try to save using File System Access API (Chrome)
-            if ('showSaveFilePicker' in window) {
-                const handle = await window.showSaveFilePicker({
-                    suggestedName: 'products.json',
-                    types: [{
-                        description: 'JSON Files',
-                        accept: { 'application/json': ['.json'] }
-                    }]
-                });
-                const writable = await handle.createWritable();
-                await writable.write(blob);
-                await writable.close();
-            }
-        } catch (e) {
-            console.log('File sync skipped - using localStorage only');
-        }
-    }
-
-    addProduct(product) {
-        this.products.push({
-            id: Date.now(),
-            name: product.name || 'Produk Baru',
-            description: product.description || '',
-            image: product.image || '',
-            addedAt: new Date().toISOString()
-        });
-        this.saveProducts();
-        this.renderProducts();
-        this.updateStats();
-
-        // Refresh flipbook if open in another tab
-        this.notifyFlipbookRefresh();
-    }
-
-    updateProduct(id, updates) {
-        const index = this.products.findIndex(p => p.id === id);
-        if (index !== -1) {
-            this.products[index] = { ...this.products[index], ...updates };
-            this.saveProducts();
-            this.renderProducts();
-            this.notifyFlipbookRefresh();
-        }
-    }
-
-    deleteProduct(id) {
-        this.products = this.products.filter(p => p.id !== id);
-        this.saveProducts();
-        this.renderProducts();
-        this.updateStats();
-        this.notifyFlipbookRefresh();
-    }
-
-    reorderProducts(fromIndex, toIndex) {
-        const [moved] = this.products.splice(fromIndex, 1);
-        this.products.splice(toIndex, 0, moved);
-        this.saveProducts();
-        this.renderProducts();
-        this.notifyFlipbookRefresh();
-    }
-
-    notifyFlipbookRefresh() {
-        // Dispatch storage event to notify flipbook in other tabs
-        localStorage.setItem('motifkain_refresh', Date.now());
-    }
-
-    renderProducts() {
-        const container = document.getElementById('productsGrid');
-        if (!container) return;
-
-        if (this.products.length === 0) {
-            container.innerHTML = `
-                <div class="empty-products">
-                    <div class="empty-icon">📦</div>
-                    <h3>Belum Ada Produk</h3>
-                    <p>Tambahkan produk pertama Anda dengan drag & drop foto</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = this.products.map((product, index) => `
-            <div class="product-card" data-id="${product.id}">
-                <div class="product-image">
-                    ${product.image
-                        ? `<img src="${product.image}" alt="${product.name}">`
-                        : `<div class="no-image">
-                            <span style="font-size: 2rem; opacity: 0.5;">📷</span>
-                            <span>No Image</span>
-                           </div>`
-                    }
-                    <div class="product-overlay">
-                        <button class="btn-icon" onclick="admin.previewProduct(${product.id})" title="Preview">
-                            👁️
-                        </button>
-                        <button class="btn-icon" onclick="admin.editProduct(${product.id})" title="Edit">
-                            ✏️
-                        </button>
-                        <button class="btn-icon" onclick="admin.deleteProduct(${product.id})" title="Delete">
-                            🗑️
-                        </button>
-                    </div>
-                </div>
-                <div class="product-info">
-                    <h4>${product.name}</h4>
-                    <p>${product.description || 'Tanpa deskripsi'}</p>
-                    <div class="product-actions">
-                        <button class="btn-move" onclick="admin.moveProduct(${index}, -1)" ${index === 0 ? 'disabled' : ''}>
-                            ↑
-                        </button>
-                        <span class="order-num">${index + 1}</span>
-                        <button class="btn-move" onclick="admin.moveProduct(${index}, 1)" ${index === this.products.length - 1 ? 'disabled' : ''}>
-                            ↓
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    updateStats() {
-        const stats = document.getElementById('stats');
-        if (stats) {
-            const template = localStorage.getItem('motifkain_template') || 'split';
-            stats.innerHTML = `
-                <div class="stat-item">
-                    <span class="stat-number">${this.products.length}</span>
-                    <span class="stat-label">Total Produk</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">${Math.ceil(this.products.length / 2)}</span>
-                    <span class="stat-label">Total Halaman</span>
-                </div>
-            `;
-            const templateDisplay = document.getElementById('templateDisplay');
-            if (templateDisplay) {
-                templateDisplay.textContent = template;
-            }
-        }
-    }
-
-    previewProduct(id) {
-        const product = this.products.find(p => p.id === id);
-        if (product) {
-            const modal = document.getElementById('previewModal');
-            if (modal) {
-                const previewImage = document.getElementById('previewImage');
-                const previewTitle = document.getElementById('previewTitle');
-                const previewDesc = document.getElementById('previewDesc');
-
-                if (product.image) {
-                    previewImage.src = product.image;
-                } else {
-                    previewImage.src = 'data:image/svg+xml,' + encodeURIComponent(`
-                        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">
-                            <rect fill="#F5F0E8" width="400" height="200"/>
-                            <text x="200" y="100" text-anchor="middle" fill="#A1887F" font-family="sans-serif" font-size="14">
-                                📷 No Image
-                            </text>
-                        </svg>
-                    `);
-                }
-                previewTitle.textContent = product.name;
-                previewDesc.textContent = product.description || 'Tidak ada deskripsi';
-                modal.style.display = 'flex';
-            }
-        }
-    }
-
-    editProduct(id) {
-        const product = this.products.find(p => p.id === id);
-        if (product) {
-            document.getElementById('editId').value = product.id;
-            document.getElementById('editName').value = product.name;
-            document.getElementById('editDesc').value = product.description || '';
-            document.getElementById('editPreview').src = product.image || 'data:image/svg+xml,' + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">
-                    <rect fill="#F5F0E8" width="400" height="200"/>
-                    <text x="200" y="100" text-anchor="middle" fill="#A1887F" font-family="sans-serif" font-size="14">
-                        📷 No Image
-                    </text>
-                </svg>
-            `);
-            document.getElementById('editModal').style.display = 'flex';
-        }
-    }
-
-    moveProduct(index, direction) {
-        const newIndex = index + direction;
-        if (newIndex >= 0 && newIndex < this.products.length) {
-            this.reorderProducts(index, newIndex);
-        }
-    }
-
-    saveEdit() {
-        const id = parseInt(document.getElementById('editId').value);
-        const name = document.getElementById('editName').value;
-        const description = document.getElementById('editDesc').value;
-
-        this.updateProduct(id, { name, description });
-        document.getElementById('editModal').style.display = 'none';
-    }
-
-    closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    handleFileUpload(files) {
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-
-        Array.from(files).forEach(file => {
-            if (validTypes.includes(file.type)) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.addProduct({
-                        name: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
-                        description: '',
-                        image: e.target.result
-                    });
-                };
-                reader.readAsDataURL(file);
-            }
-        });
     }
 
     openCatalog() {
         window.open('index.html', '_blank');
     }
-}
 
-// Initialize admin
-let admin;
-document.addEventListener('DOMContentLoaded', () => {
-    admin = new AdminDashboard();
+    async fetchAPI(endpoint, options = {}) {
+        const headers = { 'Authorization': this.pocketbaseToken, ...options.headers };
+        if (options.body && !(options.body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+        }
+        return fetch(this.pocketbaseUrl + endpoint, { ...options, headers });
+    }
 
-    // Login form
-    document.getElementById('loginForm')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const password = document.getElementById('passwordInput').value;
-        admin.login(password);
-    });
+    async loadData() {
+        await this.loadKategori();
+        await this.loadProduk();
+        await this.loadPages();
+    }
 
-    // Drag and drop
-    const dropZone = document.getElementById('dropZone');
-    if (dropZone) {
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('drag-over');
-        });
+    async loadKategori() {
+        try {
+            const res = await this.fetchAPI('/api/collections/kategori/records?sort=order');
+            if (res.ok) {
+                const data = await res.json();
+                this.kategori = data.items || [];
+            }
+        } catch (e) {
+            this.kategori = [
+                { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif', order: 0 },
+                { id: 'printing', name: 'Printing Kain', slug: 'printing', order: 1 },
+                { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian', order: 2 },
+                { id: 'asesoris', name: 'Asesoris', slug: 'asesoris', order: 3 }
+            ];
+        }
+        this.renderKategori();
+    }
 
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('drag-over');
-        });
+    async loadProduk() {
+        try {
+            const res = await this.fetchAPI('/api/collections/produk/records?per-page=500&sort=-created');
+            if (res.ok) {
+                const data = await res.json();
+                this.produk = data.items || [];
+            }
+        } catch (e) {
+            this.produk = [];
+        }
+        this.renderProduk();
+        this.updateKategoriDropdown();
+    }
 
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('drag-over');
-            const files = e.dataTransfer.files;
-            admin.handleFileUpload(files);
+    async loadPages() {
+        try {
+            const res = await this.fetchAPI('/api/collections/catalog_pages/records?sort=order');
+            if (res.ok) {
+                const data = await res.json();
+                this.pages = data.items || [];
+            }
+        } catch (e) {
+            this.pages = [];
+        }
+        this.renderPages();
+    }
+
+    setupTabs() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        const self = this;
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                tabs.forEach(function(t) { t.classList.remove('active'); });
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+                document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+            });
         });
     }
 
-    // File input
-    document.getElementById('fileInput')?.addEventListener('change', (e) => {
-        admin.handleFileUpload(e.target.files);
-    });
-
-    // Modal close on outside click
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
+    setupForms() {
+        const self = this;
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            self.login(email, password);
         });
-    });
+    }
 
-    // Listen for flipbook refresh
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'motifkain_refresh' && admin) {
-            admin.loadProducts();
+    renderKategori() {
+        const container = document.getElementById('kategoriList');
+        if (!container) return;
+
+        if (this.kategori.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada kategori</p>';
+            return;
         }
-    });
-});
 
-// Export
-window.AdminDashboard = AdminDashboard;
+        const self = this;
+        container.innerHTML = this.kategori.map(function(k) {
+            return '<div class="kategori-item">' +
+                '<div class="kategori-icon">' + k.name.charAt(0) + '</div>' +
+                '<div class="kategori-info">' +
+                    '<div class="kategori-name">' + k.name + '</div>' +
+                    '<div class="kategori-slug">' + k.slug + '</div>' +
+                '</div>' +
+                '<div class="kategori-actions">' +
+                    '<button onclick="admin.editKategori(\'' + k.id + '\')" title="Edit">Edit</button>' +
+                    '<button onclick="admin.deleteKategori(\'' + k.id + '\')" title="Hapus">Hapus</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    showAddKategoriModal() {
+        this.currentKategori = null;
+        document.getElementById('kategoriModalTitle').textContent = 'Tambah Kategori';
+        document.getElementById('kategoriName').value = '';
+        document.getElementById('kategoriSlug').value = '';
+        document.getElementById('kategoriOrder').value = this.kategori.length;
+        document.getElementById('kategoriModal').classList.add('active');
+    }
+
+    editKategori(id) {
+        const k = this.kategori.find(function(item) { return item.id === id; });
+        if (!k) return;
+        this.currentKategori = k;
+        document.getElementById('kategoriModalTitle').textContent = 'Edit Kategori';
+        document.getElementById('kategoriName').value = k.name;
+        document.getElementById('kategoriSlug').value = k.slug;
+        document.getElementById('kategoriOrder').value = k.order || 0;
+        document.getElementById('kategoriModal').classList.add('active');
+    }
+
+    async saveKategori() {
+        const name = document.getElementById('kategoriName').value.trim();
+        const slug = document.getElementById('kategoriSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
+        const order = parseInt(document.getElementById('kategoriOrder').value) || 0;
+
+        if (!name || !slug) {
+            this.showNotification('Nama dan slug wajib diisi!', 'error');
+            return;
+        }
+
+        const data = { name: name, slug: slug, order: order };
+        const self = this;
+
+        try {
+            if (this.currentKategori) {
+                await this.fetchAPI('/api/collections/kategori/records/' + this.currentKategori.id, {
+                    method: 'PATCH',
+                    body: JSON.stringify(data)
+                });
+            } else {
+                await this.fetchAPI('/api/collections/kategori/records', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+            }
+            this.showNotification('Berhasil disimpan!', 'success');
+        } catch (e) {
+            this.showNotification('Gagal menyimpan', 'error');
+        }
+
+        this.closeModal('kategoriModal');
+        await this.loadKategori();
+    }
+
+    async deleteKategori(id) {
+        if (!confirm('Yakin ingin menghapus?')) return;
+        try {
+            await this.fetchAPI('/api/collections/kategori/records/' + id, { method: 'DELETE' });
+            this.showNotification('Berhasil dihapus!', 'success');
+        } catch (e) {
+            this.showNotification('Gagal menghapus', 'error');
+        }
+        await this.loadKategori();
+    }
+
+    renderProduk() {
+        const container = document.getElementById('produkGrid');
+        if (!container) return;
+
+        const filterKategori = (document.getElementById('filterKategori') || { value: '' }).value;
+        const searchQuery = ((document.getElementById('searchProduct') || { value: '' }).value || '').toLowerCase();
+
+        let filtered = this.produk;
+
+        if (filterKategori) {
+            filtered = filtered.filter(function(p) { return p.kategori === filterKategori; });
+        }
+
+        if (searchQuery) {
+            filtered = filtered.filter(function(p) {
+                return (p.nama || '').toLowerCase().includes(searchQuery) ||
+                       (p.deskripsi || '').toLowerCase().includes(searchQuery);
+            });
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada produk</p>';
+            return;
+        }
+
+        const self = this;
+        container.innerHTML = filtered.map(function(p) {
+            const imageUrl = p.image
+                ? self.pocketbaseUrl + '/api/files/produk/' + p.id + '/' + p.image
+                : 'https://via.placeholder.com/400x300?text=No+Image';
+            const harga = p.harga ? 'Rp ' + p.harga.toLocaleString('id-ID') : 'Hubungi Kami';
+
+            return '<div class="produk-item">' +
+                '<div class="produk-image"><img src="' + imageUrl + '" alt="' + (p.nama || '') + '"></div>' +
+                '<div class="produk-info">' +
+                    '<div class="produk-name">' + (p.nama || '-') + '</div>' +
+                    '<div class="produk-price">' + harga + '</div>' +
+                    '<div class="produk-meta">' + (p.kategori || '-') + ' / ' + (p.subkategori || '-') + '</div>' +
+                    '<div class="produk-actions">' +
+                        '<button class="edit-btn" onclick="admin.editProduk(\'' + p.id + '\')">Edit</button>' +
+                        '<button class="delete-btn" onclick="admin.deleteProduk(\'' + p.id + '\')">Hapus</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    filterProducts() { this.renderProduk(); }
+
+    updateKategoriDropdown() {
+        const selects = document.querySelectorAll('#productKategori, #filterKategori');
+        const self = this;
+        selects.forEach(function(select) {
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">Semua Kategori</option>' +
+                self.kategori.map(function(k) {
+                    return '<option value="' + k.slug + '">' + k.name + '</option>';
+                }).join('');
+            select.value = currentVal;
+        });
+    }
+
+    showAddProductModal() {
+        this.currentProduk = null;
+        document.getElementById('productModalTitle').textContent = 'Tambah Produk';
+        document.getElementById('productName').value = '';
+        document.getElementById('productKategori').value = '';
+        document.getElementById('productSubkategori').value = '';
+        document.getElementById('productHarga').value = '';
+        document.getElementById('productDeskripsi').value = '';
+        document.getElementById('productToko').value = 'MotifKain';
+        document.getElementById('productDaerah').value = '';
+        document.getElementById('productImageUpload').classList.remove('has-image');
+        document.getElementById('productImagePreview').style.display = 'none';
+        document.getElementById('productModal').classList.add('active');
+    }
+
+    editProduk(id) {
+        const p = this.produk.find(function(item) { return item.id === id; });
+        if (!p) return;
+
+        this.currentProduk = p;
+        document.getElementById('productModalTitle').textContent = 'Edit Produk';
+        document.getElementById('productName').value = p.nama || '';
+        document.getElementById('productKategori').value = p.kategori || '';
+        document.getElementById('productSubkategori').value = p.subkategori || '';
+        document.getElementById('productHarga').value = p.harga || '';
+        document.getElementById('productDeskripsi').value = p.deskripsi || '';
+        document.getElementById('productToko').value = p.namatoko || 'MotifKain';
+        document.getElementById('productDaerah').value = p.daerah || '';
+
+        if (p.image) {
+            const imageUrl = this.pocketbaseUrl + '/api/files/produk/' + p.id + '/' + p.image;
+            document.getElementById('productImagePreview').src = imageUrl;
+            document.getElementById('productImagePreview').style.display = 'block';
+            document.getElementById('productImageUpload').classList.add('has-image');
+        }
+
+        document.getElementById('productModal').classList.add('active');
+    }
+
+    handleImageUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        const preview = document.getElementById('productImagePreview');
+        const upload = document.getElementById('productImageUpload');
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            upload.classList.add('has-image');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async saveProduct() {
+        const nama = document.getElementById('productName').value.trim();
+        const kategori = document.getElementById('productKategori').value;
+        const subkategori = document.getElementById('productSubkategori').value.trim();
+        const harga = parseInt(document.getElementById('productHarga').value) || 0;
+        const deskripsi = document.getElementById('productDeskripsi').value.trim();
+        const namatoko = document.getElementById('productToko').value.trim() || 'MotifKain';
+        const daerah = document.getElementById('productDaerah').value.trim();
+        const imagePreview = document.getElementById('productImagePreview');
+        const imageData = imagePreview.src && imagePreview.style.display !== 'none' ? imagePreview.src : null;
+
+        if (!nama) {
+            this.showNotification('Nama produk wajib diisi!', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('nama', nama);
+        if (kategori) formData.append('kategori', kategori);
+        if (subkategori) formData.append('subkategori', subkategori);
+        if (harga) formData.append('harga', harga);
+        if (deskripsi) formData.append('deskripsi', deskripsi);
+        formData.append('namatoko', namatoko);
+        if (daerah) formData.append('daerah', daerah);
+
+        if (imageData && imageData.startsWith('data:')) {
+            const blob = this.dataURLtoBlob(imageData);
+            formData.append('image', blob, 'image.jpg');
+        }
+
+        try {
+            if (this.currentProduk) {
+                await this.fetchAPI('/api/collections/produk/records/' + this.currentProduk.id, {
+                    method: 'PATCH',
+                    body: formData
+                });
+            } else {
+                await this.fetchAPI('/api/collections/produk/records', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+            this.showNotification('Berhasil disimpan!', 'success');
+        } catch (e) {
+            this.showNotification('Gagal menyimpan', 'error');
+        }
+
+        this.closeModal('productModal');
+        await this.loadProduk();
+    }
+
+    async deleteProduk(id) {
+        if (!confirm('Yakin ingin menghapus produk ini?')) return;
+        try {
+            await this.fetchAPI('/api/collections/produk/records/' + id, { method: 'DELETE' });
+            this.showNotification('Berhasil dihapus!', 'success');
+        } catch (e) {
+            this.showNotification('Gagal menghapus', 'error');
+        }
+        await this.loadProduk();
+    }
+
+    renderPages() {
+        const container = document.getElementById('pagesList');
+        if (!container) return;
+
+        if (this.pages.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Belum ada halaman</p>';
+            return;
+        }
+
+        const self = this;
+        container.innerHTML = this.pages.map(function(p, i) {
+            return '<div class="page-item' + (i === 0 ? ' active' : '') + '" onclick="admin.selectPage(' + i + ')">' +
+                '<strong>' + (i + 1) + '.</strong> ' + (p.mainTitle || p.title || 'Halaman ' + (i + 1)) +
+            '</div>';
+        }).join('');
+    }
+
+    selectPage(index) {
+        document.querySelectorAll('.page-item').forEach(function(el, i) {
+            el.classList.toggle('active', i === index);
+        });
+
+        const preview = document.getElementById('pagePreview');
+        if (this.pages[index]) {
+            const page = this.pages[index];
+            const pageData = {
+                ...page,
+                image: page.image ? this.pocketbaseUrl + '/api/files/catalog_pages/' + page.id + '/' + page.image : '',
+                logo: page.logo ? this.pocketbaseUrl + '/api/files/catalog_pages/' + page.id + '/' + page.logo : ''
+            };
+            preview.innerHTML = '<div style="width:300px;height:400px;">' + PageTemplates.renderPage(pageData, index + 1) + '</div>';
+        }
+    }.bind(this);
+
+    async addPage() {
+        const newPage = { ...PageTemplates.createEmptyPage('cover-dark'), order: this.pages.length };
+        try {
+            const formData = new FormData();
+            formData.append('template', newPage.template);
+            formData.append('order', newPage.order);
+            formData.append('mainTitle', newPage.mainTitle || '');
+            formData.append('subtitle', newPage.subtitle || '');
+            formData.append('description', newPage.description || '');
+
+            const res = await this.fetchAPI('/api/collections/catalog_pages/records', {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) this.showNotification('Halaman baru ditambahkan!', 'success');
+        } catch (e) {
+            this.showNotification('Gagal menambahkan halaman', 'error');
+        }
+        await this.loadPages();
+    }
+
+    closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+    }
+
+    dataURLtoBlob(dataurl) {
+        const arr = dataurl.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) u8arr[n] = bstr.charCodeAt(n);
+        return new Blob([u8arr], { type: mime });
+    }
+
+    showNotification(message, type) {
+        type = type || '';
+        const notif = document.getElementById('notification');
+        notif.textContent = message;
+        notif.className = 'notification show' + (type ? ' ' + type : '');
+        setTimeout(function() { notif.classList.remove('show'); }, 3000);
+    }
+}
+
+let admin;
+document.addEventListener('DOMContentLoaded', function() {
+    admin = new AdminDashboard();
+});

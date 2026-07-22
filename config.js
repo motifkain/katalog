@@ -1,19 +1,19 @@
 /**
  * MOTIFKAIN KATALOG CONFIG
- *
- * PENTING: Update URL sesuai dengan PocketBase kamu
- *
- * Untuk LOCAL development: http://127.0.0.1:8090
- * Untuk PRODUCTION: https://api.motifkain.com (sesuaikan dengan server kamu)
+ * Konfigurasi untuk Katalog MotifKain
  */
 window.MOTIFKAIN_CONFIG = {
-    // URL PocketBase API - PRODUCTION
-    // LOCAL: http://127.0.0.1:8090
-    // PRODUCTION: https://katalog-production-104e.up.railway.app
+    // URL PocketBase API - Railway Production
     pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
 
-    // Nama collection (default: catalog_pages)
+    // Nama collection untuk produk
     pocketbaseCollection: 'catalog_pages',
+
+    // Collection untuk kategori (jika ada)
+    kategoriCollection: 'kategori',
+
+    // Collection untuk produk
+    produkCollection: 'produk',
 
     // Catalog settings
     catalogTitle: 'MotifKain Katalog',
@@ -22,6 +22,36 @@ window.MOTIFKAIN_CONFIG = {
     // WhatsApp number untuk kontak (contoh: '6281234567890')
     whatsappNumber: '',
 
-    // Debug mode - set true untuk melihat log di console
+    // Debug mode
     debug: true
+};
+
+// ===== THEME COLORS (Tiru iswaraapp) =====
+const AppTheme = {
+    // Primary - Green Theme
+    primaryColor: '#1B5E20',
+    primaryLight: '#4CAF50',
+    primaryDark: '#0D3D12',
+
+    // Accent
+    accentColor: '#8BC34A',
+
+    // Background
+    backgroundColor: '#F5F5F5',
+    cardColor: '#FFFFFF',
+
+    // Text
+    textPrimary: '#212121',
+    textSecondary: '#757575',
+    textLight: '#BDBDBD',
+
+    // Status
+    successColor: '#4CAF50',
+    warningColor: '#FF9800',
+    errorColor: '#F44336',
+    infoColor: '#2196F3',
+
+    // Other
+    dividerColor: '#E0E0E0',
+    shadowColor: 'rgba(0,0,0,0.1)'
 };
