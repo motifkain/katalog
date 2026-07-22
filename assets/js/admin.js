@@ -492,10 +492,13 @@ class AdminDashboard {
         try {
             if (this.currentProduk) {
                 await this.fetchAPI('/api/collections/' + col + '/records/' + this.currentProduk.id, { method: 'PATCH', body: formData });
-            this.showNotification('Berhasil disimpan!', 'success');
-        } else {
-            await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: formData });
-            this.showNotification('Berhasil ditambahkan!', 'success');
+                this.showNotification('Berhasil disimpan!', 'success');
+            } else {
+                await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: formData });
+                this.showNotification('Berhasil ditambahkan!', 'success');
+            }
+        } catch (e) {
+            this.showNotification('Gagal menyimpan: ' + e.message, 'error');
         }
         this.closeModal('productModal');
         await this.loadProduk();
