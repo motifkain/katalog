@@ -350,8 +350,9 @@ class AdminDashboard {
             var filtered2 = [];
             for (var j = 0; j < filtered.length; j++) {
                 var p = filtered[j];
-                if ((p.nama && p.nama.toLowerCase().includes(searchVal)) filtered2.push(p);
-                else if (p.deskripsi && p.deskripsi.toLowerCase().includes(searchVal)) filtered2.push(p);
+                if ((p.nama && p.nama.toLowerCase().includes(searchVal)) || (p.deskripsi && p.deskripsi.toLowerCase().includes(searchVal))) {
+                    filtered2.push(p);
+                }
             }
             filtered = filtered2;
         }
