@@ -1108,7 +1108,12 @@
     <!-- Image Zoom Modal -->
     <div class="zoom-modal" id="zoomModal" onclick="closeZoom()">
         <div class="zoom-content" onclick="event.stopPropagation()">
-            <button class="zoom-close" onclick="closeZoom()">&times;</button>
+            <div class="zoom-controls">
+                <button class="zoom-nav" onclick="prevZoomImage()" title="Sebelumnya">‹</button>
+                <span class="zoom-counter" id="zoomCounter"></span>
+                <button class="zoom-nav" onclick="nextZoomImage()" title="Berikutnya">›</button>
+                <button class="zoom-close" onclick="closeZoom()" title="Tutup">&times;</button>
+            </div>
             <img id="zoomImage" src="" alt="Zoomed Image">
         </div>
     </div>
@@ -1144,24 +1149,49 @@
             border-radius: 8px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
-        .zoom-close {
-            position: absolute;
-            top: -40px;
-            right: 0;
+        .zoom-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .zoom-nav {
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
-            font-size: 2rem;
+            font-size: 1.5rem;
             cursor: pointer;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
+        }
+        .zoom-nav:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .zoom-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
         .zoom-close:hover {
             background: rgba(255,255,255,0.3);
+        }
+        .zoom-counter {
+            color: white;
+            font-size: 0.9rem;
         }
     </style>
 
@@ -1337,11 +1367,21 @@
         }
 
         // ===== IMAGE ZOOM =====
+        let zoomImages = [];
+        let currentZoomIndex = 0;
+
         function openImageZoom(src) {
             const modal = document.getElementById('zoomModal');
             const zoomImg = document.getElementById('zoomImage');
             if (modal && zoomImg) {
+                // Find all images on current page
+                const currentPage = document.getElementById('bookPage');
+                zoomImages = Array.from(currentPage.querySelectorAll('img')).map(img => img.src);
+                currentZoomIndex = zoomImages.indexOf(src);
+                if (currentZoomIndex === -1) currentZoomIndex = 0;
+
                 zoomImg.src = src;
+                updateZoomCounter();
                 modal.classList.add('active');
                 document.body.style.overflow = 'hidden';
             }
@@ -1354,6 +1394,38 @@
                 document.body.style.overflow = '';
             }
         }
+
+        function updateZoomCounter() {
+            const counter = document.getElementById('zoomCounter');
+            if (counter && zoomImages.length > 0) {
+                counter.textContent = `${currentZoomIndex + 1} / ${zoomImages.length}`;
+            }
+        }
+
+        function prevZoomImage() {
+            if (zoomImages.length > 0) {
+                currentZoomIndex = (currentZoomIndex - 1 + zoomImages.length) % zoomImages.length;
+                document.getElementById('zoomImage').src = zoomImages[currentZoomIndex];
+                updateZoomCounter();
+            }
+        }
+
+        function nextZoomImage() {
+            if (zoomImages.length > 0) {
+                currentZoomIndex = (currentZoomIndex + 1) % zoomImages.length;
+                document.getElementById('zoomImage').src = zoomImages[currentZoomIndex];
+                updateZoomCounter();
+            }
+        }
+
+        // Keyboard navigation for zoom
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('zoomModal').classList.contains('active')) {
+                if (e.key === 'Escape') closeZoom();
+                if (e.key === 'ArrowLeft') prevZoomImage();
+                if (e.key === 'ArrowRight') nextZoomImage();
+            }
+        });
 
         function flipPage(direction) {
             if (isFlipping) return;
