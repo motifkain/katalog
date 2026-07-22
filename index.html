@@ -140,69 +140,53 @@
             z-index: 1;
         }
 
-        /* Slide animation */
+        /* Slide animation - outgoing page slides out */
         .slide-page.sliding-next {
-            animation: slideToNext 0.5s ease-in-out forwards;
+            animation: slideOutNext 0.4s ease-in forwards;
             z-index: 10;
         }
 
         .slide-page.sliding-prev {
-            animation: slideToPrev 0.5s ease-in-out forwards;
+            animation: slideOutPrev 0.4s ease-in forwards;
             z-index: 10;
         }
 
-        @keyframes slideToNext {
+        @keyframes slideOutNext {
             0% {
                 transform: translateX(0);
                 opacity: 1;
             }
             100% {
-                transform: translateX(-100%);
-                opacity: 0.8;
+                transform: translateX(-30%);
+                opacity: 0;
             }
         }
 
-        @keyframes slideToPrev {
+        @keyframes slideOutPrev {
             0% {
                 transform: translateX(0);
                 opacity: 1;
             }
             100% {
-                transform: translateX(100%);
-                opacity: 0.8;
+                transform: translateX(30%);
+                opacity: 0;
             }
         }
 
-        /* Incoming slide animations */
-        .slide-page.incoming-next {
-            animation: incomingFromNext 0.5s ease-in-out forwards;
-            z-index: 2;
+        /* Incoming slide - fade in from same direction */
+        .slide-page.incoming {
+            animation: fadeInSlide 0.4s ease-out forwards;
+            z-index: 5;
         }
 
-        .slide-page.incoming-prev {
-            animation: incomingFromPrev 0.5s ease-in-out forwards;
-            z-index: 2;
-        }
-
-        @keyframes incomingFromNext {
+        @keyframes fadeInSlide {
             0% {
-                transform: translateX(100%);
-                opacity: 0.8;
+                opacity: 0;
+                transform: translateX(0);
             }
             100% {
-                transform: translateX(0);
                 opacity: 1;
-            }
-        }
-
-        @keyframes incomingFromPrev {
-            0% {
-                transform: translateX(-100%);
-                opacity: 0.8;
-            }
-            100% {
                 transform: translateX(0);
-                opacity: 1;
             }
         }
 
@@ -1417,22 +1401,31 @@
             // Animation duration
             const animDuration = 400;
 
-            // Set new content and start animation
-            slideContent.innerHTML = targetContent;
-
-            // Add animation classes
+            // Start slide out animation
             currentSlide.classList.add(direction > 0 ? 'sliding-next' : 'sliding-prev');
 
-            // After animation completes, reset and update
+            // After slide out, set new content and fade in
             setTimeout(() => {
-                currentPageIndex = targetIndex;
+                slideContent.innerHTML = targetContent;
                 currentSlide.classList.remove('sliding-next', 'sliding-prev');
                 currentSlide.style.transform = 'translateX(0)';
-                currentSlide.style.opacity = '1';
+                currentSlide.style.opacity = '0';
 
-                updatePageCounter();
-                updateNavButtons();
-                isFlipping = false;
+                // Fade in
+                requestAnimationFrame(() => {
+                    currentSlide.classList.add('incoming');
+                });
+
+                // After fade in completes
+                setTimeout(() => {
+                    currentPageIndex = targetIndex;
+                    currentSlide.classList.remove('incoming');
+                    currentSlide.style.opacity = '1';
+
+                    updatePageCounter();
+                    updateNavButtons();
+                    isFlipping = false;
+                }, animDuration);
             }, animDuration);
         }
 
