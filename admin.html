@@ -173,6 +173,36 @@
                         </div>
                         <input type="file" id="wsLogoInput" accept="image/*" style="display:none" onchange="admin.handleWelcomeLogoUpload(this)">
                         <button class="btn btn-outline btn-sm" onclick="admin.removeWelcomeLogo()" id="wsLogoRemoveBtn" style="display:none;margin-top:8px;">Hapus Logo</button>
+
+                        <div class="form-group" style="margin-top:12px;">
+                            <label>Ukuran Logo: <span id="logoSizeValue">60</span>px</label>
+                            <input type="range" id="wsLogoSize" min="30" max="150" value="60" style="width:100%;" oninput="admin.updateLogoSize()">
+                        </div>
+                        <div class="form-group">
+                            <label>Posisi Logo</label>
+                            <div class="position-selector">
+                                <button class="pos-btn" data-position="top-left" onclick="admin.setLogoPosition('top-left')">↖</button>
+                                <button class="pos-btn active" data-position="top-center" onclick="admin.setLogoPosition('top-center')">↑</button>
+                                <button class="pos-btn" data-position="top-right" onclick="admin.setLogoPosition('top-right')">↗</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Background Image (Opsional)</h3>
+                        <div class="logo-upload-area" id="wsBgUpload" onclick="document.getElementById('wsBgInput').click()">
+                            <div class="logo-placeholder" id="wsBgPlaceholder">
+                                <span class="logo-icon">🖼️</span>
+                                <span>Klik untuk upload background</span>
+                            </div>
+                            <img id="wsBgPreview" style="display:none;">
+                        </div>
+                        <input type="file" id="wsBgInput" accept="image/*" style="display:none" onchange="admin.handleWelcomeBgUpload(this)">
+                        <button class="btn btn-outline btn-sm" onclick="admin.removeWelcomeBg()" id="wsBgRemoveBtn" style="display:none;margin-top:8px;">Hapus Background</button>
+                        <div class="form-group" style="margin-top:12px;">
+                            <label>Opacity Background: <span id="bgOpacityValue">50</span>%</label>
+                            <input type="range" id="wsBgOpacity" min="10" max="100" value="50" style="width:100%;" oninput="admin.updateBgOpacity()">
+                        </div>
                     </div>
 
                     <div class="settings-section">

@@ -53,6 +53,10 @@ async function loadWelcomeSettings() {
                     colorTheme: item.colorTheme || 'elegant-gold',
                     fontFamily: item.fontFamily || 'Playfair Display',
                     logoUrl: item.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${item.id}/${item.logo}` : '',
+                    backgroundImage: item.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${item.id}/${item.backgroundImage}` : '',
+                    backgroundOpacity: item.backgroundOpacity || 50,
+                    logoSize: item.logoSize || 60,
+                    logoPosition: item.logoPosition || 'top-center',
                     leftText: item.leftText || item.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
                     title: item.title || 'CATALOG',
                     subtitle: item.subtitle || 'Company Profile',
@@ -160,12 +164,16 @@ function renderWelcomeScreen() {
 }
 
 function renderWelcomeDark(ws, theme) {
+    const bgStyle = ws.backgroundImage
+        ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover no-repeat;`
+        : `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
+    const logoStyle = getLogoStyleWelcome(ws);
     const logoHtml = ws.logoUrl
-        ? `<img src="${ws.logoUrl}" style="height:60px;margin-bottom:20px;object-fit:contain;">`
-        : `<div style="width:60px;height:60px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
+        ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
+        : `<div style="width:${ws.logoSize || 60}px;height:${ws.logoSize || 60}px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
 
     return `
-    <div style="width:100%;height:100%;background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+    <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
         <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
         <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
         <div style="text-align:center;margin-bottom:auto;">
@@ -184,13 +192,36 @@ function renderWelcomeDark(ws, theme) {
     </div>`;
 }
 
+function getLogoStyleWelcome(ws) {
+    const size = ws.logoSize || 60;
+    const pos = ws.logoPosition || 'top-center';
+    let positionStyle = '';
+    switch(pos) {
+        case 'top-left':
+            positionStyle = 'margin-right:auto;display:block;';
+            break;
+        case 'top-right':
+            positionStyle = 'margin-left:auto;display:block;';
+            break;
+        case 'top-center':
+        default:
+            positionStyle = 'margin:0 auto;display:block;';
+            break;
+    }
+    return `height:${size}px;max-width:100%;object-fit:contain;${positionStyle}`;
+}
+
 function renderWelcomeLight(ws, theme) {
+    const bgStyle = ws.backgroundImage
+        ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover no-repeat;`
+        : `background:${theme.bgLight};`;
+    const logoStyle = getLogoStyleWelcome(ws);
     const logoHtml = ws.logoUrl
-        ? `<img src="${ws.logoUrl}" style="height:60px;margin-bottom:20px;object-fit:contain;">`
-        : `<div style="width:60px;height:60px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
+        ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
+        : `<div style="width:${ws.logoSize || 60}px;height:${ws.logoSize || 60}px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
 
     return `
-    <div style="width:100%;height:100%;background:${theme.bgLight};padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+    <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
         <div style="position:absolute;top:5%;right:5%;width:30px;height:30px;border-top:2px solid ${theme.accentAlt};border-right:2px solid ${theme.accentAlt};opacity:0.3;"></div>
         <div style="text-align:center;margin-bottom:auto;">
             ${logoHtml}
@@ -209,15 +240,14 @@ function renderWelcomeLight(ws, theme) {
 }
 
 function renderWelcomeSplit(ws, theme) {
-    const logoHtml = ws.logoUrl
-        ? `<img src="${ws.logoUrl}" style="height:50px;margin-bottom:30px;object-fit:contain;">`
-        : '';
+    const logoStyle = getLogoStyleWelcome(ws);
+    const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
 
     return `
     <div style="width:100%;height:100%;display:flex;">
         <div style="width:40%;height:100%;background:${theme.bgDark};padding:6%;display:flex;flex-direction:column;justify-content:center;">
             ${logoHtml}
-            <div style="width:25px;height:1px;background:${theme.accent};margin-bottom:20px;"></div>
+            <div style="width:25px;height:1px;background:${theme.accent};margin:20px 0;"></div>
             <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
         </div>
         <div style="width:60%;height:100%;background:${theme.bgCard};padding:8%;display:flex;flex-direction:column;justify-content:center;">
@@ -231,12 +261,14 @@ function renderWelcomeSplit(ws, theme) {
 }
 
 function renderWelcomeNumbered(ws, theme) {
-    const logoHtml = ws.logoUrl
-        ? `<img src="${ws.logoUrl}" style="height:40px;margin-bottom:auto;opacity:0.9;object-fit:contain;">`
-        : '';
+    const bgStyle = ws.backgroundImage
+        ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover no-repeat;`
+        : `background:${theme.bgDark};`;
+    const logoStyle = getLogoStyleWelcome(ws);
+    const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
 
     return `
-    <div style="width:100%;height:100%;background:${theme.bgDark};padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+    <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
         ${logoHtml}
         <div style="display:flex;align-items:flex-start;gap:5%;flex:1;margin-top:20px;">
             <div style="width:30%;display:flex;flex-direction:column;justify-content:center;">
@@ -255,12 +287,14 @@ function renderWelcomeNumbered(ws, theme) {
 }
 
 function renderWelcomeMinimal(ws, theme) {
-    const logoHtml = ws.logoUrl
-        ? `<img src="${ws.logoUrl}" style="height:50px;margin-bottom:20px;object-fit:contain;">`
-        : '';
+    const bgStyle = ws.backgroundImage
+        ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover no-repeat;`
+        : `background:${theme.bgLight};`;
+    const logoStyle = getLogoStyleWelcome(ws);
+    const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
 
     return `
-    <div style="width:100%;height:100%;background:${theme.bgLight};padding:10%;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
+    <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
         <div style="position:absolute;top:8%;right:8%;width:40px;height:40px;border-top:1px solid ${theme.textMuted};border-right:1px solid ${theme.textMuted};"></div>
         <div style="position:absolute;bottom:8%;left:8%;width:40px;height:40px;border-bottom:1px solid ${theme.textMuted};border-left:1px solid ${theme.textMuted};"></div>
         ${logoHtml}

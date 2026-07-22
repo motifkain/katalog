@@ -7,6 +7,7 @@ class AdminDashboard {
         this.produk = [];
         this.welcomeSettings = null;
         this.welcomeLogoData = null;
+        this.welcomeBgData = null;
         this.currentKategori = null;
         this.currentProduk = null;
         this.pocketbaseToken = '';
@@ -174,6 +175,25 @@ class AdminDashboard {
             document.getElementById('wsLogoPlaceholder').style.display = 'flex';
             document.getElementById('wsLogoRemoveBtn').style.display = 'none';
         }
+
+        // Load background image if exists
+        if (ws.backgroundImage) {
+            const bgUrl = this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + ws.id + '/' + ws.backgroundImage;
+            document.getElementById('wsBgPreview').src = bgUrl;
+            document.getElementById('wsBgPreview').style.display = 'block';
+            document.getElementById('wsBgPlaceholder').style.display = 'none';
+            document.getElementById('wsBgRemoveBtn').style.display = 'inline-block';
+        } else {
+            document.getElementById('wsBgPreview').style.display = 'none';
+            document.getElementById('wsBgPlaceholder').style.display = 'flex';
+            document.getElementById('wsBgRemoveBtn').style.display = 'none';
+        }
+
+        // Load background opacity
+        if (ws.backgroundOpacity) {
+            document.getElementById('wsBgOpacity').value = ws.backgroundOpacity;
+            document.getElementById('bgOpacityValue').textContent = ws.backgroundOpacity;
+        }
     }
 
     selectTemplate(templateId) {
@@ -203,6 +223,8 @@ class AdminDashboard {
         ws.description = document.getElementById('wsDescription').value;
         ws.leftText = document.getElementById('wsLeftText').value;
         ws.fontFamily = document.getElementById('wsFont').value;
+        ws.backgroundOpacity = parseInt(document.getElementById('wsBgOpacity').value) || 50;
+        ws.logoSize = parseInt(document.getElementById('wsLogoSize').value) || 60;
 
         const preview = document.getElementById('wsPreviewArea');
         if (!preview) return;
@@ -232,6 +254,75 @@ class AdminDashboard {
         }
 
         preview.innerHTML = html;
+    }
+
+    getLogoStyle(ws) {
+        const size = ws.logoSize || 60;
+        const pos = ws.logoPosition || 'top-center';
+        let positionStyle = '';
+
+        switch(pos) {
+            case 'top-left':
+                positionStyle = 'margin-right:auto;margin-bottom:auto;';
+                break;
+            case 'top-right':
+                positionStyle = 'margin-left:auto;margin-bottom:auto;';
+                break;
+            case 'top-center':
+            default:
+                positionStyle = 'margin:0 auto;margin-bottom:auto;';
+                break;
+        }
+
+        return `height:${size}px;max-width:100%;object-fit:contain;${positionStyle}`;
+    }
+
+    // Background Image handlers
+    handleWelcomeBgUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.welcomeBgData = e.target.result;
+            document.getElementById('wsBgPreview').src = e.target.result;
+            document.getElementById('wsBgPreview').style.display = 'block';
+            document.getElementById('wsBgPlaceholder').style.display = 'none';
+            document.getElementById('wsBgRemoveBtn').style.display = 'inline-block';
+            this.updateWelcomePreview();
+        };
+        reader.readAsDataURL(file);
+    }
+
+    removeWelcomeBg() {
+        this.welcomeBgData = null;
+        document.getElementById('wsBgPreview').style.display = 'none';
+        document.getElementById('wsBgPlaceholder').style.display = 'flex';
+        document.getElementById('wsBgRemoveBtn').style.display = 'none';
+        document.getElementById('wsBgInput').value = '';
+        this.updateWelcomePreview();
+    }
+
+    updateBgOpacity() {
+        const val = document.getElementById('wsBgOpacity').value;
+        document.getElementById('bgOpacityValue').textContent = val;
+        this.updateWelcomePreview();
+    }
+
+    // Logo handlers
+    updateLogoSize() {
+        const val = document.getElementById('wsLogoSize').value;
+        document.getElementById('logoSizeValue').textContent = val;
+        this.updateWelcomePreview();
+    }
+
+    setLogoPosition(position) {
+        document.querySelectorAll('.pos-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.position === position);
+        });
+        this.welcomeSettings = this.welcomeSettings || {};
+        this.welcomeSettings.logoPosition = position;
+        this.updateWelcomePreview();
     }
 
     getThemeColors(themeId) {
@@ -289,12 +380,16 @@ class AdminDashboard {
     }
 
     renderPreviewDark(ws, theme) {
+        const bgStyle = ws.backgroundImage
+            ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`
+            : `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
+        const logoStyle = this.getLogoStyle(ws);
         const logoHtml = ws.logo
-            ? `<img src="${ws.logo}" class="preview-logo" style="display:none;">`
+            ? `<img src="${ws.logo}" style="${logoStyle}" class="preview-logo">`
             : `<div class="preview-logo-placeholder">📷</div>`;
 
         return `
-        <div style="width:100%;height:100%;background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);padding:12%;display:flex;flex-direction:column;">
+        <div style="width:100%;height:100%;${bgStyle}padding:12%;display:flex;flex-direction:column;">
             <div style="text-align:center;margin-bottom:auto;">
                 ${logoHtml}
             </div>
@@ -311,12 +406,16 @@ class AdminDashboard {
     }
 
     renderPreviewLight(ws, theme) {
+        const bgStyle = ws.backgroundImage
+            ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`
+            : `background:${theme.bgLight};`;
+        const logoStyle = this.getLogoStyle(ws);
         const logoHtml = ws.logo
-            ? `<img src="${ws.logo}" class="preview-logo" style="display:none;">`
+            ? `<img src="${ws.logo}" style="${logoStyle}" class="preview-logo">`
             : `<div class="preview-logo-placeholder">📷</div>`;
 
         return `
-        <div style="width:100%;height:100%;background:${theme.bgLight};padding:12%;display:flex;flex-direction:column;">
+        <div style="width:100%;height:100%;${bgStyle}padding:12%;display:flex;flex-direction:column;">
             <div style="text-align:center;margin-bottom:auto;">
                 ${logoHtml}
             </div>
@@ -333,10 +432,13 @@ class AdminDashboard {
     }
 
     renderPreviewSplit(ws, theme) {
+        const logoStyle = this.getLogoStyle(ws);
+        const logoHtml = ws.logo ? `<img src="${ws.logo}" style="${logoStyle}">` : '';
         return `
         <div style="width:100%;height:100%;display:flex;">
             <div style="width:35%;height:100%;background:${theme.bgDark};padding:8%;display:flex;flex-direction:column;justify-content:center;">
-                <div style="width:30px;height:1px;background:${theme.accent};margin-bottom:12%;"></div>
+                ${logoHtml}
+                <div style="width:30px;height:1px;background:${theme.accent};margin:12% 0;"></div>
                 <p style="color:rgba(255,255,255,0.5);font-size:0.4rem;line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
             </div>
             <div style="width:65%;height:100%;background:${theme.bgCard};padding:10%;display:flex;flex-direction:column;justify-content:center;">
@@ -349,8 +451,11 @@ class AdminDashboard {
     }
 
     renderPreviewNumbered(ws, theme) {
+        const bgStyle = ws.backgroundImage
+            ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`
+            : `background:${theme.bgDark};`;
         return `
-        <div style="width:100%;height:100%;background:${theme.bgDark};padding:10%;display:flex;flex-direction:column;">
+        <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;">
             <div style="display:flex;align-items:flex-start;gap:8%;flex:1;">
                 <div style="width:30%;display:flex;flex-direction:column;justify-content:center;">
                     <h2 style="font-family:'${ws.fontFamily}',serif;font-size:1.4rem;color:#fff;font-weight:bold;line-height:1;margin-bottom:8%;">01</h2>
@@ -367,12 +472,20 @@ class AdminDashboard {
     }
 
     renderPreviewMinimal(ws, theme) {
+        const bgStyle = ws.backgroundImage
+            ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`
+            : `background:${theme.bgLight};`;
+        const logoStyle = this.getLogoStyle(ws);
+        const logoHtml = ws.logo ? `<img src="${ws.logo}" style="${logoStyle}">` : '';
         return `
-        <div style="width:100%;height:100%;background:${theme.bgLight};padding:10%;display:flex;flex-direction:column;justify-content:center;">
-            <p style="color:${theme.textMuted};font-size:0.4rem;letter-spacing:0.2em;margin-bottom:4%;text-transform:uppercase;">${ws.subtitle}</p>
-            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1rem;color:${theme.textDark};margin-bottom:6%;font-weight:300;">${ws.title}</h1>
-            <div style="width:30px;height:1px;background:${theme.accentAlt};margin-bottom:6%;"></div>
-            ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.4rem;line-height:1.4;font-style:italic;">${ws.description}</p>` : ''}
+        <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;justify-content:center;">
+            ${logoHtml}
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+                <p style="color:${theme.textMuted};font-size:0.4rem;letter-spacing:0.2em;margin-bottom:4%;text-transform:uppercase;">${ws.subtitle}</p>
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1rem;color:${theme.textDark};margin-bottom:6%;font-weight:300;">${ws.title}</h1>
+                <div style="width:30px;height:1px;background:${theme.accentAlt};margin-bottom:6%;"></div>
+                ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.4rem;line-height:1.4;font-style:italic;">${ws.description}</p>` : ''}
+            </div>
         </div>`;
     }
 
@@ -412,7 +525,10 @@ class AdminDashboard {
             title: document.getElementById('wsTitle').value,
             subtitle: document.getElementById('wsSubtitle').value,
             description: document.getElementById('wsDescription').value,
-            leftText: document.getElementById('wsLeftText').value
+            leftText: document.getElementById('wsLeftText').value,
+            backgroundOpacity: parseInt(document.getElementById('wsBgOpacity').value) || 50,
+            logoSize: parseInt(document.getElementById('wsLogoSize').value) || 60,
+            logoPosition: this.welcomeSettings?.logoPosition || 'top-center'
         };
 
         try {
@@ -427,6 +543,12 @@ class AdminDashboard {
             if (this.welcomeLogoData) {
                 const blob = this.dataURLtoBlob(this.welcomeLogoData);
                 formData.append('logo', blob, 'logo.png');
+            }
+
+            // Add background image if changed
+            if (this.welcomeBgData) {
+                const blob = this.dataURLtoBlob(this.welcomeBgData);
+                formData.append('backgroundImage', blob, 'background.jpg');
             }
 
             if (this.welcomeSettings && this.welcomeSettings.id) {
@@ -445,6 +567,7 @@ class AdminDashboard {
 
             this.showNotification('Welcome Screen berhasil disimpan!', 'success');
             this.welcomeLogoData = null;
+            this.welcomeBgData = null;
 
             // Reload settings
             await this.loadWelcomeSettings();
