@@ -1295,8 +1295,9 @@
             // Calculate target index first
             const targetIndex = direction > 0 ? currentPageIndex + 1 : currentPageIndex - 1;
 
-            // Prepare content for BOTH directions
+            // Prepare content for target page
             const pageData = catalogPages[targetIndex];
+            let targetContent = '';
             if (pageData) {
                 const pageContentData = {
                     ...pageData,
@@ -1304,7 +1305,7 @@
                     images: (pageData.images || []).map(img => `${CONFIG.pocketbaseUrl}/api/files/catalog_pages/${pageData.id}/${img}`),
                     logo: pageData.logo ? `${CONFIG.pocketbaseUrl}/api/files/catalog_pages/${pageData.id}/${pageData.logo}` : ''
                 };
-                nextPageContent.innerHTML = `<div class="catalog-page">${PageTemplates.renderPage(pageContentData, targetIndex + 1)}</div>`;
+                targetContent = `<div class="catalog-page">${PageTemplates.renderPage(pageContentData, targetIndex + 1)}</div>`;
             }
 
             // Animation settings
@@ -1313,10 +1314,9 @@
             if (direction > 0) {
                 // FORWARD: Beautiful book flip animation
 
-                // Prepare next content in underneath page
+                // Set next content to underneath page
                 const nextFront = nextPageEl.querySelector('.page-front');
-                nextFront.innerHTML = nextPageContent.innerHTML;
-                nextPageContent.innerHTML = '';
+                nextFront.innerHTML = targetContent;
 
                 // Set initial states
                 currentPage.style.transition = 'none';
@@ -1344,6 +1344,11 @@
                 setTimeout(() => {
                     currentPageIndex = targetIndex;
 
+                    // Put new content in current page
+                    const currentFront = currentPage.querySelector('.page-front');
+                    currentFront.innerHTML = targetContent;
+
+                    // Reset transforms
                     currentPage.style.transition = 'none';
                     currentPage.style.transform = 'rotateY(0deg)';
                     currentPage.style.zIndex = '2';
@@ -1358,10 +1363,12 @@
             } else {
                 // BACKWARD: Smooth fade transition
 
-                // Set content directly - no swap needed for fade
+                // Get current content first
                 const currentFront = currentPage.querySelector('.page-front');
-                currentFront.innerHTML = nextPageContent.innerHTML;
-                nextPageContent.innerHTML = '';
+                const currentContent = currentFront.innerHTML;
+
+                // Set new content
+                currentFront.innerHTML = targetContent;
 
                 // Fade out current
                 currentPage.style.transition = `opacity ${animDuration * 0.4}ms ease-out`;
