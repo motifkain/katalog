@@ -1312,10 +1312,10 @@
 
             if (direction > 0) {
                 // FORWARD: Buka buku
-                // Animation: page moves from 0° to -180° (opens to left)
+                // Animation: current page rotates 0° → -180°
+                // Content moves from current to next page underneath
 
-                // Prepare next page content FIRST
-                const currentFront = currentPage.querySelector('.page-front');
+                // Prepare: put next content in the underneath page
                 const nextFront = nextPageEl.querySelector('.page-front');
                 nextFront.innerHTML = nextPageContent.innerHTML;
                 nextPageContent.innerHTML = '';
@@ -1335,7 +1335,7 @@
                 currentPage.offsetHeight;
                 nextPageEl.offsetHeight;
 
-                // Start animation - opens to left
+                // Start animation
                 requestAnimationFrame(() => {
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transformOrigin = 'left center';
@@ -1343,17 +1343,27 @@
                 });
 
             } else {
-                // BACKWARD: Tutup buku (kebalikan dari membuka)
-                // Animation: current page moves from -180° back to 0° (closes/returns)
+                // BACKWARD: Kembali ke halaman sebelumnya
+                // Animation: current page rotates 0° → -180° (same as forward, but shows previous)
+                // The previous page content should be in the underneath page
 
-                // Prepare previous page content in current page FIRST
+                // For backward, the "previous" page content should already be in nextPageContent
+                // We show it in the underneath page, then current page rotates away to reveal it
+
+                // Swap: current content goes to underneath, previous content becomes current
                 const currentFront = currentPage.querySelector('.page-front');
-                currentFront.innerHTML = nextPageContent.innerHTML;
-                nextPageContent.innerHTML = '';
+                const nextFront = nextPageEl.querySelector('.page-front');
 
-                // Set initial states - current page starts at -180° (flipped position)
+                // Save current content
+                const tempContent = currentFront.innerHTML;
+
+                // Put previous content (in nextPageContent) to current page
+                currentFront.innerHTML = nextPageContent.innerHTML;
+                nextPageContent.innerHTML = tempContent; // Save for next time
+
+                // Set initial states
                 currentPage.style.transition = 'none';
-                currentPage.style.transform = 'rotateY(-180deg)';
+                currentPage.style.transform = 'rotateY(0deg)';
                 currentPage.style.opacity = '1';
                 currentPage.style.zIndex = '2';
 
@@ -1366,11 +1376,11 @@
                 currentPage.offsetHeight;
                 nextPageEl.offsetHeight;
 
-                // Start animation - closes/returns to 0°
+                // Start animation - same rotation as forward
                 requestAnimationFrame(() => {
                     currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
                     currentPage.style.transformOrigin = 'left center';
-                    currentPage.style.transform = 'rotateY(0deg)';
+                    currentPage.style.transform = 'rotateY(-180deg)';
                 });
             }
 
