@@ -1,13 +1,11 @@
 /**
  * MOTIFKAIN ADMIN DASHBOARD
- * Logic untuk Dashboard Admin
  */
-
 class AdminDashboard {
     constructor() {
         this.kategori = [];
         this.produk = [];
-        this.pages = [];
+        this.welcomeSettings = null;
         this.currentKategori = null;
         this.currentProduk = null;
         this.pocketbaseToken = '';
@@ -90,41 +88,116 @@ class AdminDashboard {
         window.open('index.html', '_blank');
     }
 
-    async fetchAPI(endpoint, options = {}) {
-        const headers = { 'Authorization': this.pocketbaseToken, ...options.headers };
+    async fetchAPI(endpoint, options) {
+        options = options || {};
+        const headers = { 'Authorization': this.pocketbaseToken };
+        if (options.headers) Object.assign(headers, options.headers);
         if (options.body && !(options.body instanceof FormData)) {
             headers['Content-Type'] = 'application/json';
         }
-        return fetch(this.pocketbaseUrl + endpoint, { ...options, headers });
+        return fetch(this.pocketbaseUrl + endpoint, {
+            method: options.method || 'GET',
+            headers: headers,
+            body: options.body
+        });
     }
 
     async loadData() {
+        await this.loadWelcomeSettings();
         await this.loadKategori();
         await this.loadProduk();
-        await this.loadPages();
+    }
+
+    async loadWelcomeSettings() {
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+        try {
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=1');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.items && data.items.length > 0) {
+                    this.welcomeSettings = data.items[0];
+                    this.renderWelcomeSettings();
+                } else {
+                    this.welcomeSettings = { title: 'CATALOG', subtitle: 'Company Profile', description: 'Koleksi produk eksklusif kami' };
+                    this.renderWelcomeSettings();
+                }
+            }
+        } catch (e) {
+            this.welcomeSettings = { title: 'CATALOG', subtitle: 'Company Profile', description: 'Koleksi produk eksklusif kami' };
+            this.renderWelcomeSettings();
+        }
+    }
+
+    renderWelcomeSettings() {
+        if (!this.welcomeSettings) return;
+        const ws = this.welcomeSettings;
+        const wsForm = document.getElementById('wsForm');
+        if (wsForm) {
+            wsForm.title.value = ws.title || '';
+            wsForm.subtitle.value = ws.subtitle || '';
+            wsForm.description.value = ws.description || '';
+        }
+    }
+
+    async saveWelcomeSettings() {
+        const form = document.getElementById('wsForm');
+        if (!form) return;
+
+        const data = {
+            title: form.title.value,
+            subtitle: form.subtitle.value,
+            description: form.description.value
+        };
+
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+        const self = this;
+
+        try {
+            if (this.welcomeSettings && this.welcomeSettings.id) {
+                await this.fetchAPI('/api/collections/' + col + '/records/' + this.welcomeSettings.id, {
+                    method: 'PATCH',
+                    body: JSON.stringify(data)
+                });
+                this.welcomeSettings = Object.assign(this.welcomeSettings, data);
+            } else {
+                const res = await this.fetchAPI('/api/collections/' + col + '/records', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    const created = await res.json();
+                    this.welcomeSettings = Object.assign(created, data);
+                }
+            }
+            this.showNotification('Berhasil disimpan!', 'success');
+        } catch (e) {
+            this.showNotification('Gagal menyimpan: ' + e.message, 'error');
+        }
     }
 
     async loadKategori() {
+        const col = window.MOTIFKAIN_CONFIG?.kategoriCollection || 'kategori';
         try {
-            const res = await this.fetchAPI('/api/collections/kategori/records?sort=order');
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=order');
             if (res.ok) {
                 const data = await res.json();
                 this.kategori = data.items || [];
             }
         } catch (e) {
             this.kategori = [
-                { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif', order: 0 },
-                { id: 'printing', name: 'Printing Kain', slug: 'printing', order: 1 },
-                { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian', order: 2 },
-                { id: 'asesoris', name: 'Asesoris', slug: 'asesoris', order: 3 }
+                { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif' },
+                { id: 'printing', name: 'Printing Kain', slug: 'printing' },
+                { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian' },
+                { id: 'asesoris', name: 'Asesoris', slug: 'asesoris' }
             ];
         }
         this.renderKategori();
     }
 
     async loadProduk() {
+        const col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
         try {
-            const res = await this.fetchAPI('/api/collections/produk/records?per-page=500&sort=-created');
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=500&sort=-created');
             if (res.ok) {
                 const data = await res.json();
                 this.produk = data.items || [];
@@ -133,47 +206,41 @@ class AdminDashboard {
             this.produk = [];
         }
         this.renderProduk();
-        this.updateKategoriDropdown();
-    }
-
-    async loadPages() {
-        try {
-            const res = await this.fetchAPI('/api/collections/catalog_pages/records?sort=order');
-            if (res.ok) {
-                const data = await res.json();
-                this.pages = data.items || [];
-            }
-        } catch (e) {
-            this.pages = [];
-        }
-        this.renderPages();
     }
 
     setupTabs() {
-        const tabs = document.querySelectorAll('.tab-btn');
-        const self = this;
-        tabs.forEach(function(tab) {
-            tab.addEventListener('click', function() {
-                tabs.forEach(function(t) { t.classList.remove('active'); });
-                this.classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
-                document.getElementById('tab-' + this.dataset.tab).classList.add('active');
-            });
-        });
+        var tabs = document.querySelectorAll('.tab-btn');
+        for (var i = 0; i < tabs.length; i++) {
+            tabs[i].addEventListener('click', (function(tab) {
+                for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove('active');
+                tab.classList.add('active');
+                var tabName = tab.dataset.tab;
+                var contents = document.querySelectorAll('.tab-content');
+                for (var k = 0; k < contents.length; k++) contents[k].classList.remove('active');
+                var target = document.getElementById('tab-' + tabName);
+                if (target) target.classList.add('active');
+            }).bind(null, tabs[i]));
+        }
     }
 
     setupForms() {
-        const self = this;
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('emailInput').value;
-            const password = document.getElementById('passwordInput').value;
-            self.login(email, password);
-        });
+        var self = this;
+        var form = document.getElementById('loginForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var email = document.getElementById('emailInput').value;
+                var password = document.getElementById('passwordInput').value;
+                self.login(email, password);
+            });
+        }
+
+        var wsSave = document.getElementById('wsSaveBtn');
+        if (wsSave) wsSave.addEventListener('click', function() { self.saveWelcomeSettings(); });
     }
 
     renderKategori() {
-        const container = document.getElementById('kategoriList');
+        var container = document.getElementById('kategoriList');
         if (!container) return;
 
         if (this.kategori.length === 0) {
@@ -181,105 +248,112 @@ class AdminDashboard {
             return;
         }
 
-        const self = this;
-        container.innerHTML = this.kategori.map(function(k) {
-            return '<div class="kategori-item">' +
-                '<div class="kategori-icon">' + k.name.charAt(0) + '</div>' +
-                '<div class="kategori-info">' +
-                    '<div class="kategori-name">' + k.name + '</div>' +
-                    '<div class="kategori-slug">' + k.slug + '</div>' +
-                '</div>' +
-                '<div class="kategori-actions">' +
-                    '<button onclick="admin.editKategori(\'' + k.id + '\')" title="Edit">Edit</button>' +
-                    '<button onclick="admin.deleteKategori(\'' + k.id + '\')" title="Hapus">Hapus</button>' +
-                '</div>' +
-            '</div>';
-        }).join('');
+        var html = '';
+        for (var i = 0; i < this.kategori.length; i++) {
+            var k = this.kategori[i];
+            html += '<div class="kategori-item">';
+            html += '<div class="kategori-icon">' + (k.name.charAt ? k.name.charAt(0).toUpperCase() : '?') + '</div>';
+            html += '<div class="kategori-info">';
+            html += '<div class="kategori-name">' + k.name + '</div>';
+            html += '<div class="kategori-slug">' + k.slug + '</div>';
+            html += '</div>';
+            html += '<div class="kategori-actions">';
+            html += '<button class="btn btn-sm" onclick="admin.editKategori(\'' + k.id + '\')">Edit</button> ';
+            html += '<button class="btn btn-sm btn-danger" onclick="admin.deleteKategori(\'' + k.id + '\')">Hapus</button>';
+            html += '</div></div>';
+        }
+        container.innerHTML = html;
     }
 
     showAddKategoriModal() {
         this.currentKategori = null;
-        document.getElementById('kategoriModalTitle').textContent = 'Tambah Kategori';
-        document.getElementById('kategoriName').value = '';
-        document.getElementById('kategoriSlug').value = '';
-        document.getElementById('kategoriOrder').value = this.kategori.length;
-        document.getElementById('kategoriModal').classList.add('active');
+        document.getElementById('katModalTitle').textContent = 'Tambah Kategori';
+        document.getElementById('katName').value = '';
+        document.getElementById('katSlug').value = '';
+        document.getElementById('katOrder').value = this.kategori.length;
+        document.getElementById('katModal').classList.add('active');
     }
 
     editKategori(id) {
-        const k = this.kategori.find(function(item) { return item.id === id; });
+        var k = null;
+        for (var i = 0; i < this.kategori.length; i++) {
+            if (this.kategori[i].id === id) { k = this.kategori[i]; break; }
+        }
         if (!k) return;
+
         this.currentKategori = k;
-        document.getElementById('kategoriModalTitle').textContent = 'Edit Kategori';
-        document.getElementById('kategoriName').value = k.name;
-        document.getElementById('kategoriSlug').value = k.slug;
-        document.getElementById('kategoriOrder').value = k.order || 0;
-        document.getElementById('kategoriModal').classList.add('active');
+        document.getElementById('katModalTitle').textContent = 'Edit Kategori';
+        document.getElementById('katName').value = k.name || '';
+        document.getElementById('katSlug').value = k.slug || '';
+        document.getElementById('katOrder').value = k.order || 0;
+        document.getElementById('katModal').classList.add('active');
     }
 
     async saveKategori() {
-        const name = document.getElementById('kategoriName').value.trim();
-        const slug = document.getElementById('kategoriSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
-        const order = parseInt(document.getElementById('kategoriOrder').value) || 0;
+        var name = document.getElementById('katName').value.trim();
+        var slug = document.getElementById('katSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
+        var order = parseInt(document.getElementById('katOrder').value) || 0;
 
         if (!name || !slug) {
             this.showNotification('Nama dan slug wajib diisi!', 'error');
             return;
         }
 
-        const data = { name: name, slug: slug, order: order };
-        const self = this;
+        var data = { name: name, slug: slug, order: order };
+
+        var col = window.MOTIFKAIN_CONFIG?.kategoriCollection || 'kategori';
+        var self = this;
 
         try {
             if (this.currentKategori) {
-                await this.fetchAPI('/api/collections/kategori/records/' + this.currentKategori.id, {
-                    method: 'PATCH',
-                    body: JSON.stringify(data)
-                });
+                await this.fetchAPI('/api/collections/' + col + '/records/' + this.currentKategori.id, { method: 'PATCH', body: JSON.stringify(data) });
             } else {
-                await this.fetchAPI('/api/collections/kategori/records', {
-                    method: 'POST',
-                    body: JSON.stringify(data)
-                });
+                await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: JSON.stringify(data) });
             }
             this.showNotification('Berhasil disimpan!', 'success');
         } catch (e) {
-            this.showNotification('Gagal menyimpan', 'error');
+            this.showNotification('Gagal menyimpan: ' + e.message, 'error');
         }
 
-        this.closeModal('kategoriModal');
+        this.closeModal('katModal');
         await this.loadKategori();
     }
 
     async deleteKategori(id) {
         if (!confirm('Yakin ingin menghapus?')) return;
+        var col = window.MOTIFKAIN_CONFIG?.kategoriCollection || 'kategori';
         try {
-            await this.fetchAPI('/api/collections/kategori/records/' + id, { method: 'DELETE' });
+            await this.fetchAPI('/api/collections/' + col + '/records/' + id, { method: 'DELETE' });
             this.showNotification('Berhasil dihapus!', 'success');
         } catch (e) {
-            this.showNotification('Gagal menghapus', 'error');
+            this.showNotification('Gagal menghapus: ' + e.message, 'error');
         }
         await this.loadKategori();
     }
 
     renderProduk() {
-        const container = document.getElementById('produkGrid');
+        var container = document.getElementById('produkGrid');
         if (!container) return;
 
-        const filterKategori = (document.getElementById('filterKategori') || { value: '' }).value;
-        const searchQuery = ((document.getElementById('searchProduct') || { value: '' }).value || '').toLowerCase();
+        var filterKat = document.getElementById('filterKategori');
+        var filterVal = filterKat ? filterKat.value : '';
+        var searchVal = (document.getElementById('searchProduk') || { value: '' }).value.toLowerCase();
 
-        let filtered = this.produk;
-
-        if (filterKategori) {
-            filtered = filtered.filter(function(p) { return p.kategori === filterKategori; });
+        var filtered = this.produk;
+        if (filterVal) {
+            filtered = [];
+            for (var i = 0; i < this.produk.length; i++) {
+                if (this.produk[i].kategori === filterVal) filtered.push(this.produk[i]);
+            }
         }
-
-        if (searchQuery) {
-            filtered = filtered.filter(function(p) {
-                return (p.nama || '').toLowerCase().includes(searchQuery) ||
-                       (p.deskripsi || '').toLowerCase().includes(searchQuery);
-            });
+        if (searchVal) {
+            var filtered2 = [];
+            for (var j = 0; j < filtered.length; j++) {
+                var p = filtered[j];
+                if ((p.nama && p.nama.toLowerCase().includes(searchVal)) filtered2.push(p);
+                else if (p.deskripsi && p.deskripsi.toLowerCase().includes(searchVal)) filtered2.push(p);
+            }
+            filtered = filtered2;
         }
 
         if (filtered.length === 0) {
@@ -287,64 +361,66 @@ class AdminDashboard {
             return;
         }
 
-        const self = this;
-        container.innerHTML = filtered.map(function(p) {
-            const imageUrl = p.image
-                ? self.pocketbaseUrl + '/api/files/produk/' + p.id + '/' + p.image
-                : 'https://via.placeholder.com/400x300?text=No+Image';
-            const harga = p.harga ? 'Rp ' + p.harga.toLocaleString('id-ID') : 'Hubungi Kami';
+        var html = '';
+        for (var k = 0; k < filtered.length; k++) {
+            var prod = filtered[k];
+            var imgUrl = prod.image ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + prod.id + '/' + prod.image : 'https://via.placeholder.com/300x300?text=No+Image';
+            var harga = prod.harga ? 'Rp ' + prod.harga.toLocaleString('id-ID') : 'Hubungi Kami';
+            html += '<div class="produk-item">';
+            html += '<div class="produk-image"><img src="' + imgUrl + '" alt="' + (prod.nama || '') + '"></div>';
+            html += '<div class="produk-info">';
+            html += '<div class="produk-name">' + (prod.nama || '-') + '</div>';
+            html += '<div class="produk-price">' + harga + '</div>';
+            html += '<div class="produk-meta">' + (prod.kategori || '-') + ' / ' + (prod.subkategori || '-') + '</div>';
+            html += '<div class="produk-actions">';
+            html += '<button class="edit-btn" onclick="admin.editProduk(\'' + prod.id + '\')">Edit</button> ';
+            html += '<button class="delete-btn" onclick="admin.deleteProduk(\'' + prod.id + '\')">Hapus</button>';
+            html += '</div></div></div>';
+        }
+        container.innerHTML = html;
 
-            return '<div class="produk-item">' +
-                '<div class="produk-image"><img src="' + imageUrl + '" alt="' + (p.nama || '') + '"></div>' +
-                '<div class="produk-info">' +
-                    '<div class="produk-name">' + (p.nama || '-') + '</div>' +
-                    '<div class="produk-price">' + harga + '</div>' +
-                    '<div class="produk-meta">' + (p.kategori || '-') + ' / ' + (p.subkategori || '-') + '</div>' +
-                    '<div class="produk-actions">' +
-                        '<button class="edit-btn" onclick="admin.editProduk(\'' + p.id + '\')">Edit</button>' +
-                        '<button class="delete-btn" onclick="admin.deleteProduk(\'' + p.id + '\')">Hapus</button>' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-        }).join('');
+        this.populateKategoriDropdown();
     }
 
-    filterProducts() { this.renderProduk(); }
-
-    updateKategoriDropdown() {
-        const selects = document.querySelectorAll('#productKategori, #filterKategori');
-        const self = this;
-        selects.forEach(function(select) {
-            const currentVal = select.value;
-            select.innerHTML = '<option value="">Semua Kategori</option>' +
-                self.kategori.map(function(k) {
-                    return '<option value="' + k.slug + '">' + k.name + '</option>';
-                }).join('');
-            select.value = currentVal;
-        });
+    populateKategoriDropdown() {
+        var selects = document.querySelectorAll('#productKategori, #filterKategori');
+        for (var s = 0; s < selects.length; s++) {
+            var sel = selects[s];
+            var cur = sel.value;
+            var html = '<option value="">Semua Kategori</option>';
+            for (var i = 0; i < this.kategori.length; i++) {
+                var k = this.kategori[i];
+                html += '<option value="' + k.slug + '">' + k.name + '</option>';
+            }
+            sel.innerHTML = html;
+            sel.value = cur;
+        }
     }
 
     showAddProductModal() {
         this.currentProduk = null;
-        document.getElementById('productModalTitle').textContent = 'Tambah Produk';
-        document.getElementById('productName').value = '';
-        document.getElementById('productKategori').value = '';
-        document.getElementById('productSubkategori').value = '';
-        document.getElementById('productHarga').value = '';
-        document.getElementById('productDeskripsi').value = '';
-        document.getElementById('productToko').value = 'MotifKain';
-        document.getElementById('productDaerah').value = '';
-        document.getElementById('productImageUpload').classList.remove('has-image');
-        document.getElementById('productImagePreview').style.display = 'none';
+        document.getElementById('prodModalTitle').textContent = 'Tambah Produk';
+        var fields = ['productName', 'productKategori', 'productSubkategori', 'productHarga', 'productDeskripsi', 'productToko', 'productDaerah'];
+        for (var i = 0; i < fields.length; i++) {
+            var f = document.getElementById(fields[i]);
+            if (f) f.value = fields[i] === 'productToko' ? 'MotifKain' : '';
+        }
+        var upload = document.getElementById('productImageUpload');
+        var preview = document.getElementById('productImagePreview');
+        if (upload) upload.classList.remove('has-image');
+        if (preview) { preview.src = ''; preview.style.display = 'none'; }
         document.getElementById('productModal').classList.add('active');
     }
 
     editProduk(id) {
-        const p = this.produk.find(function(item) { return item.id === id; });
+        var p = null;
+        for (var i = 0; i < this.produk.length; i++) {
+            if (this.produk[i].id === id) { p = this.produk[i]; break; }
+        }
         if (!p) return;
 
         this.currentProduk = p;
-        document.getElementById('productModalTitle').textContent = 'Edit Produk';
+        document.getElementById('prodModalTitle').textContent = 'Edit Produk';
         document.getElementById('productName').value = p.nama || '';
         document.getElementById('productKategori').value = p.kategori || '';
         document.getElementById('productSubkategori').value = p.subkategori || '';
@@ -354,8 +430,8 @@ class AdminDashboard {
         document.getElementById('productDaerah').value = p.daerah || '';
 
         if (p.image) {
-            const imageUrl = this.pocketbaseUrl + '/api/files/produk/' + p.id + '/' + p.image;
-            document.getElementById('productImagePreview').src = imageUrl;
+            var imgUrl = this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + p.id + '/' + p.image;
+            document.getElementById('productImagePreview').src = imgUrl;
             document.getElementById('productImagePreview').style.display = 'block';
             document.getElementById('productImageUpload').classList.add('has-image');
         }
@@ -364,36 +440,39 @@ class AdminDashboard {
     }
 
     handleImageUpload(input) {
-        const file = input.files[0];
+        var file = input.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        const preview = document.getElementById('productImagePreview');
-        const upload = document.getElementById('productImageUpload');
+        var reader = new FileReader();
+        var preview = document.getElementById('productImagePreview');
+        var upload = document.getElementById('productImageUpload');
+        var self = this;
         reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            upload.classList.add('has-image');
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                if (upload) upload.classList.add('has-image');
+            }
         };
         reader.readAsDataURL(file);
     }
 
-    async saveProduct() {
-        const nama = document.getElementById('productName').value.trim();
-        const kategori = document.getElementById('productKategori').value;
-        const subkategori = document.getElementById('productSubkategori').value.trim();
-        const harga = parseInt(document.getElementById('productHarga').value) || 0;
-        const deskripsi = document.getElementById('productDeskripsi').value.trim();
-        const namatoko = document.getElementById('productToko').value.trim() || 'MotifKain';
-        const daerah = document.getElementById('productDaerah').value.trim();
-        const imagePreview = document.getElementById('productImagePreview');
-        const imageData = imagePreview.src && imagePreview.style.display !== 'none' ? imagePreview.src : null;
+    async saveProduk() {
+        var nama = document.getElementById('productName').value.trim();
+        var kategori = document.getElementById('productKategori').value;
+        var subkategori = document.getElementById('productSubkategori').value.trim();
+        var harga = parseInt(document.getElementById('productHarga').value) || 0;
+        var deskripsi = document.getElementById('productDeskripsi').value.trim();
+        var namatoko = document.getElementById('productToko').value.trim() || 'MotifKain';
+        var daerah = document.getElementById('productDaerah').value.trim();
+        var imgEl = document.getElementById('productImagePreview');
+        var imgData = imgEl && imgEl.src && imgEl.style.display !== 'none' ? imgEl.src : null;
 
         if (!nama) {
             this.showNotification('Nama produk wajib diisi!', 'error');
             return;
         }
 
-        const formData = new FormData();
+        var formData = new FormData();
         formData.append('nama', nama);
         if (kategori) formData.append('kategori', kategori);
         if (subkategori) formData.append('subkategori', subkategori);
@@ -402,123 +481,61 @@ class AdminDashboard {
         formData.append('namatoko', namatoko);
         if (daerah) formData.append('daerah', daerah);
 
-        if (imageData && imageData.startsWith('data:')) {
-            const blob = this.dataURLtoBlob(imageData);
+        if (imgData && imgData.startsWith('data:')) {
+            var blob = this.dataURLtoBlob(imgData);
             formData.append('image', blob, 'image.jpg');
         }
 
+        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
+
         try {
             if (this.currentProduk) {
-                await this.fetchAPI('/api/collections/produk/records/' + this.currentProduk.id, {
-                    method: 'PATCH',
-                    body: formData
-                });
-            } else {
-                await this.fetchAPI('/api/collections/produk/records', {
-                    method: 'POST',
-                    body: formData
-                });
-            }
+                await this.fetchAPI('/api/collections/' + col + '/records/' + this.currentProduk.id, { method: 'PATCH', body: formData });
             this.showNotification('Berhasil disimpan!', 'success');
-        } catch (e) {
-            this.showNotification('Gagal menyimpan', 'error');
+        } else {
+            await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: formData });
+            this.showNotification('Berhasil ditambahkan!', 'success');
         }
-
         this.closeModal('productModal');
         await this.loadProduk();
     }
 
     async deleteProduk(id) {
         if (!confirm('Yakin ingin menghapus produk ini?')) return;
+        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
         try {
-            await this.fetchAPI('/api/collections/produk/records/' + id, { method: 'DELETE' });
+            await this.fetchAPI('/api/collections/' + col + '/records/' + id, { method: 'DELETE' });
             this.showNotification('Berhasil dihapus!', 'success');
         } catch (e) {
-            this.showNotification('Gagal menghapus', 'error');
+            this.showNotification('Gagal menghapus: ' + e.message, 'error');
         }
         await this.loadProduk();
     }
 
-    renderPages() {
-        const container = document.getElementById('pagesList');
-        if (!container) return;
-
-        if (this.pages.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Belum ada halaman</p>';
-            return;
-        }
-
-        const self = this;
-        container.innerHTML = this.pages.map(function(p, i) {
-            return '<div class="page-item' + (i === 0 ? ' active' : '') + '" onclick="admin.selectPage(' + i + ')">' +
-                '<strong>' + (i + 1) + '.</strong> ' + (p.mainTitle || p.title || 'Halaman ' + (i + 1)) +
-            '</div>';
-        }).join('');
-    }
-
-    selectPage(index) {
-        document.querySelectorAll('.page-item').forEach(function(el, i) {
-            el.classList.toggle('active', i === index);
-        });
-
-        const preview = document.getElementById('pagePreview');
-        if (this.pages[index]) {
-            const page = this.pages[index];
-            const pageData = {
-                ...page,
-                image: page.image ? this.pocketbaseUrl + '/api/files/catalog_pages/' + page.id + '/' + page.image : '',
-                logo: page.logo ? this.pocketbaseUrl + '/api/files/catalog_pages/' + page.id + '/' + page.logo : ''
-            };
-            preview.innerHTML = '<div style="width:300px;height:400px;">' + PageTemplates.renderPage(pageData, index + 1) + '</div>';
-        }
-    }.bind(this);
-
-    async addPage() {
-        const newPage = { ...PageTemplates.createEmptyPage('cover-dark'), order: this.pages.length };
-        try {
-            const formData = new FormData();
-            formData.append('template', newPage.template);
-            formData.append('order', newPage.order);
-            formData.append('mainTitle', newPage.mainTitle || '');
-            formData.append('subtitle', newPage.subtitle || '');
-            formData.append('description', newPage.description || '');
-
-            const res = await this.fetchAPI('/api/collections/catalog_pages/records', {
-                method: 'POST',
-                body: formData
-            });
-            if (res.ok) this.showNotification('Halaman baru ditambahkan!', 'success');
-        } catch (e) {
-            this.showNotification('Gagal menambahkan halaman', 'error');
-        }
-        await this.loadPages();
-    }
-
     closeModal(id) {
-        const el = document.getElementById(id);
+        var el = document.getElementById(id);
         if (el) el.classList.remove('active');
     }
 
     dataURLtoBlob(dataurl) {
-        const arr = dataurl.split(',');
-        const mime = arr[0].match(/:(.*?);/)[1];
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
+        var arr = dataurl.split(',');
+        var mime = arr[0].match(/:(.*?);/)[1];
+        var bstr = atob(arr[1]);
+        var n = bstr.length;
+        var u8arr = new Uint8Array(n);
         while (n--) u8arr[n] = bstr.charCodeAt(n);
         return new Blob([u8arr], { type: mime });
     }
 
-    showNotification(message, type) {
+    showNotification(msg, type) {
         type = type || '';
-        const notif = document.getElementById('notification');
-        notif.textContent = message;
+        var notif = document.getElementById('notification');
+        notif.textContent = msg;
         notif.className = 'notification show' + (type ? ' ' + type : '');
+        var self = this;
         setTimeout(function() { notif.classList.remove('show'); }, 3000);
     }
 }
 
-let admin;
-document.addEventListener('DOMContentLoaded', function() {
-    admin = new AdminDashboard();
-});
+var admin;
+document.addEventListener('DOMContentLoaded', function() { admin = new AdminDashboard(); });
