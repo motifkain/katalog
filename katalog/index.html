@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotifKain - Katalog Desain</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="welcomeScreen" class="welcome-screen">
+        <div class="welcome-container">
+            <div class="slide-container" id="slideContainer">
+                <div class="sticky-notes" id="stickyNotes">
+                    <div class="sticky-note">Panel Atasan Wanita</div>
+                    <div class="sticky-note">Panel Gamis</div>
+                    <div class="sticky-note">Seamless</div>
+                    <div class="sticky-note">Portfolio</div>
+                </div>
+                <div class="paper-stack">
+                    <div class="paper-shadow"></div>
+                    <div class="paper-shadow"></div>
+                    <div class="paper-shadow"></div>
+                </div>
+                <div class="slide-page" id="currentSlide">
+                    <div id="slideContent"><div class="loading"><div class="spinner"></div></div></div>
+                </div>
+                <div class="slide-page incoming-slide" id="incomingSlide">
+                    <div id="incomingSlideContent"></div>
+                </div>
+                <div class="swipe-left-area" id="swipeLeft"></div>
+                <div class="swipe-right-area" id="swipeRight"></div>
+            </div>
+            <div class="book-nav-container">
+                <div class="book-nav">
+                    <button class="book-nav-btn" id="prevBtn" onclick="slidePage(-1)">&lt;</button>
+                    <button class="book-nav-btn" id="nextBtn" onclick="slidePage(1)">&gt;</button>
+                </div>
+                <div class="page-counter" id="pageCounter">1 / 1</div>
+            </div>
+            <div class="page-indicator" id="pageIndicator"></div>
+            <button class="enter-catalog-btn" onclick="openKatalog()">Masuk Katalog</button>
+        </div>
+    </div>
+
+    <div id="appScreen" class="app-screen">
+        <header class="app-header">
+            <div class="header-top">
+                <button class="home-btn" onclick="backToWelcome()">H</button>
+                <div class="header-logo"><span class="header-title">MotifKain</span></div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Cari produk..." oninput="filterProducts()">
+                </div>
+                <button class="filter-btn" id="filterBtn" onclick="toggleFilters()">F</button>
+            </div>
+            <nav class="category-tabs" id="categoryTabs">
+                <button class="category-tab active" data-category="desain-motif">Desain Motif</button>
+                <button class="category-tab" data-category="printing">Printing Kain</button>
+                <button class="category-tab" data-category="pakaian">Pakaian Jadi</button>
+                <button class="category-tab" data-category="asesoris">Asesoris</button>
+            </nav>
+        </header>
+        <div class="subcategory-bar" id="subcategoryBar"></div>
+        <div class="filter-section" id="filterSection">
+            <div class="filter-title">Subkategori</div>
+            <div class="filter-chips" id="filterChips"></div>
+        </div>
+        <div class="active-filters" id="activeFilters" style="display:none;">
+            <span>Filter aktif:</span>
+            <div id="activeFilterTags"></div>
+            <button class="reset-filters" onclick="resetFilters()">Reset</button>
+        </div>
+        <main class="products-section">
+            <div class="products-grid" id="productsGrid">
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+        </main>
+    </div>
+
+    <div class="detail-modal" id="detailModal">
+        <div class="detail-content">
+            <div class="detail-handle"><div class="detail-handle-bar"></div></div>
+            <button class="detail-close" onclick="closeDetail()">X</button>
+            <div class="detail-gallery" id="detailGallery">
+                <img id="detailImage" src="" alt="">
+                <div class="gallery-badge" id="galleryBadge" style="display:none;"></div>
+                <div class="gallery-dots" id="galleryDots"></div>
+            </div>
+            <div class="thumbnail-gallery" id="thumbnailGallery"></div>
+            <div class="detail-info">
+                <h2 class="detail-name" id="detailName"></h2>
+                <p class="detail-price" id="detailPrice"></p>
+                <span class="detail-badge" id="detailBadge"></span>
+                <div class="store-card" onclick="openWhatsApp()">
+                    <div class="store-avatar" id="storeAvatar">M</div>
+                    <div class="store-info">
+                        <div class="store-name" id="storeName">MotifKain</div>
+                        <div class="store-location" id="storeLocation"></div>
+                    </div>
+                    <div class="store-arrow">&gt;</div>
+                </div>
+                <div class="detail-section">
+                    <h3 class="detail-section-title">Deskripsi</h3>
+                    <p class="detail-description" id="detailDescription"></p>
+                </div>
+            </div>
+            <div style="padding:16px 20px;">
+                <button class="wa-button" onclick="openWhatsApp()">Hubungi via WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="assets/js/templates.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>

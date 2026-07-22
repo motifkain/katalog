@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - MotifKain Katalog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+    <!-- LOGIN -->
+    <div id="loginSection" class="login-section">
+        <div class="login-card">
+            <img src="assets/images/logo-motifkain.png" alt="MotifKain" class="login-logo">
+            <h1>Dashboard Admin</h1>
+            <p>Masuk dengan akun PocketBase</p>
+            <form id="loginForm">
+                <input type="email" id="emailInput" class="form-input" placeholder="Email" required>
+                <input type="password" id="passwordInput" class="form-input" placeholder="Password" required>
+                <button type="submit" class="btn btn-primary">Masuk</button>
+            </form>
+            <p id="loginError" class="login-error">Email atau password salah!</p>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboardSection" class="dashboard-section">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <img src="assets/images/logo-motifkain.png" alt="Logo" class="header-logo">
+                <h1>Dashboard Admin</h1>
+            </div>
+            <div class="header-right">
+                <span id="userEmail" class="user-email"></span>
+                <button class="btn btn-outline btn-sm" onclick="admin.openCatalog()">Lihat Katalog</button>
+                <button class="btn btn-outline btn-sm" onclick="admin.logout()">Logout</button>
+            </div>
+        </header>
+
+        <!-- Tabs -->
+        <nav class="dashboard-tabs">
+            <button class="tab-btn active" data-tab="kategori">Kategori</button>
+            <button class="tab-btn" data-tab="produk">Produk</button>
+            <button class="tab-btn" data-tab="welcome">Welcome Screen</button>
+        </nav>
+
+        <!-- Tab Content: Kategori -->
+        <div id="tab-kategori" class="tab-content active">
+            <div class="content-header">
+                <h2>Pengaturan Kategori</h2>
+                <button class="btn btn-primary btn-sm" onclick="admin.showAddKategoriModal()">+ Tambah Kategori</button>
+            </div>
+            <div class="kategori-list" id="kategoriList">
+                <!-- Kategori items -->
+            </div>
+        </div>
+
+        <!-- Tab Content: Produk -->
+        <div id="tab-produk" class="tab-content">
+            <div class="content-header">
+                <h2>Pengaturan Produk</h2>
+                <button class="btn btn-primary btn-sm" onclick="admin.showAddProductModal()">+ Tambah Produk</button>
+            </div>
+            <div class="filter-bar">
+                <select id="filterKategori" onchange="admin.filterProducts()">
+                    <option value="">Semua Kategori</option>
+                </select>
+                <input type="text" id="searchProduct" placeholder="Cari produk..." oninput="admin.filterProducts()">
+            </div>
+            <div class="produk-grid" id="produkGrid">
+                <!-- Produk items -->
+            </div>
+        </div>
+
+        <!-- Tab Content: Welcome Screen -->
+        <div id="tab-welcome" class="tab-content">
+            <div class="content-header">
+                <h2>Welcome Screen Pages</h2>
+                <button class="btn btn-primary btn-sm" onclick="admin.addPage()">+ Tambah Halaman</button>
+            </div>
+            <div class="welcome-editor">
+                <div class="pages-list" id="pagesList">
+                    <!-- Page items -->
+                </div>
+                <div class="page-preview" id="pagePreview">
+                    <div class="preview-placeholder">
+                        <p>Pilih halaman untuk edit</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Tambah/Edit Kategori -->
+    <div id="kategoriModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="kategoriModalTitle">Tambah Kategori</h3>
+                <button class="modal-close" onclick="admin.closeModal('kategoriModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nama Kategori</label>
+                    <input type="text" id="kategoriName" placeholder="Contoh: Desain Motif">
+                </div>
+                <div class="form-group">
+                    <label>Slug (ID)</label>
+                    <input type="text" id="kategoriSlug" placeholder="contoh: desain-motif">
+                    <small>ID unik untuk kategori (tanpa spasi)</small>
+                </div>
+                <div class="form-group">
+                    <label>Urutan</label>
+                    <input type="number" id="kategoriOrder" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="admin.closeModal('kategoriModal')">Batal</button>
+                <button class="btn btn-primary" onclick="admin.saveKategori()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Tambah/Edit Produk -->
+    <div id="productModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="productModalTitle">Tambah Produk</h3>
+                <button class="modal-close" onclick="admin.closeModal('productModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nama Produk</label>
+                        <input type="text" id="productName" placeholder="Nama produk">
+                    </div>
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="productKategori">
+                            <option value="">Pilih Kategori</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Subkategori</label>
+                        <input type="text" id="productSubkategori" placeholder="Contoh: Batik, Printing, dll">
+                    </div>
+                    <div class="form-group">
+                        <label>Harga</label>
+                        <input type="number" id="productHarga" placeholder="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="productDeskripsi" rows="3" placeholder="Deskripsi produk"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nama Toko</label>
+                        <input type="text" id="productToko" placeholder="Nama toko">
+                    </div>
+                    <div class="form-group">
+                        <label>Daerah</label>
+                        <input type="text" id="productDaerah" placeholder="Contoh: Jakarta, Bandung">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Gambar</label>
+                    <div class="image-upload" id="productImageUpload" onclick="document.getElementById('productImageInput').click()">
+                        <div class="upload-placeholder">
+                            <span class="upload-icon">📷</span>
+                            <span>Klik untuk upload gambar</span>
+                        </div>
+                        <img id="productImagePreview" style="display:none;">
+                    </div>
+                    <input type="file" id="productImageInput" accept="image/*" style="display:none" onchange="admin.handleImageUpload(this)">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="admin.closeModal('productModal')">Batal</button>
+                <button class="btn btn-primary" onclick="admin.saveProduct()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <script src="config.js"></script>
+    <script src="assets/js/templates.js"></script>
+    <script src="assets/js/admin.js"></script>
+</body>
+</html>
