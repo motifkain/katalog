@@ -77,16 +77,118 @@
         <!-- Tab Content: Welcome Screen -->
         <div id="tab-welcome" class="tab-content">
             <div class="content-header">
-                <h2>Welcome Screen Pages</h2>
-                <button class="btn btn-primary btn-sm" onclick="admin.addPage()">+ Tambah Halaman</button>
+                <h2>Welcome Screen Editor</h2>
             </div>
-            <div class="welcome-editor">
-                <div class="pages-list" id="pagesList">
-                    <!-- Page items -->
+            <div class="welcome-editor-container">
+                <!-- Settings Panel -->
+                <div class="welcome-settings">
+                    <div class="settings-section">
+                        <h3>Template</h3>
+                        <div class="template-grid">
+                            <button class="template-btn active" data-template="cover-dark" onclick="admin.selectTemplate('cover-dark')">
+                                <div class="template-preview template-dark"></div>
+                                <span>Gelap</span>
+                            </button>
+                            <button class="template-btn" data-template="cover-light" onclick="admin.selectTemplate('cover-light')">
+                                <div class="template-preview template-light"></div>
+                                <span>Terang</span>
+                            </button>
+                            <button class="template-btn" data-template="cover-split" onclick="admin.selectTemplate('cover-split')">
+                                <div class="template-preview template-split"></div>
+                                <span>Split</span>
+                            </button>
+                            <button class="template-btn" data-template="cover-numbered" onclick="admin.selectTemplate('cover-numbered')">
+                                <div class="template-preview template-numbered"></div>
+                                <span>Nomor</span>
+                            </button>
+                            <button class="template-btn" data-template="cover-minimal" onclick="admin.selectTemplate('cover-minimal')">
+                                <div class="template-preview template-minimal"></div>
+                                <span>Minimal</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Warna / Theme</h3>
+                        <div class="theme-grid">
+                            <button class="theme-btn active" data-theme="elegant-gold" onclick="admin.selectTheme('elegant-gold')">
+                                <div class="theme-swatch" style="background: linear-gradient(135deg, #5D4037, #C9A66B)"></div>
+                                <span>Elegant Gold</span>
+                            </button>
+                            <button class="theme-btn" data-theme="ocean-blue" onclick="admin.selectTheme('ocean-blue')">
+                                <div class="theme-swatch" style="background: linear-gradient(135deg, #1E3A5F, #4A90A4)"></div>
+                                <span>Ocean Blue</span>
+                            </button>
+                            <button class="theme-btn" data-theme="forest-green" onclick="admin.selectTheme('forest-green')">
+                                <div class="theme-swatch" style="background: linear-gradient(135deg, #2D4739, #4CAF50)"></div>
+                                <span>Forest Green</span>
+                            </button>
+                            <button class="theme-btn" data-theme="monochrome" onclick="admin.selectTheme('monochrome')">
+                                <div class="theme-swatch" style="background: linear-gradient(135deg, #212121, #9E9E9E)"></div>
+                                <span>Monochrome</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Font</h3>
+                        <select id="wsFont" class="form-input" onchange="admin.updateWelcomePreview()">
+                            <option value="Playfair Display">Playfair Display (Serif)</option>
+                            <option value="Inter">Inter (Sans-serif)</option>
+                            <option value="Poppins">Poppins</option>
+                            <option value="Montserrat">Montserrat</option>
+                            <option value="Lora">Lora</option>
+                            <option value="Merriweather">Merriweather</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Konten</h3>
+                        <div class="form-group">
+                            <label>Judul Utama</label>
+                            <input type="text" id="wsTitle" class="form-input" placeholder="Contoh: MOTIFKAIN" value="CATALOG" oninput="admin.updateWelcomePreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Subtitle</label>
+                            <input type="text" id="wsSubtitle" class="form-input" placeholder="Contoh: Company Profile" value="Company Profile" oninput="admin.updateWelcomePreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Deskripsi</label>
+                            <textarea id="wsDescription" class="form-input" rows="2" placeholder="Deskripsi singkat" oninput="admin.updateWelcomePreview()">Koleksi produk eksklusif kami</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Text Kiri / Tagline</label>
+                            <textarea id="wsLeftText" class="form-input" rows="2" placeholder="Text di sisi kiri" oninput="admin.updateWelcomePreview()">Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.</textarea>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Logo</h3>
+                        <div class="logo-upload-area" id="wsLogoUpload" onclick="document.getElementById('wsLogoInput').click()">
+                            <div class="logo-placeholder" id="wsLogoPlaceholder">
+                                <span class="logo-icon">📷</span>
+                                <span>Klik untuk upload logo</span>
+                            </div>
+                            <img id="wsLogoPreview" style="display:none;">
+                        </div>
+                        <input type="file" id="wsLogoInput" accept="image/*" style="display:none" onchange="admin.handleWelcomeLogoUpload(this)">
+                        <button class="btn btn-outline btn-sm" onclick="admin.removeWelcomeLogo()" id="wsLogoRemoveBtn" style="display:none;margin-top:8px;">Hapus Logo</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <button class="btn btn-primary" onclick="admin.saveWelcomeSettings()">Simpan Welcome Screen</button>
+                    </div>
                 </div>
-                <div class="page-preview" id="pagePreview">
-                    <div class="preview-placeholder">
-                        <p>Pilih halaman untuk edit</p>
+
+                <!-- Preview Panel -->
+                <div class="welcome-preview-panel">
+                    <h3>Preview</h3>
+                    <div class="preview-frame">
+                        <div class="preview-phone">
+                            <div id="wsPreviewArea" class="ws-preview-content">
+                                <!-- Preview will be rendered here -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -6,6 +6,7 @@ class AdminDashboard {
         this.kategori = [];
         this.produk = [];
         this.welcomeSettings = null;
+        this.welcomeLogoData = null;
         this.currentKategori = null;
         this.currentProduk = null;
         this.pocketbaseToken = '';
@@ -108,6 +109,7 @@ class AdminDashboard {
         await this.loadProduk();
     }
 
+    // ===== WELCOME SCREEN SETTINGS =====
     async loadWelcomeSettings() {
         const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
         try {
@@ -116,63 +118,349 @@ class AdminDashboard {
                 const data = await res.json();
                 if (data.items && data.items.length > 0) {
                     this.welcomeSettings = data.items[0];
-                    this.renderWelcomeSettings();
                 } else {
-                    this.welcomeSettings = { title: 'CATALOG', subtitle: 'Company Profile', description: 'Koleksi produk eksklusif kami' };
-                    this.renderWelcomeSettings();
+                    this.welcomeSettings = this.getDefaultWelcomeSettings();
                 }
             }
         } catch (e) {
-            this.welcomeSettings = { title: 'CATALOG', subtitle: 'Company Profile', description: 'Koleksi produk eksklusif kami' };
-            this.renderWelcomeSettings();
+            this.welcomeSettings = this.getDefaultWelcomeSettings();
         }
+        this.renderWelcomeSettings();
+        this.updateWelcomePreview();
+    }
+
+    getDefaultWelcomeSettings() {
+        return {
+            template: 'cover-dark',
+            colorTheme: 'elegant-gold',
+            fontFamily: 'Playfair Display',
+            title: 'CATALOG',
+            subtitle: 'Company Profile',
+            description: 'Koleksi produk eksklusif kami',
+            leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.'
+        };
     }
 
     renderWelcomeSettings() {
         if (!this.welcomeSettings) return;
         const ws = this.welcomeSettings;
-        const wsForm = document.getElementById('wsForm');
-        if (wsForm) {
-            wsForm.title.value = ws.title || '';
-            wsForm.subtitle.value = ws.subtitle || '';
-            wsForm.description.value = ws.description || '';
+
+        // Set form values
+        document.getElementById('wsTitle').value = ws.title || '';
+        document.getElementById('wsSubtitle').value = ws.subtitle || '';
+        document.getElementById('wsDescription').value = ws.description || '';
+        document.getElementById('wsLeftText').value = ws.leftText || '';
+        document.getElementById('wsFont').value = ws.fontFamily || 'Playfair Display';
+
+        // Set template active
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.template === ws.template);
+        });
+
+        // Set theme active
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === ws.colorTheme);
+        });
+
+        // Load logo if exists
+        if (ws.logo) {
+            const logoUrl = this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + ws.id + '/' + ws.logo;
+            document.getElementById('wsLogoPreview').src = logoUrl;
+            document.getElementById('wsLogoPreview').style.display = 'block';
+            document.getElementById('wsLogoPlaceholder').style.display = 'none';
+            document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
+        } else {
+            document.getElementById('wsLogoPreview').style.display = 'none';
+            document.getElementById('wsLogoPlaceholder').style.display = 'flex';
+            document.getElementById('wsLogoRemoveBtn').style.display = 'none';
         }
     }
 
-    async saveWelcomeSettings() {
-        const form = document.getElementById('wsForm');
-        if (!form) return;
+    selectTemplate(templateId) {
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.template === templateId);
+        });
+        this.welcomeSettings = this.welcomeSettings || {};
+        this.welcomeSettings.template = templateId;
+        this.updateWelcomePreview();
+    }
 
+    selectTheme(themeId) {
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === themeId);
+        });
+        this.welcomeSettings = this.welcomeSettings || {};
+        this.welcomeSettings.colorTheme = themeId;
+        this.updateWelcomePreview();
+    }
+
+    updateWelcomePreview() {
+        if (!this.welcomeSettings) this.welcomeSettings = this.getDefaultWelcomeSettings();
+
+        const ws = this.welcomeSettings;
+        ws.title = document.getElementById('wsTitle').value;
+        ws.subtitle = document.getElementById('wsSubtitle').value;
+        ws.description = document.getElementById('wsDescription').value;
+        ws.leftText = document.getElementById('wsLeftText').value;
+        ws.fontFamily = document.getElementById('wsFont').value;
+
+        const preview = document.getElementById('wsPreviewArea');
+        if (!preview) return;
+
+        const theme = this.getThemeColors(ws.colorTheme);
+        const template = ws.template || 'cover-dark';
+
+        let html = '';
+        switch(template) {
+            case 'cover-dark':
+                html = this.renderPreviewDark(ws, theme);
+                break;
+            case 'cover-light':
+                html = this.renderPreviewLight(ws, theme);
+                break;
+            case 'cover-split':
+                html = this.renderPreviewSplit(ws, theme);
+                break;
+            case 'cover-numbered':
+                html = this.renderPreviewNumbered(ws, theme);
+                break;
+            case 'cover-minimal':
+                html = this.renderPreviewMinimal(ws, theme);
+                break;
+            default:
+                html = this.renderPreviewDark(ws, theme);
+        }
+
+        preview.innerHTML = html;
+    }
+
+    getThemeColors(themeId) {
+        const themes = {
+            'elegant-gold': {
+                primary: '#5D4037',
+                secondary: '#8D6E63',
+                accent: '#C9A66B',
+                accentAlt: '#008B8B',
+                textDark: '#1a1a1a',
+                textLight: '#6D4C41',
+                textMuted: '#A1887F',
+                bgLight: '#FFF8F0',
+                bgDark: '#1a2a3a',
+                bgCard: '#FFFFFF'
+            },
+            'ocean-blue': {
+                primary: '#1E3A5F',
+                secondary: '#4A90A4',
+                accent: '#E8F4F8',
+                accentAlt: '#26C6DA',
+                textDark: '#0D2137',
+                textLight: '#3D5A73',
+                textMuted: '#6B8BA4',
+                bgLight: '#F0F8FF',
+                bgDark: '#0D2137',
+                bgCard: '#FFFFFF'
+            },
+            'forest-green': {
+                primary: '#2D4739',
+                secondary: '#4CAF50',
+                accent: '#A5D6A7',
+                accentAlt: '#8BC34A',
+                textDark: '#1B3324',
+                textLight: '#3D5C4A',
+                textMuted: '#6B8B7A',
+                bgLight: '#F1F8E9',
+                bgDark: '#1B3324',
+                bgCard: '#FFFFFF'
+            },
+            'monochrome': {
+                primary: '#212121',
+                secondary: '#616161',
+                accent: '#BDBDBD',
+                accentAlt: '#9E9E9E',
+                textDark: '#000000',
+                textLight: '#424242',
+                textMuted: '#757575',
+                bgLight: '#FAFAFA',
+                bgDark: '#000000',
+                bgCard: '#FFFFFF'
+            }
+        };
+        return themes[themeId] || themes['elegant-gold'];
+    }
+
+    renderPreviewDark(ws, theme) {
+        const logoHtml = ws.logo
+            ? `<img src="${ws.logo}" class="preview-logo" style="display:none;">`
+            : `<div class="preview-logo-placeholder">📷</div>`;
+
+        return `
+        <div style="width:100%;height:100%;background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);padding:12%;display:flex;flex-direction:column;">
+            <div style="text-align:center;margin-bottom:auto;">
+                ${logoHtml}
+            </div>
+            <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.1rem;color:#fff;margin-bottom:4%;letter-spacing:0.05em;">${ws.title}</h1>
+                <p style="color:${theme.accent};font-size:0.5rem;letter-spacing:0.2em;margin-bottom:4%;">${ws.subtitle}</p>
+                <div style="width:30px;height:1px;background:${theme.accent};margin:0 auto;"></div>
+                ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.45rem;margin-top:4%;line-height:1.4;">${ws.description}</p>` : ''}
+            </div>
+            <div style="text-align:center;margin-top:auto;padding:8%;background:rgba(255,255,255,0.95);border-radius:8px;">
+                <p style="font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+            </div>
+        </div>`;
+    }
+
+    renderPreviewLight(ws, theme) {
+        const logoHtml = ws.logo
+            ? `<img src="${ws.logo}" class="preview-logo" style="display:none;">`
+            : `<div class="preview-logo-placeholder">📷</div>`;
+
+        return `
+        <div style="width:100%;height:100%;background:${theme.bgLight};padding:12%;display:flex;flex-direction:column;">
+            <div style="text-align:center;margin-bottom:auto;">
+                ${logoHtml}
+            </div>
+            <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.1rem;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
+                <p style="color:${theme.accentAlt};font-size:0.5rem;letter-spacing:0.2em;margin-bottom:4%;">${ws.subtitle}</p>
+                <div style="width:30px;height:1px;background:${theme.accent};margin:0 auto;"></div>
+                ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.45rem;margin-top:4%;line-height:1.4;">${ws.description}</p>` : ''}
+            </div>
+            <div style="text-align:center;margin-top:auto;padding:8%;background:${theme.bgDark};border-radius:8px;">
+                <p style="font-size:0.45rem;color:rgba(255,255,255,0.8);line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+            </div>
+        </div>`;
+    }
+
+    renderPreviewSplit(ws, theme) {
+        return `
+        <div style="width:100%;height:100%;display:flex;">
+            <div style="width:35%;height:100%;background:${theme.bgDark};padding:8%;display:flex;flex-direction:column;justify-content:center;">
+                <div style="width:30px;height:1px;background:${theme.accent};margin-bottom:12%;"></div>
+                <p style="color:rgba(255,255,255,0.5);font-size:0.4rem;line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+            </div>
+            <div style="width:65%;height:100%;background:${theme.bgCard};padding:10%;display:flex;flex-direction:column;justify-content:center;">
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:0.9rem;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
+                <p style="color:${theme.accentAlt};font-size:0.4rem;letter-spacing:0.1em;margin-bottom:4%;">${ws.subtitle}</p>
+                <div style="width:25px;height:1px;background:${theme.textDark};margin-bottom:8%;"></div>
+                ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.4rem;line-height:1.4;">${ws.description}</p>` : ''}
+            </div>
+        </div>`;
+    }
+
+    renderPreviewNumbered(ws, theme) {
+        return `
+        <div style="width:100%;height:100%;background:${theme.bgDark};padding:10%;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:flex-start;gap:8%;flex:1;">
+                <div style="width:30%;display:flex;flex-direction:column;justify-content:center;">
+                    <h2 style="font-family:'${ws.fontFamily}',serif;font-size:1.4rem;color:#fff;font-weight:bold;line-height:1;margin-bottom:8%;">01</h2>
+                    <div style="width:20px;height:1px;background:${theme.accent};"></div>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+                    <p style="color:${theme.accent};font-size:0.4rem;letter-spacing:0.2em;margin-bottom:3%;">${ws.title}</p>
+                    <h1 style="font-family:'${ws.fontFamily}',serif;font-size:0.7rem;color:#fff;margin-bottom:4%;">${ws.subtitle}</h1>
+                    <div style="width:20px;height:1px;background:${theme.accent};margin-bottom:4%;"></div>
+                    ${ws.description ? `<p style="color:rgba(255,255,255,0.4);font-size:0.35rem;line-height:1.4;">${ws.description}</p>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }
+
+    renderPreviewMinimal(ws, theme) {
+        return `
+        <div style="width:100%;height:100%;background:${theme.bgLight};padding:10%;display:flex;flex-direction:column;justify-content:center;">
+            <p style="color:${theme.textMuted};font-size:0.4rem;letter-spacing:0.2em;margin-bottom:4%;text-transform:uppercase;">${ws.subtitle}</p>
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1rem;color:${theme.textDark};margin-bottom:6%;font-weight:300;">${ws.title}</h1>
+            <div style="width:30px;height:1px;background:${theme.accentAlt};margin-bottom:6%;"></div>
+            ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.4rem;line-height:1.4;font-style:italic;">${ws.description}</p>` : ''}
+        </div>`;
+    }
+
+    handleWelcomeLogoUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.welcomeLogoData = e.target.result;
+            document.getElementById('wsLogoPreview').src = e.target.result;
+            document.getElementById('wsLogoPreview').style.display = 'block';
+            document.getElementById('wsLogoPlaceholder').style.display = 'none';
+            document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
+            this.updateWelcomePreview();
+        };
+        reader.readAsDataURL(file);
+    }
+
+    removeWelcomeLogo() {
+        this.welcomeLogoData = null;
+        document.getElementById('wsLogoPreview').style.display = 'none';
+        document.getElementById('wsLogoPlaceholder').style.display = 'flex';
+        document.getElementById('wsLogoRemoveBtn').style.display = 'none';
+        document.getElementById('wsLogoInput').value = '';
+        this.updateWelcomePreview();
+    }
+
+    async saveWelcomeSettings() {
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+
+        // Get form values
         const data = {
-            title: form.title.value,
-            subtitle: form.subtitle.value,
-            description: form.description.value
+            template: this.welcomeSettings?.template || 'cover-dark',
+            colorTheme: this.welcomeSettings?.colorTheme || 'elegant-gold',
+            fontFamily: document.getElementById('wsFont').value,
+            title: document.getElementById('wsTitle').value,
+            subtitle: document.getElementById('wsSubtitle').value,
+            description: document.getElementById('wsDescription').value,
+            leftText: document.getElementById('wsLeftText').value
         };
 
-        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
-        const self = this;
-
         try {
+            const formData = new FormData();
+
+            // Add text fields
+            for (const [key, value] of Object.entries(data)) {
+                formData.append(key, value);
+            }
+
+            // Add logo if changed
+            if (this.welcomeLogoData) {
+                const blob = this.dataURLtoBlob(this.welcomeLogoData);
+                formData.append('logo', blob, 'logo.png');
+            }
+
             if (this.welcomeSettings && this.welcomeSettings.id) {
+                // Update existing
                 await this.fetchAPI('/api/collections/' + col + '/records/' + this.welcomeSettings.id, {
                     method: 'PATCH',
-                    body: JSON.stringify(data)
+                    body: formData
                 });
-                this.welcomeSettings = Object.assign(this.welcomeSettings, data);
             } else {
-                const res = await this.fetchAPI('/api/collections/' + col + '/records', {
+                // Create new
+                await this.fetchAPI('/api/collections/' + col + '/records', {
                     method: 'POST',
-                    body: JSON.stringify(data)
+                    body: formData
                 });
-                if (res.ok) {
-                    const created = await res.json();
-                    this.welcomeSettings = Object.assign(created, data);
-                }
             }
-            this.showNotification('Berhasil disimpan!', 'success');
+
+            this.showNotification('Welcome Screen berhasil disimpan!', 'success');
+            this.welcomeLogoData = null;
+
+            // Reload settings
+            await this.loadWelcomeSettings();
         } catch (e) {
             this.showNotification('Gagal menyimpan: ' + e.message, 'error');
         }
+    }
+
+    dataURLtoBlob(dataurl) {
+        const arr = dataurl.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) u8arr[n] = bstr.charCodeAt(n);
+        return new Blob([u8arr], { type: mime });
     }
 
     async loadKategori() {

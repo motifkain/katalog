@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadWelcomeSettings();
     await loadCategories();
     await loadProducts();
-    setupCategoryTabs();
     setupSearch();
     renderWelcomeScreen();
 });
@@ -49,8 +48,12 @@ async function loadWelcomeSettings() {
             if (data.items && data.items.length > 0) {
                 const item = data.items[0];
                 welcomeSettings = {
+                    id: item.id,
+                    template: item.template || 'cover-dark',
+                    colorTheme: item.colorTheme || 'elegant-gold',
+                    fontFamily: item.fontFamily || 'Playfair Display',
                     logoUrl: item.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${item.id}/${item.logo}` : '',
-                    leftText: item.left_text || window.WELCOME_SETTINGS?.leftText || '',
+                    leftText: item.leftText || item.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
                     title: item.title || 'CATALOG',
                     subtitle: item.subtitle || 'Company Profile',
                     description: item.description || 'Koleksi produk eksklusif kami'
@@ -62,31 +65,213 @@ async function loadWelcomeSettings() {
     }
 }
 
-function renderWelcomeScreen() {
-    // Update title & subtitle
-    const titleEl = document.getElementById('welcomeTitle');
-    const subtitleEl = document.getElementById('welcomeSubtitle');
-    const descEl = document.getElementById('welcomeDesc');
-    const leftTextEl = document.getElementById('welcomeLeftText');
-    const logoImg = document.getElementById('welcomeLogoImg');
-    const logoPlaceholder = document.getElementById('welcomeLogoPlaceholder');
-
-    if (titleEl) titleEl.textContent = welcomeSettings.title;
-    if (subtitleEl) subtitleEl.textContent = welcomeSettings.subtitle;
-    if (descEl) descEl.textContent = welcomeSettings.description;
-    if (leftTextEl) leftTextEl.innerHTML = welcomeSettings.leftText?.replace(/\n/g, '<br>') || '';
-
-    // Logo
-    if (logoImg && logoPlaceholder) {
-        if (welcomeSettings.logoUrl) {
-            logoImg.src = welcomeSettings.logoUrl;
-            logoImg.style.display = 'block';
-            logoPlaceholder.style.display = 'none';
-        } else {
-            logoImg.style.display = 'none';
-            logoPlaceholder.style.display = 'flex';
+function getThemeColors(themeId) {
+    const themes = {
+        'elegant-gold': {
+            primary: '#5D4037',
+            secondary: '#8D6E63',
+            accent: '#C9A66B',
+            accentAlt: '#008B8B',
+            textDark: '#1a1a1a',
+            textLight: '#6D4C41',
+            textMuted: '#A1887F',
+            bgLight: '#FFF8F0',
+            bgDark: '#1a2a3a',
+            bgCard: '#FFFFFF'
+        },
+        'ocean-blue': {
+            primary: '#1E3A5F',
+            secondary: '#4A90A4',
+            accent: '#E8F4F8',
+            accentAlt: '#26C6DA',
+            textDark: '#0D2137',
+            textLight: '#3D5A73',
+            textMuted: '#6B8BA4',
+            bgLight: '#F0F8FF',
+            bgDark: '#0D2137',
+            bgCard: '#FFFFFF'
+        },
+        'forest-green': {
+            primary: '#2D4739',
+            secondary: '#4CAF50',
+            accent: '#A5D6A7',
+            accentAlt: '#8BC34A',
+            textDark: '#1B3324',
+            textLight: '#3D5C4A',
+            textMuted: '#6B8B7A',
+            bgLight: '#F1F8E9',
+            bgDark: '#1B3324',
+            bgCard: '#FFFFFF'
+        },
+        'monochrome': {
+            primary: '#212121',
+            secondary: '#616161',
+            accent: '#BDBDBD',
+            accentAlt: '#9E9E9E',
+            textDark: '#000000',
+            textLight: '#424242',
+            textMuted: '#757575',
+            bgLight: '#FAFAFA',
+            bgDark: '#000000',
+            bgCard: '#FFFFFF'
         }
+    };
+    return themes[themeId] || themes['elegant-gold'];
+}
+
+function renderWelcomeScreen() {
+    const ws = welcomeSettings;
+    const theme = getThemeColors(ws.colorTheme || 'elegant-gold');
+    const template = ws.template || 'cover-dark';
+
+    // Hide static elements
+    document.getElementById('welcomeTitle').style.display = 'none';
+    document.getElementById('welcomeSubtitle').style.display = 'none';
+    document.getElementById('welcomeDesc').style.display = 'none';
+    document.getElementById('welcomeLeftText').style.display = 'none';
+    document.getElementById('welcomeLogoImg').style.display = 'none';
+    document.getElementById('welcomeLogoPlaceholder').style.display = 'none';
+
+    // Render based on template
+    const welcomeScreen = document.getElementById('welcomeScreen');
+
+    let html = '';
+    switch(template) {
+        case 'cover-dark':
+            html = renderWelcomeDark(ws, theme);
+            break;
+        case 'cover-light':
+            html = renderWelcomeLight(ws, theme);
+            break;
+        case 'cover-split':
+            html = renderWelcomeSplit(ws, theme);
+            break;
+        case 'cover-numbered':
+            html = renderWelcomeNumbered(ws, theme);
+            break;
+        case 'cover-minimal':
+            html = renderWelcomeMinimal(ws, theme);
+            break;
+        default:
+            html = renderWelcomeDark(ws, theme);
     }
+
+    welcomeScreen.innerHTML = html;
+}
+
+function renderWelcomeDark(ws, theme) {
+    const logoHtml = ws.logoUrl
+        ? `<img src="${ws.logoUrl}" style="height:60px;margin-bottom:20px;object-fit:contain;">`
+        : `<div style="width:60px;height:60px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
+
+    return `
+    <div style="width:100%;height:100%;background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
+        <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
+        <div style="text-align:center;margin-bottom:auto;">
+            ${logoHtml}
+        </div>
+        <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:#fff;margin-bottom:10px;letter-spacing:0.05em;">${ws.title}</h1>
+            <p style="color:${theme.accent};font-size:0.9rem;letter-spacing:0.3em;margin-bottom:20px;">${ws.subtitle}</p>
+            <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${theme.accent},transparent);margin:0 auto;"></div>
+            ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.9rem;margin-top:20px;line-height:1.6;">${ws.description}</p>` : ''}
+        </div>
+        <div style="background:rgba(255,255,255,0.95);border-radius:12px;padding:24px;text-align:center;margin-top:auto;">
+            <p style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+        </div>
+        <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>
+    </div>`;
+}
+
+function renderWelcomeLight(ws, theme) {
+    const logoHtml = ws.logoUrl
+        ? `<img src="${ws.logoUrl}" style="height:60px;margin-bottom:20px;object-fit:contain;">`
+        : `<div style="width:60px;height:60px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
+
+    return `
+    <div style="width:100%;height:100%;background:${theme.bgLight};padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:5%;right:5%;width:30px;height:30px;border-top:2px solid ${theme.accentAlt};border-right:2px solid ${theme.accentAlt};opacity:0.3;"></div>
+        <div style="text-align:center;margin-bottom:auto;">
+            ${logoHtml}
+        </div>
+        <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:${theme.textDark};margin-bottom:10px;">${ws.title}</h1>
+            <p style="color:${theme.accentAlt};font-size:0.9rem;letter-spacing:0.3em;margin-bottom:20px;">${ws.subtitle}</p>
+            <div style="width:50px;height:2px;background:${theme.accent};margin:0 auto;"></div>
+            ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.9rem;margin-top:20px;line-height:1.6;">${ws.description}</p>` : ''}
+        </div>
+        <div style="background:${theme.bgDark};border-radius:12px;padding:24px;text-align:center;margin-top:auto;">
+            <p style="font-size:0.85rem;color:rgba(255,255,255,0.8);line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+        </div>
+        <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>
+    </div>`;
+}
+
+function renderWelcomeSplit(ws, theme) {
+    const logoHtml = ws.logoUrl
+        ? `<img src="${ws.logoUrl}" style="height:50px;margin-bottom:30px;object-fit:contain;">`
+        : '';
+
+    return `
+    <div style="width:100%;height:100%;display:flex;">
+        <div style="width:40%;height:100%;background:${theme.bgDark};padding:6%;display:flex;flex-direction:column;justify-content:center;">
+            ${logoHtml}
+            <div style="width:25px;height:1px;background:${theme.accent};margin-bottom:20px;"></div>
+            <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+        </div>
+        <div style="width:60%;height:100%;background:${theme.bgCard};padding:8%;display:flex;flex-direction:column;justify-content:center;">
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.2rem;color:${theme.textDark};margin-bottom:15px;">${ws.title}</h1>
+            <p style="color:${theme.accentAlt};font-size:0.85rem;letter-spacing:0.2em;margin-bottom:20px;">${ws.subtitle}</p>
+            <div style="width:40px;height:2px;background:${theme.textDark};margin-bottom:30px;"></div>
+            ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.9rem;line-height:1.8;">${ws.description}</p>` : ''}
+            <button class="welcome-btn" onclick="openKatalog()" style="margin-top:40px;align-self:flex-start;">Lihat Katalog</button>
+        </div>
+    </div>`;
+}
+
+function renderWelcomeNumbered(ws, theme) {
+    const logoHtml = ws.logoUrl
+        ? `<img src="${ws.logoUrl}" style="height:40px;margin-bottom:auto;opacity:0.9;object-fit:contain;">`
+        : '';
+
+    return `
+    <div style="width:100%;height:100%;background:${theme.bgDark};padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+        ${logoHtml}
+        <div style="display:flex;align-items:flex-start;gap:5%;flex:1;margin-top:20px;">
+            <div style="width:30%;display:flex;flex-direction:column;justify-content:center;">
+                <h2 style="font-family:'${ws.fontFamily}',serif;font-size:3rem;color:#fff;font-weight:700;line-height:1;margin-bottom:15px;">01</h2>
+                <div style="width:40px;height:1px;background:${theme.accent};"></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+                <p style="color:${theme.accent};font-size:0.8rem;letter-spacing:0.3em;margin-bottom:10px;">${ws.title}</p>
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.8rem;color:#fff;margin-bottom:15px;">${ws.subtitle}</h1>
+                <div style="width:30px;height:1px;background:${theme.accent};margin-bottom:15px;"></div>
+                ${ws.description ? `<p style="color:rgba(255,255,255,0.4);font-size:0.85rem;line-height:1.8;">${ws.description}</p>` : ''}
+            </div>
+        </div>
+        <button class="welcome-btn" onclick="openKatalog()" style="align-self:center;margin-top:auto;">Lihat Katalog</button>
+    </div>`;
+}
+
+function renderWelcomeMinimal(ws, theme) {
+    const logoHtml = ws.logoUrl
+        ? `<img src="${ws.logoUrl}" style="height:50px;margin-bottom:20px;object-fit:contain;">`
+        : '';
+
+    return `
+    <div style="width:100%;height:100%;background:${theme.bgLight};padding:10%;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:8%;right:8%;width:40px;height:40px;border-top:1px solid ${theme.textMuted};border-right:1px solid ${theme.textMuted};"></div>
+        <div style="position:absolute;bottom:8%;left:8%;width:40px;height:40px;border-bottom:1px solid ${theme.textMuted};border-left:1px solid ${theme.textMuted};"></div>
+        ${logoHtml}
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <p style="color:${theme.textMuted};font-size:0.85rem;letter-spacing:0.3em;margin-bottom:15px;text-transform:uppercase;">${ws.subtitle}</p>
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:${theme.textDark};margin-bottom:30px;font-weight:300;">${ws.title}</h1>
+            <div style="width:50px;height:1px;background:${theme.accentAlt};margin-bottom:30px;"></div>
+            ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.9rem;line-height:1.8;font-style:italic;">${ws.description}</p>` : ''}
+        </div>
+        <button class="welcome-btn" onclick="openKatalog()" style="align-self:center;">Lihat Katalog</button>
+    </div>`;
 }
 
 // ===== NAVIGATION =====

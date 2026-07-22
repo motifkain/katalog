@@ -349,7 +349,284 @@ input, textarea, select { font-family: inherit; outline: none; }
     color: white;
 }
 
-/* ===== WELCOME EDITOR ===== */
+/* ===== WELCOME EDITOR V2 ===== */
+.welcome-editor-container {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+    min-height: 600px;
+}
+
+.welcome-settings {
+    background: var(--card);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: 0 2px 8px var(--shadow);
+    overflow-y: auto;
+    max-height: calc(100vh - 180px);
+}
+
+.settings-section {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--divider);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.settings-section h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+/* Template Grid */
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.template-btn {
+    background: none;
+    border: 2px solid var(--divider);
+    border-radius: var(--border-radius-sm);
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.template-btn:hover {
+    border-color: var(--primary);
+}
+
+.template-btn.active {
+    border-color: var(--primary);
+    background: rgba(27, 94, 32, 0.05);
+}
+
+.template-preview {
+    width: 100%;
+    height: 60px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+.template-dark { background: linear-gradient(180deg, #1a2a3a 0%, #5D4037 100%); }
+.template-light { background: linear-gradient(180deg, #FFF8F0 0%, #E0E0E0 100%); }
+.template-split { background: linear-gradient(90deg, #1a2a3a 40%, #FFFFFF 40%); }
+.template-numbered { background: #1a2a3a; position: relative; }
+.template-numbered::after { content: '01'; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 1.5rem; color: #C9A66B; font-weight: bold; }
+.template-minimal { background: #FAFAFA; border: 1px solid #ddd; }
+
+.template-btn span {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* Theme Grid */
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.theme-btn {
+    background: none;
+    border: 2px solid var(--divider);
+    border-radius: var(--border-radius-sm);
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.theme-btn:hover { border-color: var(--primary); }
+
+.theme-btn.active {
+    border-color: var(--primary);
+    background: rgba(27, 94, 32, 0.05);
+}
+
+.theme-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.theme-btn span {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Logo Upload */
+.logo-upload-area {
+    border: 2px dashed var(--divider);
+    border-radius: var(--border-radius-sm);
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--bg);
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-upload-area:hover { border-color: var(--primary); }
+
+.logo-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.logo-icon { font-size: 1.5rem; opacity: 0.5; }
+.logo-placeholder span { font-size: 0.75rem; color: var(--text-light); }
+
+.logo-upload-area img {
+    max-width: 150px;
+    max-height: 80px;
+    object-fit: contain;
+}
+
+/* Preview Panel */
+.welcome-preview-panel {
+    background: var(--card);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.welcome-preview-panel h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.preview-frame {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.preview-phone {
+    width: 280px;
+    height: 560px;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    overflow: hidden;
+    border: 8px solid #1a1a1a;
+}
+
+.ws-preview-content {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Preview content styles (inline for dynamic rendering) */
+.ws-preview-content .preview-cover-dark {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #1a2a3a 0%, #5D4037 100%);
+    padding: 12%;
+    display: flex;
+    flex-direction: column;
+}
+
+.ws-preview-content .preview-cover-light {
+    width: 100%;
+    height: 100%;
+    background: #FFF8F0;
+    padding: 12%;
+    display: flex;
+    flex-direction: column;
+}
+
+.ws-preview-content .preview-cover-split {
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.ws-preview-content .preview-cover-numbered {
+    width: 100%;
+    height: 100%;
+    background: #1a2a3a;
+    padding: 12%;
+    display: flex;
+    flex-direction: column;
+}
+
+.ws-preview-content .preview-cover-minimal {
+    width: 100%;
+    height: 100%;
+    background: #FAFAFA;
+    padding: 12%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.ws-preview-content .preview-logo {
+    height: 40px;
+    margin-bottom: 8%;
+    object-fit: contain;
+}
+
+.ws-preview-content .preview-logo-placeholder {
+    width: 50px;
+    height: 50px;
+    border: 2px dashed #888;
+    border-radius: 8px;
+    margin: 0 auto 8%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.5;
+}
+
+.ws-preview-content .preview-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 4%;
+}
+
+.ws-preview-content .preview-subtitle {
+    font-size: 0.6rem;
+    text-align: center;
+    letter-spacing: 0.1em;
+    margin-bottom: 4%;
+}
+
+.ws-preview-content .preview-description {
+    font-size: 0.55rem;
+    text-align: center;
+    opacity: 0.7;
+    line-height: 1.4;
+}
+
+.ws-preview-content .preview-divider {
+    width: 30px;
+    height: 2px;
+    margin: 0 auto 8%;
+}
+
+/* OLD WELCOME EDITOR */
 .welcome-editor {
     display: grid;
     grid-template-columns: 300px 1fr;

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - MotifKain Katalog</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+    <!-- LOGIN -->
+    <div id="loginSection" class="login-section">
+        <div class="login-card">
+            <img src="assets/images/logo-motifkain.png" alt="MotifKain" class="login-logo">
+            <h1>Dashboard Admin</h1>
+            <p>Masuk dengan akun PocketBase</p>
+            <form id="loginForm">
+                <input type="email" id="emailInput" class="form-input" placeholder="Email" required>
+                <input type="password" id="passwordInput" class="form-input" placeholder="Password" required>
+                <button type="submit" class="btn btn-primary">Masuk</button>
+            </form>
+            <p id="loginError" class="login-error">Email atau password salah!</p>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboardSection" class="dashboard-section">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <img src="assets/images/logo-motifkain.png" alt="Logo" class="header-logo">
+                <h1>Dashboard Admin</h1>
+            </div>
+            <div class="header-right">
+                <span id="userEmail" class="user-email"></span>
+                <button class="btn btn-outline btn-sm" onclick="admin.openCatalog()">Lihat Katalog</button>
+                <button class="btn btn-outline btn-sm" onclick="admin.logout()">Logout</button>
+            </div>
+        </header>
+
+        <!-- Tabs -->
+        <nav class="dashboard-tabs">
+            <button class="tab-btn" data-tab="kategori">Kategori</button>
+            <button class="tab-btn" data-tab="produk">Produk</button>
+            <button class="tab-btn" data-tab="welcome">Welcome Screen</button>
+        </nav>
+
+        <!-- Tab Content: Kategori -->
+        <div id="tab-kategori" class="tab-content">
+            <div class="content-header">
+                <h2>Kategori</h2>
+                <button class="btn btn-primary btn-sm" onclick="admin.showAddKategoriModal()">+ Tambah</button>
+            </div>
+            <div id="kategoriList" class="kategori-list"></div>
+        </div>
+
+        <!-- Tab Content: Produk -->
+        <div id="tab-produk" class="tab-content">
+            <div class="content-header">
+                <h2>Produk</h2>
+                <button class="btn btn-primary btn-sm" onclick="admin.showAddProductModal()">+ Tambah</button>
+            </div>
+            <div class="filter-bar">
+                <select id="filterKategori">
+                    <option value="">Semua Kategori</option>
+                </select>
+                <input type="text" id="searchProduk" placeholder="Cari produk...">
+            </div>
+            <div id="produkGrid" class="produk-grid"></div>
+        </div>
+
+        <!-- Tab Content: Welcome Screen -->
+        <div id="tab-welcome" class="tab-content">
+            <div class="content-header">
+                <h2>Welcome Screen</h2>
+            </div>
+            <div class="welcome-editor" style="padding:20px;">
+                <div class="form-group">
+                    <label>Judul Utama</label>
+                    <input type="text" id="wsForm" name="title" placeholder="CATALOG">
+                </div>
+                <div class="form-group">
+                    <label>Subtitle</label>
+                    <input type="text" id="wsForm" name="subtitle" placeholder="Company Profile">
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="wsForm" name="description" rows="3" placeholder="Deskripsi singkat tentang koleksi atau perusahaan Anda."></textarea>
+                </div>
+                <button id="wsSaveBtn" class="btn btn-primary">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Kategori -->
+    <div id="katModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="katModalTitle">Tambah Kategori</h3>
+                <button class="modal-close" onclick="admin.closeModal('katModal')">X</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nama Kategori</label>
+                    <input type="text" id="katName" placeholder="Contoh: Desain Motif">
+                </div>
+                <div class="form-group">
+                    <label>Slug</label>
+                    <input type="text" id="katSlug" placeholder="contoh: desain-motif">
+                    <small>ID unik (huruf kecil, tanpa spasi</small>
+                </div>
+                <div class="form-group">
+                    <label>Urutan</label>
+                    <input type="number" id="katOrder" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="admin.closeModal('katModal')">Batal</button>
+                <button class="btn btn-primary" onclick="admin.saveKategori()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Produk -->
+    <div id="productModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="prodModalTitle">Tambah Produk</h3>
+                <button class="modal-close" onclick="admin.closeModal('productModal')">X</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nama Produk</label>
+                        <input type="text" id="productName" placeholder="Nama produk">
+                    </div>
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="productKategori">
+                            <option value="">Pilih Kategori</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Subkategori</label>
+                        <input type="text" id="productSubkategori" placeholder="Contoh: Batik">
+                    </div>
+                    <div class="form-group">
+                        <label>Harga</label>
+                        <input type="number" id="productHarga" placeholder="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="productDeskripsi" rows="2" placeholder="Deskripsi produk"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nama Toko</label>
+                        <input type="text" id="productToko" placeholder="MotifKain">
+                    </div>
+                    <div class="form-group">
+                        <label>Daerah</label>
+                        <input type="text" id="productDaerah" placeholder="Jakarta">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="admin.closeModal('productModal')">Batal</button>
+                <button class="btn btn-primary" onclick="admin.saveProduk()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <script src="config.js"></script>
+    <script src="assets/js/admin.js"></script>
+</body>
+</html>
