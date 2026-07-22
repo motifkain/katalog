@@ -31,7 +31,7 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
-        /* ===== WELCOME SCREEN - BOOK STYLE ===== */
+        /* ===== WELCOME SCREEN - SLIDE/SWIPE STYLE ===== */
         .welcome-screen {
             display: flex;
             flex-direction: column;
@@ -41,7 +41,8 @@
             padding: 1rem;
             background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
         }
-        /* Sticky notes - BOOKMARK TABS on TOP edge of book */
+
+        /* Sticky notes - Bookmark tabs on top */
         .sticky-notes {
             position: absolute;
             top: -20px;
@@ -68,191 +69,144 @@
             margin-right: 2px;
         }
 
-        .sticky-note:nth-child(1) { background: #4A90D9; } /* Blue */
-        .sticky-note:nth-child(2) { background: #F5C242; color: #333; } /* Yellow */
-        .sticky-note:nth-child(3) { background: #E57373; } /* Pink */
-        .sticky-note:nth-child(4) { background: #81C784; } /* Green */
+        .sticky-note:nth-child(1) { background: #4A90D9; }
+        .sticky-note:nth-child(2) { background: #F5C242; color: #333; }
+        .sticky-note:nth-child(3) { background: #E57373; }
+        .sticky-note:nth-child(4) { background: #81C784; }
 
         .sticky-note:hover {
             filter: brightness(1.1);
             transform: translateY(-2px);
         }
 
-        /* Page indicator - remove or style */
-        .page-indicator {
-            display: none;
-        }
-
-        /* Book Container */
-        .book-container {
+        /* Slide Container */
+        .slide-container {
             position: relative;
             width: 320px;
             height: 480px;
-            perspective: 1500px;
-        }
-
-        /* The Book */
-        .book {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-        }
-
-        /* Current Page - container only */
-        .book-page {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 6px;
             overflow: hidden;
-            transform-style: preserve-3d;
-            transform-origin: left center;
-            z-index: 2;
         }
 
-        /* Front face of page (shows content) */
-        .book-page .page-front {
+        /* Paper stack shadow - multiple layers for depth */
+        .paper-stack {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #fff;
-            backface-visibility: hidden;
-        }
-
-        /* Back face of page - WHITE BLANK (统一) */
-        .book-page .page-back {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #fff;
-            transform: rotateY(180deg);
-            backface-visibility: hidden;
-        }
-
-        /* Fixed shadow behind the book - doesn't move during animation */
-        .book-shadow {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            box-shadow:
-                0 0 0 1px rgba(0,0,0,0.03),
-                0 10px 40px rgba(0,0,0,0.15),
-                0 4px 12px rgba(0,0,0,0.1);
-            border-radius: 6px;
-            z-index: 0;
             pointer-events: none;
         }
 
-        /* Next page underneath - always visible */
-        .book-page.next-page {
-            z-index: 1;
-            transform: none;
-            opacity: 1;
-            background: #fff;
-            box-shadow: none !important;
-        }
-
-        /* Current page is on top */
-        .book-page:not(.next-page) {
-            z-index: 2;
-            transform: none;
-            opacity: 1;
-        }
-
-        .book-page .page-front {
+        .paper-shadow {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
+            border-radius: 6px;
+            background: #fff;
         }
 
-        /* Page flip animation - both pages visible */
-        .book-page.flipping-next {
-            animation: flipToNext 0.6s ease-in-out forwards;
-            z-index: 10;
+        /* Layered shadows to create paper stack effect */
+        .paper-shadow:nth-child(1) {
+            top: 6px;
+            left: 3px;
+            background: #e8e8e8;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .paper-shadow:nth-child(2) {
+            top: 4px;
+            left: 2px;
+            background: #f0f0f0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .paper-shadow:nth-child(3) {
+            top: 2px;
+            left: 1px;
+            background: #f5f5f5;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
-        .book-page.flipping-prev {
-            animation: flipToPrev 0.6s ease-in-out forwards;
-            z-index: 10;
-        }
-
-        @keyframes flipToNext {
-            0% {
-                transform: rotateY(0deg);
-            }
-            50% {
-                transform: rotateY(-90deg);
-            }
-            100% {
-                transform: rotateY(-180deg);
-            }
-        }
-
-        @keyframes flipToPrev {
-            0% {
-                transform: rotateY(0deg);
-            }
-            50% {
-                transform: rotateY(90deg);
-            }
-            100% {
-                transform: rotateY(180deg);
-            }
-        }
-
-        /* Book spine - natural looking book binding */
-        .book-spine {
+        /* Main slide page */
+        .slide-page {
             position: absolute;
-            left: 0;
             top: 0;
-            width: 5px;
+            left: 0;
+            width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, #8B7355, #A0896C, #9C8570);
-            z-index: 20;
-            border-radius: 3px 0 0 3px;
-            box-shadow: -1px 0 4px rgba(0,0,0,0.2);
+            background: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            z-index: 1;
         }
 
-        /* Page edge that shows when book is open */
-        .open-page-edge {
-            position: absolute;
-            left: 5px;
-            top: 2%;
-            width: 12px;
-            height: 96%;
-            background: linear-gradient(90deg,
-                #e8e4de 0%,
-                #f5f2ed 50%,
-                #ffffff 100%);
-            border-radius: 0 2px 2px 0;
-            z-index: 5;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        /* Slide animation */
+        .slide-page.sliding-next {
+            animation: slideToNext 0.5s ease-in-out forwards;
+            z-index: 10;
         }
 
-        /* Navigation Hint - Japanese style */
-        .page-hint {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            color: #999;
-            font-size: 0.6rem;
+        .slide-page.sliding-prev {
+            animation: slideToPrev 0.5s ease-in-out forwards;
+            z-index: 10;
         }
 
-        .page-hint svg {
-            width: 10px;
-            height: 10px;
+        @keyframes slideToNext {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(-100%);
+                opacity: 0.8;
+            }
         }
 
-        /* Page counter - PDF style */
+        @keyframes slideToPrev {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100%);
+                opacity: 0.8;
+            }
+        }
+
+        /* Incoming slide animations */
+        .slide-page.incoming-next {
+            animation: incomingFromNext 0.5s ease-in-out forwards;
+            z-index: 2;
+        }
+
+        .slide-page.incoming-prev {
+            animation: incomingFromPrev 0.5s ease-in-out forwards;
+            z-index: 2;
+        }
+
+        @keyframes incomingFromNext {
+            0% {
+                transform: translateX(100%);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes incomingFromPrev {
+            0% {
+                transform: translateX(-100%);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Page counter */
         .page-counter {
             font-size: 0.8rem;
             color: #8B7355;
@@ -263,7 +217,7 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
 
-        /* Book nav container */
+        /* Navigation container */
         .book-nav-container {
             display: flex;
             align-items: center;
@@ -271,7 +225,7 @@
             margin-top: 1rem;
         }
 
-        /* Navigation arrows - PDF style, more visible */
+        /* Navigation arrows */
         .book-nav {
             display: flex;
             gap: 0.5rem;
@@ -284,11 +238,12 @@
             width: 40%;
             height: 100%;
             z-index: 100;
+            cursor: pointer;
         }
         .swipe-left-area { left: 0; }
         .swipe-right-area { right: 0; }
 
-        /* Page indicator */
+        /* Page indicator dots */
         .page-indicator {
             display: flex;
             gap: 6px;
@@ -306,8 +261,8 @@
             transform: scale(1.2);
         }
 
-        /* Catalog page inside book */
-        .book-page .catalog-page {
+        /* Catalog page inside slide */
+        .slide-page .catalog-page {
             width: 100%;
             height: 100%;
             aspect-ratio: 2 / 3;
@@ -1041,7 +996,7 @@
     <!-- WELCOME SCREEN - BOOK STYLE -->
     <div class="welcome-screen" id="welcomeScreen">
         <div class="welcome-container">
-            <div class="book-container" id="bookContainer">
+            <div class="slide-container" id="slideContainer">
                 <!-- Sticky notes / bookmark tabs on top edge -->
                 <div class="sticky-notes">
                     <div class="sticky-note">Panel Atasan Wanita</div>
@@ -1049,35 +1004,31 @@
                     <div class="sticky-note">Seamless</div>
                     <div class="sticky-note">Portopholio</div>
                 </div>
-                <div class="book-shadow"></div>
-                <div class="book" id="book">
-                    <div class="book-spine"></div>
-                    <div class="open-page-edge"></div>
-                    <!-- Next page (underneath) -->
-                    <div class="book-page next-page" id="nextPage">
-                        <div class="page-front" id="nextPageContent"></div>
-                        <div class="page-back"></div>
-                    </div>
-                    <!-- Current page (on top) -->
-                    <div class="book-page" id="bookPage">
-                        <div class="page-front" id="bookPageContent">
-                            <div class="loading"><div class="spinner"></div></div>
-                        </div>
-                        <div class="page-back"></div>
+
+                <!-- Paper stack shadow layers -->
+                <div class="paper-stack">
+                    <div class="paper-shadow"></div>
+                    <div class="paper-shadow"></div>
+                    <div class="paper-shadow"></div>
+                </div>
+
+                <!-- Main slide page -->
+                <div class="slide-page" id="currentSlide">
+                    <div id="slideContent">
+                        <div class="loading"><div class="spinner"></div></div>
                     </div>
                 </div>
+
+                <!-- Swipe areas -->
                 <div class="swipe-left-area" id="swipeLeft"></div>
                 <div class="swipe-right-area" id="swipeRight"></div>
-                <div class="page-hint">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
-                </div>
             </div>
             <div class="book-nav-container">
                 <div class="book-nav">
-                    <button class="book-nav-btn" id="prevBtn" onclick="flipPage(-1)" title="Halaman Sebelumnya">
+                    <button class="book-nav-btn" id="prevBtn" onclick="slidePage(-1)" title="Halaman Sebelumnya">
                         ‹
                     </button>
-                    <button class="book-nav-btn" id="nextBtn" onclick="flipPage(1)" title="Halaman Berikutnya">
+                    <button class="book-nav-btn" id="nextBtn" onclick="slidePage(1)" title="Halaman Berikutnya">
                         ›
                     </button>
                 </div>
@@ -1236,7 +1187,7 @@
             setupCategoryTabs();
             await loadWelcomeData();
             await loadProducts();
-            setupBookNavigation();
+            setupSlideNavigation();
         });
 
         // ===== WELCOME SCREEN - BOOK STYLE =====
@@ -1255,12 +1206,12 @@
             }
 
             // Render first page
-            renderBookPage(0);
+            renderSlidePage(0);
             initBookViewer();
         }
 
-        function renderBookPage(index) {
-            const content = document.getElementById('bookPageContent');
+        function renderSlidePage(index) {
+            const content = document.getElementById('slideContent');
             if (!content) return;
 
             if (catalogPages.length > 0 && index < catalogPages.length) {
@@ -1298,8 +1249,8 @@
             ).join('');
         }
 
-        function setupBookNavigation() {
-            const container = document.getElementById('bookContainer');
+        function setupSlideNavigation() {
+            const container = document.getElementById('slideContainer');
             const leftArea = document.getElementById('swipeLeft');
             const rightArea = document.getElementById('swipeRight');
 
@@ -1332,9 +1283,9 @@
                 // Only handle as swipe if horizontal movement is greater
                 if (diffX > diffY && diffX > 50) {
                     if (touchEndX < touchStartX) {
-                        flipPage(1); // Swipe left = next
+                        slidePage(1); // Swipe left = next
                     } else {
-                        flipPage(-1); // Swipe right = previous
+                        slidePage(-1); // Swipe right = previous
                     }
                 }
             }, { passive: true });
@@ -1343,26 +1294,26 @@
             if (leftArea) {
                 leftArea.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    flipPage(-1); // Left side = previous
+                    slidePage(-1); // Left side = previous
                 });
             }
             if (rightArea) {
                 rightArea.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    flipPage(1); // Right side = next
+                    slidePage(1); // Right side = next
                 });
             }
 
             // Keyboard navigation
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowRight') flipPage(1);
-                if (e.key === 'ArrowLeft') flipPage(-1);
+                if (e.key === 'ArrowRight') slidePage(1);
+                if (e.key === 'ArrowLeft') slidePage(-1);
             });
 
             // Click on image to zoom
-            const bookPage = document.getElementById('bookPage');
-            if (bookPage) {
-                bookPage.addEventListener('click', (e) => {
+            const currentSlide = document.getElementById('currentSlide');
+            if (currentSlide) {
+                currentSlide.addEventListener('click', (e) => {
                     // Check if clicked on an image
                     if (e.target.tagName === 'IMG') {
                         openImageZoom(e.target.src);
@@ -1379,9 +1330,9 @@
             const modal = document.getElementById('zoomModal');
             const zoomImg = document.getElementById('zoomImage');
             if (modal && zoomImg) {
-                // Find all images on current page
-                const currentPage = document.getElementById('bookPage');
-                zoomImages = Array.from(currentPage.querySelectorAll('img')).map(img => img.src);
+                // Find all images on current slide
+                const currentSlide = document.getElementById('currentSlide');
+                zoomImages = Array.from(currentSlide.querySelectorAll('img')).map(img => img.src);
                 currentZoomIndex = zoomImages.indexOf(src);
                 if (currentZoomIndex === -1) currentZoomIndex = 0;
 
@@ -1432,14 +1383,13 @@
             }
         });
 
-        function flipPage(direction) {
+        function slidePage(direction) {
             if (isFlipping) return;
 
-            const currentPage = document.getElementById('bookPage');
-            const nextPageEl = document.getElementById('nextPage');
-            const nextPageContent = document.getElementById('nextPageContent');
+            const currentSlide = document.getElementById('currentSlide');
+            const slideContent = document.getElementById('slideContent');
 
-            if (!currentPage || !nextPageEl) return;
+            if (!currentSlide || !slideContent) return;
 
             const totalPages = catalogPages.length || 1;
 
@@ -1448,7 +1398,7 @@
 
             isFlipping = true;
 
-            // Calculate target index first
+            // Calculate target index
             const targetIndex = direction > 0 ? currentPageIndex + 1 : currentPageIndex - 1;
 
             // Prepare content for target page
@@ -1464,84 +1414,26 @@
                 targetContent = `<div class="catalog-page">${PageTemplates.renderPage(pageContentData, targetIndex + 1)}</div>`;
             }
 
-            // Animation settings
-            const animDuration = 800;
+            // Animation duration
+            const animDuration = 400;
 
-            if (direction > 0) {
-                // FORWARD: Beautiful book flip animation
+            // Set new content and start animation
+            slideContent.innerHTML = targetContent;
 
-                // Set next content to underneath page
-                const nextFront = nextPageEl.querySelector('.page-front');
-                nextFront.innerHTML = targetContent;
+            // Add animation classes
+            currentSlide.classList.add(direction > 0 ? 'sliding-next' : 'sliding-prev');
 
-                // Set initial states
-                currentPage.style.transition = 'none';
-                currentPage.style.transform = 'rotateY(0deg)';
-                currentPage.style.opacity = '1';
-                currentPage.style.zIndex = '2';
+            // After animation completes, reset and update
+            setTimeout(() => {
+                currentPageIndex = targetIndex;
+                currentSlide.classList.remove('sliding-next', 'sliding-prev');
+                currentSlide.style.transform = 'translateX(0)';
+                currentSlide.style.opacity = '1';
 
-                nextPageEl.style.transition = 'none';
-                nextPageEl.style.transform = 'rotateY(0deg)';
-                nextPageEl.style.opacity = '1';
-                nextPageEl.style.zIndex = '1';
-
-                // Force reflow
-                currentPage.offsetHeight;
-                nextPageEl.offsetHeight;
-
-                // Start flip animation
-                requestAnimationFrame(() => {
-                    currentPage.style.transition = `transform ${animDuration}ms ease-in-out`;
-                    currentPage.style.transformOrigin = 'left center';
-                    currentPage.style.transform = 'rotateY(-180deg)';
-                });
-
-                // After animation
-                setTimeout(() => {
-                    currentPageIndex = targetIndex;
-
-                    // Put new content in current page
-                    const currentFront = currentPage.querySelector('.page-front');
-                    currentFront.innerHTML = targetContent;
-
-                    // Reset transforms
-                    currentPage.style.transition = 'none';
-                    currentPage.style.transform = 'rotateY(0deg)';
-                    currentPage.style.zIndex = '2';
-                    nextPageEl.style.transform = 'rotateY(0deg)';
-                    nextPageEl.style.zIndex = '1';
-
-                    updatePageCounter();
-                    updateNavButtons();
-                    isFlipping = false;
-                }, animDuration);
-
-            } else {
-                // BACKWARD: Smooth fade transition
-
-                // Get current content first
-                const currentFront = currentPage.querySelector('.page-front');
-                const currentContent = currentFront.innerHTML;
-
-                // Set new content
-                currentFront.innerHTML = targetContent;
-
-                // Fade out current
-                currentPage.style.transition = `opacity ${animDuration * 0.4}ms ease-out`;
-                currentPage.style.opacity = '0';
-
-                // After fade out, fade in new content
-                setTimeout(() => {
-                    currentPageIndex = targetIndex;
-
-                    currentPage.style.transition = `opacity ${animDuration * 0.4}ms ease-in`;
-                    currentPage.style.opacity = '1';
-
-                    updatePageCounter();
-                    updateNavButtons();
-                    isFlipping = false;
-                }, animDuration * 0.4);
-            }
+                updatePageCounter();
+                updateNavButtons();
+                isFlipping = false;
+            }, animDuration);
         }
 
         function updatePageCounter() {
@@ -1577,7 +1469,7 @@
             document.getElementById('welcomeScreen').style.display = 'flex';
             // Reset to first page
             currentPageIndex = 0;
-            renderBookPage(0);
+            renderSlidePage(0);
             renderPageIndicator();
         }
 
