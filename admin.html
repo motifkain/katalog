@@ -329,6 +329,28 @@
                     </div>
 
                     <div class="settings-section">
+                        <h3>Tombol "Lihat Katalog"</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Warna Background</label>
+                                <input type="color" id="wsBtnBgColor" value="#1B5E20" style="width:50px;height:30px;border:none;cursor:pointer;" oninput="admin.updateWelcomePreview()">
+                            </div>
+                            <div class="form-group">
+                                <label>Warna Text</label>
+                                <input type="color" id="wsBtnTextColor" value="#FFFFFF" style="width:50px;height:30px;border:none;cursor:pointer;" oninput="admin.updateWelcomePreview()">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Posisi X Tombol: <span id="btnXValue">50</span>%</label>
+                            <input type="range" id="wsBtnX" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateBtnPosition()">
+                        </div>
+                        <div class="form-group">
+                            <label>Posisi Y Tombol: <span id="btnYValue">90</span>%</label>
+                            <input type="range" id="wsBtnY" min="50" max="95" value="90" style="width:100%;" oninput="admin.updateBtnPosition()">
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
                         <button class="btn btn-primary" onclick="admin.saveWelcomeSettings()">Simpan Welcome Screen</button>
                     </div>
                 </div>

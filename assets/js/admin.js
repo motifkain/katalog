@@ -1011,6 +1011,33 @@ class AdminDashboard {
         this.updateWelcomePreview();
     }
 
+    updateBottomPanelOpacity() {
+        const val = document.getElementById('wsBottomPanelOpacity').value;
+        document.getElementById('bottomPanelOpacityValue').textContent = val;
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.bottomPanelOpacity = parseInt(val);
+        this.updateWelcomePreview();
+    }
+
+    updateBtnPosition() {
+        const xVal = document.getElementById('wsBtnX').value;
+        const yVal = document.getElementById('wsBtnY').value;
+        document.getElementById('btnXValue').textContent = xVal;
+        document.getElementById('btnYValue').textContent = yVal;
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.btnX = parseInt(xVal);
+        this.welcomeSettings.btnY = parseInt(yVal);
+        this.updateWelcomePreview();
+    }
+
+    getBtnStyle(ws) {
+        const x = ws.btnX || 50;
+        const y = ws.btnY || 90;
+        const bgColor = ws.btnBgColor || '#1B5E20';
+        const textColor = ws.btnTextColor || '#FFFFFF';
+        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);background:${bgColor};color:${textColor};padding:12px 32px;border:none;border-radius:6px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
+    }
+
     // Logo handlers
     updateLogoSize() {
         const val = document.getElementById('wsLogoSize').value;
@@ -1130,6 +1157,7 @@ class AdminDashboard {
 
         const logoStyle = this.getLogoStyle(ws);
         const titleStyle = this.getTitleStyle(ws);
+        const btnStyle = this.getBtnStyle(ws);
         const logoUrl = ws.logoUrl || ws.logo;
         const logoHtml = logoUrl
             ? `<img src="${logoUrl}" style="${logoStyle}" class="preview-logo">`
@@ -1147,6 +1175,7 @@ class AdminDashboard {
             </div>
             ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.45rem;color:rgba(255,255,255,0.7);line-height:1.4;">${ws.description}</div>` : ''}
             ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
+            <button style="${btnStyle}">Lihat Katalog</button>
         </div>`;
     }
 
@@ -1160,6 +1189,7 @@ class AdminDashboard {
         }
         const logoStyle = this.getLogoStyle(ws);
         const titleStyle = this.getTitleStyle(ws);
+        const btnStyle = this.getBtnStyle(ws);
         const logoUrl = ws.logoUrl || ws.logo;
         const logoHtml = logoUrl
             ? `<img src="${logoUrl}" style="${logoStyle}" class="preview-logo">`
@@ -1176,6 +1206,7 @@ class AdminDashboard {
             </div>
             ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.description}</div>` : ''}
             ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
+            <button style="${btnStyle}">Lihat Katalog</button>
         </div>`;
     }
 
@@ -1189,6 +1220,7 @@ class AdminDashboard {
 
         const logoStyle = this.getLogoStyle(ws);
         const titleStyle = this.getTitleStyle(ws);
+        const btnStyle = this.getBtnStyle(ws);
         const logoUrl = ws.logoUrl || ws.logo;
         const logoHtml = logoUrl ? `<img src="${logoUrl}" style="${logoStyle}">` : '';
 
@@ -1205,6 +1237,7 @@ class AdminDashboard {
                     <div style="width:25px;height:1px;background:${theme.textDark};margin-bottom:8%;"></div>
                 </div>
                 ${ws.description ? `<div style="position:absolute;left:65%;top:60%;transform:translate(-50%, -50%);width:50%;font-size:0.4rem;color:${theme.textMuted};line-height:1.4;">${ws.description}</div>` : ''}
+                <button style="${btnStyle}">Lihat Katalog</button>
             </div>
         </div>`;
     }
@@ -1219,6 +1252,7 @@ class AdminDashboard {
         }
         const logoStyle = this.getLogoStyle(ws);
         const titleStyle = this.getTitleStyle(ws);
+        const btnStyle = this.getBtnStyle(ws);
         const logoUrl = ws.logoUrl || ws.logo;
         const logoHtml = logoUrl
             ? `<img src="${logoUrl}" style="${logoStyle}">`
@@ -1236,6 +1270,7 @@ class AdminDashboard {
             </div>
             ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.45rem;color:rgba(255,255,255,0.7);line-height:1.5;max-width:80%;">${ws.description}</div>` : ''}
             ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
+            <button style="${btnStyle}">Lihat Katalog</button>
         </div>`;
     }
 
@@ -1249,6 +1284,7 @@ class AdminDashboard {
         }
         const logoStyle = this.getLogoStyle(ws);
         const titleStyle = this.getTitleStyle(ws);
+        const btnStyle = this.getBtnStyle(ws);
         const logoUrl = ws.logoUrl || ws.logo;
         const logoHtml = logoUrl
             ? `<img src="${logoUrl}" style="${logoStyle}">`
@@ -1266,6 +1302,7 @@ class AdminDashboard {
             </div>
             ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.4rem;color:${theme.textMuted};line-height:1.4;font-style:italic;">${ws.description}</div>` : ''}
             ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.4rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
+            <button style="${btnStyle}">Lihat Katalog</button>
         </div>`;
     }
 

@@ -296,6 +296,14 @@ function getTaglineStyleWelcome(ws) {
     return `font-size:${size}px;line-height:1.6;`;
 }
 
+function getBtnStyleWelcome(ws) {
+    const x = ws.btnX || 50;
+    const y = ws.btnY || 90;
+    const bgColor = ws.btnBgColor || '#1B5E20';
+    const textColor = ws.btnTextColor || '#FFFFFF';
+    return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);background:${bgColor};color:${textColor};padding:12px 32px;border:none;border-radius:6px;font-size:0.9rem;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
+}
+
 function renderWelcomeDark(ws, theme) {
     const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
     const bgStyle = bgImg
@@ -304,9 +312,9 @@ function renderWelcomeDark(ws, theme) {
 
     const logoStyle = getLogoStyleWelcome(ws);
     const titleStyle = getTitleStyleWelcome(ws);
-    const subtitleStyle = getSubtitleStyleWelcome(ws);
     const descStyle = getDescriptionStyleWelcome(ws);
     const taglineStyle = getTaglineStyleWelcome(ws);
+    const btnStyle = getBtnStyleWelcome(ws);
 
     const logoHtml = ws.logoUrl
         ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
@@ -324,7 +332,7 @@ function renderWelcomeDark(ws, theme) {
         </div>
         ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:rgba(255,255,255,0.7);">${ws.description}</div>` : ''}
         ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
-        <button class="welcome-btn" onclick="openKatalog()" style="position:absolute;bottom:5%;left:50%;transform:translateX(-50%);">Lihat Katalog</button>
+        <button class="welcome-btn" onclick="openKatalog()" style="${btnStyle}">Lihat Katalog</button>
     </div>`;
 }
 
@@ -336,9 +344,9 @@ function renderWelcomeLight(ws, theme) {
 
     const logoStyle = getLogoStyleWelcome(ws);
     const titleStyle = getTitleStyleWelcome(ws);
-    const subtitleStyle = getSubtitleStyleWelcome(ws);
     const descStyle = getDescriptionStyleWelcome(ws);
     const taglineStyle = getTaglineStyleWelcome(ws);
+    const btnStyle = getBtnStyleWelcome(ws);
 
     const logoHtml = ws.logoUrl
         ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
@@ -355,7 +363,7 @@ function renderWelcomeLight(ws, theme) {
         </div>
         ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:${theme.textMuted};">${ws.description}</div>` : ''}
         ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
-        <button class="welcome-btn" onclick="openKatalog()" style="position:absolute;bottom:5%;left:50%;transform:translateX(-50%);">Lihat Katalog</button>
+        <button class="welcome-btn" onclick="openKatalog()" style="${btnStyle}">Lihat Katalog</button>
     </div>`;
 }
 
@@ -384,7 +392,7 @@ function renderWelcomeSplit(ws, theme) {
                 <div style="width:40px;height:2px;background:${theme.textDark};margin-bottom:20px;"></div>
             </div>
             ${ws.description ? `<div style="position:absolute;left:65%;top:60%;transform:translate(-50%, -50%);width:50%;${descStyle}color:${theme.textMuted};">${ws.description}</div>` : ''}
-            <button class="welcome-btn" onclick="openKatalog()" style="position:absolute;bottom:10%;left:65%;transform:translateX(-50%);">Lihat Katalog</button>
+            <button class="welcome-btn" onclick="openKatalog()" style="${btnStyle}">Lihat Katalog</button>
         </div>
     </div>`;
 }
@@ -417,7 +425,7 @@ function renderWelcomeNumbered(ws, theme) {
         </div>
         ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:rgba(255,255,255,0.7);">${ws.description}</div>` : ''}
         ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
-        <button class="welcome-btn" onclick="openKatalog()" style="position:absolute;bottom:5%;left:50%;transform:translateX(-50%);">Lihat Katalog</button>
+        <button class="welcome-btn" onclick="openKatalog()" style="${btnStyle}">Lihat Katalog</button>
     </div>`;
 }
 
@@ -429,9 +437,9 @@ function renderWelcomeMinimal(ws, theme) {
 
     const logoStyle = getLogoStyleWelcome(ws);
     const titleStyle = getTitleStyleWelcome(ws);
-    const subtitleStyle = getSubtitleStyleWelcome(ws);
     const descStyle = getDescriptionStyleWelcome(ws);
     const taglineStyle = getTaglineStyleWelcome(ws);
+    const btnStyle = getBtnStyleWelcome(ws);
 
     const logoHtml = ws.logoUrl
         ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
@@ -449,7 +457,7 @@ function renderWelcomeMinimal(ws, theme) {
         </div>
         ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:${theme.textMuted};font-style:italic;">${ws.description}</div>` : ''}
         ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
-        <button class="welcome-btn" onclick="openKatalog()" style="position:absolute;bottom:5%;left:50%;transform:translateX(-50%);">Lihat Katalog</button>
+        <button class="welcome-btn" onclick="openKatalog()" style="${btnStyle}">Lihat Katalog</button>
     </div>`;
 }
 
