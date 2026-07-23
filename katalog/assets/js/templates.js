@@ -20,6 +20,48 @@ const ColorThemes = {
             bgCard: '#FFFFFF',
             bgMuted: '#F5F0E8'
         },
+        'elegant-red': {
+            name: 'Elegant Red',
+            primary: '#8B0000',
+            secondary: '#B22222',
+            accent: '#CD5C5C',
+            accentAlt: '#DC143C',
+            textDark: '#4A0000',
+            textLight: '#FFF0F0',
+            textMuted: '#8B0000',
+            bgLight: '#FFF5F5',
+            bgDark: '#4A0000',
+            bgCard: '#FFF8F8',
+            bgMuted: '#FFE4E1'
+        },
+        'elegant-cream': {
+            name: 'Elegant Cream',
+            primary: '#8B4513',
+            secondary: '#D2691E',
+            accent: '#DEB887',
+            accentAlt: '#CD853F',
+            textDark: '#3D2314',
+            textLight: '#5C4033',
+            textMuted: '#8B7355',
+            bgLight: '#FFF8DC',
+            bgDark: '#3D2314',
+            bgCard: '#FFFAF0',
+            bgMuted: '#FAEBD7'
+        },
+        'elegant-brown': {
+            name: 'Elegant Brown',
+            primary: '#3E2723',
+            secondary: '#5D4037',
+            accent: '#8D6E63',
+            accentAlt: '#A1887F',
+            textDark: '#1a1a1a',
+            textLight: '#4E342E',
+            textMuted: '#795548',
+            bgLight: '#EFEBE9',
+            bgDark: '#3E2723',
+            bgCard: '#FFFFFF',
+            bgMuted: '#D7CCC8'
+        },
         'ocean-blue': {
             name: 'Ocean Blue',
             primary: '#1E3A5F',

@@ -6,24 +6,42 @@ window.MOTIFKAIN_CONFIG = {
     // URL PocketBase API - Railway Production
     pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
 
-    // Nama collection untuk produk
-    pocketbaseCollection: 'catalog_pages',
+    // Collection untuk layanan
+    layananCollection: 'layanan',
 
-    // Collection untuk kategori (jika ada)
+    // Collection untuk welcome screen settings
+    welcomeCollection: 'welcome_settings',
+
+    // Collection untuk kategori
     kategoriCollection: 'kategori',
 
     // Collection untuk produk
     produkCollection: 'produk',
 
+    // Collection untuk user (designer & pemasaran)
+    userCollection: 'users',
+
+    // WhatsApp number default (jika tidak ada user)
+    whatsappNumber: '',
+
     // Catalog settings
     catalogTitle: 'MotifKain Katalog',
     websiteUrl: 'https://motifkain.com',
 
-    // WhatsApp number untuk kontak (contoh: '6281234567890')
-    whatsappNumber: '',
-
     // Debug mode
     debug: true
+};
+
+// Default Welcome Screen Settings (bisa diedit dari admin)
+window.WELCOME_SETTINGS = {
+    // Left side - Logo area
+    logoUrl: 'assets/images/logo-motifkain.png',
+    leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
+
+    // Right side - Text area
+    title: 'CATALOG',
+    subtitle: 'Company Profile',
+    description: 'Koleksi produk eksklusif kami'
 };
 
 // ===== THEME COLORS (Tiru iswaraapp) =====

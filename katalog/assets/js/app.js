@@ -6,226 +6,446 @@
 // ===== CONFIG =====
 const CONFIG = window.MOTIFKAIN_CONFIG || {
     pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
-    pocketbaseCollection: 'catalog_pages',
+    welcomeCollection: 'welcome_settings',
     produkCollection: 'produk',
-    kategoriCollection: 'kategori'
+    kategoriCollection: 'kategori',
+    userCollection: 'users'
 };
 
 // ===== STATE =====
-let catalogPages = [];
-let currentPageIndex = 0;
-let isFlipping = false;
+let welcomeSettings = window.WELCOME_SETTINGS || {
+    logoUrl: 'assets/images/logo-motifkain.png',
+    leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
+    title: 'CATALOG',
+    subtitle: 'Company Profile',
+    description: 'Koleksi produk eksklusif kami',
+    colorTheme: 'elegant-cream',
+    backgroundOpacity: 50,
+    leftPanelOpacity: 50
+};
 
 let products = [];
 let filteredProducts = [];
+let categories = [];
+let users = [];
+let productCarousels = {};
+let currentImageIndex = 0;
 let currentCategory = 'desain-motif';
 let currentSubcategory = null;
-let categories = []; // Dari database
-let subcategories = []; // Dari database
 
 let selectedProduct = null;
-let currentImageIndex = 0;
-let productCarousels = {}; // Track carousel state per product
+let allWelcomeScreens = []; // Store all welcome screens
+let activeWelcomeScreenId = null;
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadCatalogPages();
+    await loadWelcomeSettings();
     await loadCategories();
     await loadProducts();
-    setupCategoryTabs();
-    setupSlideNavigation();
+    await loadUsers();
     setupSearch();
-    initBookViewer();
+    renderWelcomeScreen();
 });
 
-// ===== CATALOG PAGES (Welcome Screen) =====
-async function loadCatalogPages() {
+// ===== LOAD USERS =====
+async function loadUsers() {
     try {
-        const res = await fetch(`${CONFIG.pocketbaseUrl}/api/collections/${CONFIG.pocketbaseCollection}/records?sort=order`);
+        const res = await fetch(`${CONFIG.pocketbaseUrl}/api/collections/${CONFIG.userCollection}/records?sort=+role`);
         if (res.ok) {
             const data = await res.json();
-            if (data.items && data.items.length > 0) {
-                catalogPages = data.items;
-            }
+            users = data.items || [];
         }
     } catch (e) {
-        console.log('Catalog pages not found, using default');
-    }
-
-    // Update sticky notes
-    updateStickyNotes();
-    renderSlidePage(0);
-}
-
-function updateStickyNotes() {
-    const container = document.getElementById('stickyNotes');
-    if (!container) return;
-
-    // Get unique categories/titles from pages
-    const titles = catalogPages.length > 0
-        ? catalogPages.slice(0, 4).map(p => p.mainTitle || p.title || 'Cover')
-        : ['Panel Atasan Wanita', 'Panel Gamis', 'Seamless', 'Portfolio'];
-
-    container.innerHTML = titles.map((title, i) =>
-        `<div class="sticky-note" onclick="slidePage(${i})">${title}</div>`
-    ).join('');
-}
-
-function renderSlidePage(index) {
-    const content = document.getElementById('slideContent');
-    if (!content) return;
-
-    if (catalogPages.length > 0 && index < catalogPages.length) {
-        const page = catalogPages[index];
-        const pageData = {
-            ...page,
-            image: page.image ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${page.id}/${page.image}` : '',
-            images: (page.images || []).map(img => `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${page.id}/${img}`),
-            logo: page.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${page.id}/${page.logo}` : ''
-        };
-        content.innerHTML = `<div class="catalog-page">${PageTemplates.renderPage(pageData, index + 1)}</div>`;
-    } else {
-        // Default cover
-        const pageData = {
-            template: 'cover-dark',
-            mainTitle: 'MOTIFKAIN',
-            subtitle: 'Koleksi Desain 2024',
-            description: 'Desain motif kain eksklusif',
-            colorTheme: 'elegant-gold'
-        };
-        content.innerHTML = `<div class="catalog-page">${PageTemplates.renderPage(pageData, 1)}</div>`;
+        users = [];
     }
 }
 
-function setupSlideNavigation() {
-    const container = document.getElementById('slideContainer');
-    const leftArea = document.getElementById('swipeLeft');
-    const rightArea = document.getElementById('swipeRight');
+// ===== WELCOME SCREEN =====
+async function loadWelcomeSettings() {
+    const savedActiveId = localStorage.getItem('motifkain_active_ws');
 
-    if (!container) return;
-
-    let touchStartX = 0;
-
-    container.addEventListener('touchstart', (e) => {
-        touchStartX = e.touches[0].clientX;
-    }, { passive: true });
-
-    container.addEventListener('touchend', (e) => {
-        const diffX = e.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(diffX) > 50) {
-            slidePage(diffX > 0 ? -1 : 1);
+    try {
+        // First, load all welcome screens
+        const listRes = await fetch(`${CONFIG.pocketbaseUrl}/api/collections/${CONFIG.welcomeCollection}/records?per-page=500&sort=-created`);
+        if (listRes.ok) {
+            const listData = await listRes.json();
+            allWelcomeScreens = listData.items || [];
         }
-    }, { passive: true });
 
-    if (leftArea) leftArea.addEventListener('click', () => slidePage(-1));
-    if (rightArea) rightArea.addEventListener('click', () => slidePage(1));
+        // Find the active welcome screen
+        let activeWs = null;
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight') slidePage(1);
-        if (e.key === 'ArrowLeft') slidePage(-1);
-    });
-}
+        if (savedActiveId) {
+            // Use the saved active ID
+            activeWs = allWelcomeScreens.find(ws => ws.id === savedActiveId);
+        }
 
-function slidePage(direction) {
-    if (isFlipping) return;
+        if (!activeWs && allWelcomeScreens.length > 0) {
+            // Use the most recent one
+            activeWs = allWelcomeScreens[0];
+            activeWelcomeScreenId = activeWs.id;
+            localStorage.setItem('motifkain_active_ws', activeWelcomeScreenId);
+        }
 
-    const currentSlide = document.getElementById('currentSlide');
-    const incomingSlide = document.getElementById('incomingSlide');
-    const slideContent = document.getElementById('slideContent');
-    const incomingContent = document.getElementById('incomingSlideContent');
-
-    if (!currentSlide || !incomingSlide) return;
-
-    const totalPages = catalogPages.length || 1;
-
-    if (direction > 0 && currentPageIndex >= totalPages - 1) return;
-    if (direction < 0 && currentPageIndex <= 0) return;
-
-    isFlipping = true;
-
-    const targetIndex = currentPageIndex + direction;
-
-    // Prepare content
-    let targetContent = '';
-    if (catalogPages.length > 0 && targetIndex < catalogPages.length) {
-        const page = catalogPages[targetIndex];
-        const pageData = {
-            ...page,
-            image: page.image ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${page.id}/${page.image}` : '',
-            logo: page.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.pocketbaseCollection}/${page.id}/${page.logo}` : ''
-        };
-        targetContent = `<div class="catalog-page">${PageTemplates.renderPage(pageData, targetIndex + 1)}</div>`;
-    }
-
-    incomingContent.innerHTML = targetContent;
-
-    if (direction > 0) {
-        incomingSlide.style.transform = 'translateX(100%)';
-    } else {
-        incomingSlide.style.transform = 'translateX(-100%)';
-    }
-    incomingSlide.style.opacity = '1';
-
-    requestAnimationFrame(() => {
-        currentSlide.classList.add(direction > 0 ? 'sliding-next' : 'sliding-prev');
-        incomingSlide.classList.add(direction > 0 ? 'incoming-next' : 'incoming-prev');
-    });
-
-    setTimeout(() => {
-        slideContent.innerHTML = targetContent;
-        currentSlide.classList.remove('sliding-next', 'sliding-prev');
-        currentSlide.style.transform = 'translateX(0)';
-        incomingSlide.classList.remove('incoming-next', 'incoming-prev');
-        incomingSlide.style.transform = 'translateX(0)';
-        incomingSlide.style.opacity = '0';
-
-        currentPageIndex = targetIndex;
-        updatePageCounter();
-        updateNavButtons();
-        renderPageIndicator();
-        isFlipping = false;
-    }, 400);
-}
-
-function updatePageCounter() {
-    const counter = document.getElementById('pageCounter');
-    if (counter) {
-        counter.textContent = `${currentPageIndex + 1} / ${catalogPages.length || 1}`;
+        if (activeWs) {
+            activeWelcomeScreenId = activeWs.id;
+            welcomeSettings = {
+                id: activeWs.id,
+                template: activeWs.template || 'cover-split',
+                colorTheme: activeWs.colorTheme || 'elegant-cream',
+                fontFamily: activeWs.fontFamily || 'Playfair Display',
+                logoUrl: activeWs.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${activeWs.id}/${activeWs.logo}` : '',
+                backgroundImage: activeWs.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${activeWs.id}/${activeWs.backgroundImage}` : '',
+                backgroundOpacity: activeWs.backgroundOpacity || 50,
+                logoSize: activeWs.logoSize || 60,
+                logoX: activeWs.logoX || 50,
+                logoY: activeWs.logoY || 10,
+                titleSize: activeWs.titleSize || 32,
+                titleX: activeWs.titleX || 50,
+                titleY: activeWs.titleY || 50,
+                subtitleSize: activeWs.subtitleSize || 14,
+                subtitleX: activeWs.subtitleX || 50,
+                subtitleY: activeWs.subtitleY || 70,
+                leftText: activeWs.leftText || activeWs.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
+                title: activeWs.title || 'CATALOG',
+                subtitle: activeWs.subtitle || 'Company Profile',
+                description: activeWs.description || 'Koleksi produk eksklusif kami'
+            };
+            updateFavicon(welcomeSettings.logoUrl);
+        }
+    } catch (e) {
+        console.log('Welcome settings from config file');
     }
 }
 
-function updateNavButtons() {
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    if (prevBtn) prevBtn.disabled = currentPageIndex <= 0;
-    if (nextBtn) nextBtn.disabled = currentPageIndex >= (catalogPages.length || 1) - 1;
+function updateFavicon(logoUrl) {
+    if (!logoUrl) return;
+    const favicon = document.getElementById('faviconLink');
+    if (favicon) {
+        favicon.href = logoUrl;
+    }
 }
 
-function renderPageIndicator() {
-    const indicator = document.getElementById('pageIndicator');
-    if (!indicator) return;
-    const total = catalogPages.length || 1;
-    indicator.innerHTML = Array.from({length: Math.min(total, 10)}, (_, i) =>
-        `<div class="page-dot ${i === currentPageIndex ? 'active' : ''}"></div>`
-    ).join('');
+function getThemeColors(themeId) {
+    const themes = {
+        'elegant-gold': {
+            primary: '#5D4037',
+            secondary: '#8D6E63',
+            accent: '#C9A66B',
+            accentAlt: '#008B8B',
+            textDark: '#1a1a1a',
+            textLight: '#6D4C41',
+            textMuted: '#A1887F',
+            bgLight: '#FFF8F0',
+            bgDark: '#1a2a3a',
+            bgCard: '#FFFFFF'
+        },
+        'elegant-red': {
+            primary: '#8B0000',
+            secondary: '#B22222',
+            accent: '#CD5C5C',
+            accentAlt: '#DC143C',
+            textDark: '#4A0000',
+            textLight: '#FFF0F0',
+            textMuted: '#8B0000',
+            bgLight: '#FFF5F5',
+            bgDark: '#4A0000',
+            bgCard: '#FFF8F8'
+        },
+        'elegant-cream': {
+            primary: '#8B4513',
+            secondary: '#D2691E',
+            accent: '#DEB887',
+            accentAlt: '#CD853F',
+            textDark: '#3D2314',
+            textLight: '#5C4033',
+            textMuted: '#8B7355',
+            bgLight: '#FFF8DC',
+            bgDark: '#3D2314',
+            bgCard: '#FFFAF0'
+        },
+        'elegant-brown': {
+            primary: '#3E2723',
+            secondary: '#5D4037',
+            accent: '#8D6E63',
+            accentAlt: '#A1887F',
+            textDark: '#1a1a1a',
+            textLight: '#4E342E',
+            textMuted: '#795548',
+            bgLight: '#EFEBE9',
+            bgDark: '#3E2723',
+            bgCard: '#FFFFFF'
+        },
+        'ocean-blue': {
+            primary: '#1E3A5F',
+            secondary: '#4A90A4',
+            accent: '#E8F4F8',
+            accentAlt: '#26C6DA',
+            textDark: '#0D2137',
+            textLight: '#3D5A73',
+            textMuted: '#6B8BA4',
+            bgLight: '#F0F8FF',
+            bgDark: '#0D2137',
+            bgCard: '#FFFFFF'
+        },
+        'forest-green': {
+            primary: '#2D4739',
+            secondary: '#4CAF50',
+            accent: '#A5D6A7',
+            accentAlt: '#8BC34A',
+            textDark: '#1B3324',
+            textLight: '#3D5C4A',
+            textMuted: '#6B8B7A',
+            bgLight: '#F1F8E9',
+            bgDark: '#1B3324',
+            bgCard: '#FFFFFF'
+        },
+        'monochrome': {
+            primary: '#212121',
+            secondary: '#616161',
+            accent: '#BDBDBD',
+            accentAlt: '#9E9E9E',
+            textDark: '#000000',
+            textLight: '#424242',
+            textMuted: '#757575',
+            bgLight: '#FAFAFA',
+            bgDark: '#000000',
+            bgCard: '#FFFFFF'
+        }
+    };
+    return themes[themeId] || themes['elegant-gold'];
 }
 
-function initBookViewer() {
-    updatePageCounter();
-    updateNavButtons();
-    renderPageIndicator();
+function renderWelcomeScreen() {
+    const ws = welcomeSettings;
+    const theme = getThemeColors(ws.colorTheme || 'elegant-gold');
+    const template = ws.template || 'cover-dark';
+
+    // Hide static elements
+    document.getElementById('welcomeTitle').style.display = 'none';
+    document.getElementById('welcomeSubtitle').style.display = 'none';
+    document.getElementById('welcomeDesc').style.display = 'none';
+    document.getElementById('welcomeLeftText').style.display = 'none';
+    document.getElementById('welcomeLogoImg').style.display = 'none';
+    document.getElementById('welcomeLogoPlaceholder').style.display = 'none';
+
+    // Render based on template
+    const welcomeScreen = document.getElementById('welcomeScreen');
+
+    let html = '';
+    switch(template) {
+        case 'cover-dark':
+            html = renderWelcomeDark(ws, theme);
+            break;
+        case 'cover-light':
+            html = renderWelcomeLight(ws, theme);
+            break;
+        case 'cover-split':
+            html = renderWelcomeSplit(ws, theme);
+            break;
+        case 'cover-numbered':
+            html = renderWelcomeNumbered(ws, theme);
+            break;
+        case 'cover-minimal':
+            html = renderWelcomeMinimal(ws, theme);
+            break;
+        default:
+            html = renderWelcomeDark(ws, theme);
+    }
+
+    // Add settings button to open welcome screen selector
+    html += `
+        <button class="ws-selector-btn" onclick="openWelcomeSelector()" title="Pilih Welcome Screen">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        </button>
+    `;
+
+    welcomeScreen.innerHTML = html;
+}
+
+function hexToRgb(hex) {
+    // Remove # if present
+    hex = hex.replace('#', '');
+    // Parse hex
+    var r = parseInt(hex.substring(0, 2), 16);
+    var g = parseInt(hex.substring(2, 4), 16);
+    var b = parseInt(hex.substring(4, 6), 16);
+    return r + ',' + g + ',' + b;
+}
+
+function renderWelcomeDark(ws, theme) {
+    const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
+    const bgStyle = bgImg
+        ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${bgImg}') center/cover no-repeat;`
+        : `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
+    const logoStyle = getLogoStyleWelcome(ws);
+    const titleStyle = getTitleStyleWelcome(ws);
+    const subtitleStyle = getSubtitleStyleWelcome(ws);
+    const logoHtml = ws.logoUrl
+        ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
+        : `<div style="width:${ws.logoSize || 60}px;height:${ws.logoSize || 60}px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
+    const panelOpacity = (ws.bottomPanelOpacity || 95) / 100;
+
+    return `
+    <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
+        <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
+        <div style="text-align:center;margin-bottom:auto;">
+            ${logoHtml}
+        </div>
+        <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:#fff;margin-bottom:10px;letter-spacing:0.05em;">${ws.title}</h1>
+            <p style="color:${theme.accent};font-size:0.9rem;letter-spacing:0.3em;margin-bottom:20px;">${ws.subtitle}</p>
+            <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${theme.accent},transparent);margin:0 auto;"></div>
+            ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.9rem;margin-top:20px;line-height:1.6;">${ws.description}</p>` : ''}
+        </div>
+        <div style="background:rgba(255,255,255,${panelOpacity});border-radius:12px;padding:24px;text-align:center;margin-top:auto;">
+            <p style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+        </div>
+        <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>
+    </div>`;
+}
+
+function getLogoStyleWelcome(ws) {
+    const size = ws.logoSize || 60;
+    const x = ws.logoX || 50;
+    const y = ws.logoY || 10;
+    return `height:${size}px;max-width:150px;object-fit:contain;position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, 0);`;
+}
+
+function getTitleStyleWelcome(ws) {
+    const x = ws.titleX || 50;
+    const y = ws.titleY || 50;
+    const size = ws.titleSize || 32;
+    return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
+}
+
+function getSubtitleStyleWelcome(ws) {
+    const x = ws.subtitleX || 50;
+    const y = ws.subtitleY || 70;
+    const size = ws.subtitleSize || 14;
+    return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
+}
+
+function renderWelcomeLight(ws, theme) {
+    const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
+    const bgStyle = bgImg
+        ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgImg}') center/cover no-repeat;`
+        : `background:${theme.bgLight};`;
+    const logoStyle = getLogoStyleWelcome(ws);
+    const logoHtml = ws.logoUrl
+        ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
+        : `<div style="width:${ws.logoSize || 60}px;height:${ws.logoSize || 60}px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
+    const panelOpacity = (ws.bottomPanelOpacity || 95) / 100;
+
+    return `
+    <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:5%;right:5%;width:30px;height:30px;border-top:2px solid ${theme.accentAlt};border-right:2px solid ${theme.accentAlt};opacity:0.3;"></div>
+        <div style="text-align:center;margin-bottom:auto;">
+            ${logoHtml}
+        </div>
+        <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:${theme.textDark};margin-bottom:10px;">${ws.title}</h1>
+            <p style="color:${theme.accentAlt};font-size:0.9rem;letter-spacing:0.3em;margin-bottom:20px;">${ws.subtitle}</p>
+            <div style="width:50px;height:2px;background:${theme.accent};margin:0 auto;"></div>
+            ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.9rem;margin-top:20px;line-height:1.6;">${ws.description}</p>` : ''}
+        </div>
+        <div style="background:rgba(${hexToRgb(theme.bgDark)},${panelOpacity});border-radius:12px;padding:24px;text-align:center;margin-top:auto;">
+            <p style="font-size:0.85rem;color:rgba(255,255,255,0.8);line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+        </div>
+        <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>
+    </div>`;
+}
+
+function renderWelcomeSplit(ws, theme) {
+    const logoStyle = getLogoStyleWelcome(ws);
+    const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
+
+    // Background image for right side - check both ws.backgroundImage and ws.backgroundImageUrl
+    const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
+    const rightBgStyle = bgImg
+        ? `background: linear-gradient(rgba(255,255,255,${(100 - (ws.backgroundOpacity || 50))/100}), rgba(255,255,255,${(100 - (ws.backgroundOpacity || 50))/100})), url('${bgImg}') center/cover;`
+        : `background:${theme.bgCard || '#FFFAF0'};`;
+
+    return `
+    <div style="width:100%;height:100%;display:flex;">
+        <div style="width:40%;height:100%;background:${theme.bgDark};padding:6%;display:flex;flex-direction:column;justify-content:center;">
+            ${logoHtml}
+            <div style="width:25px;height:1px;background:${theme.accent};margin:20px 0;"></div>
+            <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+        </div>
+        <div style="width:60%;height:100%;${rightBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;">
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.2rem;color:${theme.textDark};margin-bottom:15px;">${ws.title}</h1>
+            <p style="color:${theme.accentAlt};font-size:0.85rem;letter-spacing:0.2em;margin-bottom:20px;">${ws.subtitle}</p>
+            <div style="width:40px;height:2px;background:${theme.textDark};margin-bottom:30px;"></div>
+            ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.9rem;line-height:1.8;">${ws.description}</p>` : ''}
+            <button class="welcome-btn" onclick="openKatalog()" style="margin-top:40px;align-self:flex-start;">Lihat Katalog</button>
+        </div>
+    </div>`;
+}
+
+function renderWelcomeNumbered(ws, theme) {
+    const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
+    const bgStyle = bgImg
+        ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${bgImg}') center/cover no-repeat;`
+        : `background:${theme.bgDark};`;
+    const logoStyle = getLogoStyleWelcome(ws);
+    const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
+    const panelOpacity = (ws.bottomPanelOpacity || 95) / 100;
+
+    return `
+    <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
+        <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
+        ${logoHtml}
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:#fff;margin-bottom:15px;letter-spacing:0.05em;">${ws.title}</h1>
+            <p style="color:${theme.accent};font-size:0.9rem;letter-spacing:0.3em;margin-bottom:20px;">${ws.subtitle}</p>
+            <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${theme.accent},transparent);margin:0 auto;"></div>
+            ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.9rem;margin-top:20px;line-height:1.6;max-width:80%;">${ws.description}</p>` : ''}
+        </div>
+        <div style="background:rgba(255,255,255,${panelOpacity});border-radius:12px;padding:20px;text-align:center;margin-top:auto;">
+            <p style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+        </div>
+        <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>
+    </div>`;
+}
+
+function renderWelcomeMinimal(ws, theme) {
+    const bgStyle = ws.backgroundImage
+        ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover no-repeat;`
+        : `background:${theme.bgLight};`;
+    const logoStyle = getLogoStyleWelcome(ws);
+    const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
+
+    return `
+    <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:8%;right:8%;width:40px;height:40px;border-top:1px solid ${theme.textMuted};border-right:1px solid ${theme.textMuted};"></div>
+        <div style="position:absolute;bottom:8%;left:8%;width:40px;height:40px;border-bottom:1px solid ${theme.textMuted};border-left:1px solid ${theme.textMuted};"></div>
+        ${logoHtml}
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <p style="color:${theme.textMuted};font-size:0.85rem;letter-spacing:0.3em;margin-bottom:15px;text-transform:uppercase;">${ws.subtitle}</p>
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:${theme.textDark};margin-bottom:30px;font-weight:300;">${ws.title}</h1>
+            <div style="width:50px;height:1px;background:${theme.accentAlt};margin-bottom:30px;"></div>
+            ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.9rem;line-height:1.8;font-style:italic;">${ws.description}</p>` : ''}
+        </div>
+        <button class="welcome-btn" onclick="openKatalog()" style="align-self:center;">Lihat Katalog</button>
+    </div>`;
 }
 
 // ===== NAVIGATION =====
 function openKatalog() {
     document.getElementById('welcomeScreen').style.display = 'none';
     document.getElementById('appScreen').classList.add('active');
-    renderSubcategories();
+    document.getElementById('backToWelcomeBtn').style.display = 'flex';
+    document.getElementById('backBtnContainer').style.display = 'block';
 }
 
 function backToWelcome() {
     document.getElementById('appScreen').classList.remove('active');
     document.getElementById('welcomeScreen').style.display = 'flex';
+    document.getElementById('backToWelcomeBtn').style.display = 'none';
+    document.getElementById('backBtnContainer').style.display = 'none';
 }
 
 // ===== CATEGORIES & SUBCATEGORIES =====
@@ -241,14 +461,58 @@ async function loadCategories() {
     }
 
     // Default categories if none loaded
-    if (categories.length === 0) {
+    if (!categories || categories.length === 0) {
         categories = [
-            { id: 'desain-motif', name: 'Desain Motif', parent: null },
-            { id: 'printing', name: 'Printing Kain', parent: null },
-            { id: 'pakaian', name: 'Pakaian Jadi', parent: null },
-            { id: 'asesoris', name: 'Asesoris', parent: null }
+            { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif' },
+            { id: 'printing', name: 'Printing Kain', slug: 'printing' },
+            { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian' },
+            { id: 'asesoris', name: 'Asesoris', slug: 'asesoris' }
         ];
     }
+
+    // Render category tabs
+    renderCategoryTabs();
+}
+
+function renderCategoryTabs() {
+    const tabs = document.getElementById('categoryTabs');
+    if (!tabs) return;
+
+    tabs.innerHTML = categories.map(cat => `
+        <button class="category-tab ${currentCategory === cat.slug ? 'active' : ''}"
+                data-category="${cat.slug}"
+                onclick="selectCategory('${cat.slug}')">
+            ${cat.name}
+        </button>
+    `).join('');
+}
+
+function selectCategory(slug) {
+    currentCategory = slug;
+    currentSubcategory = null;
+    renderCategoryTabs();
+    renderSubcategories();
+    filterProducts();
+}
+
+function renderSubcategories() {
+    const bar = document.getElementById('subcategoryBar');
+    if (!bar) return;
+
+    const subs = getSubcategories(currentCategory);
+
+    if (subs.length === 0) {
+        bar.style.display = 'none';
+        return;
+    }
+
+    bar.style.display = 'flex';
+    bar.innerHTML = subs.map(sub => `
+        <button class="subcategory-btn ${currentSubcategory === sub.id ? 'active' : ''}"
+                onclick="selectSubcategory('${sub.id}')">
+            ${sub.name}
+        </button>
+    `).join('');
 }
 
 async function loadProducts() {
@@ -286,41 +550,6 @@ function getSampleProducts() {
         { id: "7", nama: "Kain Batik Tulis", harga: 450000, kategori: "printing", subkategori: "katun", deskripsi: "Kain batik tulis handmade", image: "https://picsum.photos/400/400?random=7", images: [], namatoko: "MotifKain", daerah: "Solo" },
         { id: "8", nama: "Rok Batik Femine", harga: 285000, kategori: "pakaian", subkategori: "bawahan", deskripsi: "Rok batik elegant untuk acara formal", image: "https://picsum.photos/400/400?random=8", images: [], namatoko: "MotifKain", daerah: "Yogyakarta" },
     ];
-}
-
-function setupCategoryTabs() {
-    const tabs = document.querySelectorAll('.category-tab');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentCategory = tab.dataset.category;
-            currentSubcategory = null;
-            renderSubcategories();
-            filterProducts();
-        });
-    });
-}
-
-function renderSubcategories() {
-    const bar = document.getElementById('subcategoryBar');
-    if (!bar) return;
-
-    // Get subcategories for current category
-    const subs = getSubcategories(currentCategory);
-
-    if (subs.length === 0) {
-        bar.style.display = 'none';
-        return;
-    }
-
-    bar.style.display = 'flex';
-    bar.innerHTML = subs.map(sub => `
-        <button class="subcategory-btn ${currentSubcategory === sub.id ? 'active' : ''}"
-                onclick="selectSubcategory('${sub.id}')">
-            ${sub.name}
-        </button>
-    `).join('');
 }
 
 function getSubcategories(category) {
@@ -540,12 +769,19 @@ function formatRupiah(num) {
 }
 
 // ===== PRODUCT DETAIL =====
+// removed duplicate - already declared at line 27
+let productImages = [];
+let zoomLevel = 1;
+let isDragging = false;
+let startX, startY, translateX = 0, translateY = 0;
+
 function openDetail(productId) {
     selectedProduct = filteredProducts.find(p => p.id === productId) || products.find(p => p.id === productId);
     if (!selectedProduct) return;
 
     const images = getProductImages(selectedProduct);
     currentImageIndex = 0;
+    productImages = images;
 
     // Gallery
     document.getElementById('detailImage').src = images[0] || 'https://via.placeholder.com/400x400?text=No+Image';
@@ -559,11 +795,17 @@ function openDetail(productId) {
         badge.style.display = 'none';
     }
 
-    // Dots
+    // Render dots
     renderGalleryDots(images.length);
 
     // Thumbnails
     renderThumbnails(images);
+
+    // Show gallery navigation if multiple images
+    const nav = document.getElementById('galleryNav');
+    if (nav) {
+        nav.style.display = images.length > 1 ? 'flex' : 'none';
+    }
 
     // Info
     document.getElementById('detailName').textContent = selectedProduct.nama || '';
@@ -585,6 +827,34 @@ function openDetail(productId) {
     // Show modal
     document.getElementById('detailModal').classList.add('active');
     document.body.style.overflow = 'hidden';
+}
+
+function prevImage() {
+    if (productImages.length <= 1) return;
+    currentImageIndex = (currentImageIndex - 1 + productImages.length) % productImages.length;
+    updateGalleryImage();
+}
+
+function nextImage() {
+    if (productImages.length <= 1) return;
+    currentImageIndex = (currentImageIndex + 1) % productImages.length;
+    updateGalleryImage();
+}
+
+function updateGalleryImage() {
+    document.getElementById('detailImage').src = productImages[currentImageIndex] || '';
+
+    // Update badge
+    const badge = document.getElementById('galleryBadge');
+    if (badge) badge.textContent = `${currentImageIndex + 1}/${productImages.length}`;
+
+    // Update dots
+    document.querySelectorAll('.gallery-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentImageIndex);
+    });
+
+    // Reset zoom when changing images
+    resetZoom();
 }
 
 function renderGalleryDots(count) {
@@ -616,11 +886,9 @@ function renderThumbnails(images) {
 function selectGalleryImage(index) {
     if (!selectedProduct) return;
 
-    const images = getProductImages(selectedProduct);
     currentImageIndex = index;
-
-    document.getElementById('detailImage').src = images[index] || '';
-    document.getElementById('galleryBadge').textContent = `${index + 1}/${images.length}`;
+    document.getElementById('detailImage').src = productImages[index] || '';
+    document.getElementById('galleryBadge').textContent = `${index + 1}/${productImages.length}`;
 
     // Update dots
     document.querySelectorAll('.gallery-dot').forEach((dot, i) => {
@@ -631,42 +899,384 @@ function selectGalleryImage(index) {
     document.querySelectorAll('.thumbnail').forEach((thumb, i) => {
         thumb.classList.toggle('active', i === index);
     });
+
+    // Reset zoom
+    resetZoom();
 }
 
 function closeDetail() {
     document.getElementById('detailModal').classList.remove('active');
     document.body.style.overflow = '';
+    resetZoom();
 }
 
-function openWhatsApp() {
-    if (!selectedProduct) return;
+// ===== IMAGE ZOOM =====
+function openImageZoom(src) {
+    if (!src || src.includes('placeholder')) return;
 
-    let message = `Halo, saya tertarik dengan produk berikut dari Katalog MotifKain:\n\n`;
-    message += `Nama: ${selectedProduct.nama || '-'}\n`;
-    if (selectedProduct.harga) message += `Harga: ${formatRupiah(selectedProduct.harga)}\n`;
-    message += `\nMohon info lebih lanjut. Terima kasih!`;
+    const zoomModal = document.getElementById('zoomModal');
+    const zoomImage = document.getElementById('zoomImage');
+    const zoomCounter = document.getElementById('zoomCounter');
 
-    const waNumber = CONFIG.whatsappNumber || '6281234567890';
-    const encodedMsg = encodeURIComponent(message);
-    window.open(`https://wa.me/${waNumber}?text=${encodedMsg}`, '_blank');
+    zoomImage.src = src;
+    zoomImage.style.transform = 'scale(1)';
+    zoomImage.style.cursor = 'grab';
+
+    if (zoomCounter) zoomCounter.textContent = `${currentImageIndex + 1} / ${productImages.length}`;
+
+    zoomModal.classList.add('active');
+    zoomLevel = 1;
+    translateX = 0;
+    translateY = 0;
+
+    // Add event listeners
+    setupZoomControls(zoomImage);
 }
 
-// Close modal on backdrop
-document.getElementById('detailModal')?.addEventListener('click', function(e) {
-    if (e.target === this) closeDetail();
-});
+function closeImageZoom(event) {
+    if (event && event.target !== event.currentTarget && !event.target.classList.contains('zoom-close')) {
+        return;
+    }
 
-// Close on Escape
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeDetail();
-});
+    const zoomModal = document.getElementById('zoomModal');
+    zoomModal.classList.remove('active');
+    resetZoom();
+}
 
-// ===== ZOOM =====
-function openZoom(src) {
+function zoomPrevImage() {
+    prevImage();
+    const src = productImages[currentImageIndex];
     document.getElementById('zoomImage').src = src;
-    document.getElementById('zoomModal').classList.add('active');
+    document.getElementById('zoomCounter').textContent = `${currentImageIndex + 1} / ${productImages.length}`;
+    resetZoom();
 }
 
-function closeZoom() {
-    document.getElementById('zoomModal').classList.remove('active');
+function zoomNextImage() {
+    nextImage();
+    const src = productImages[currentImageIndex];
+    document.getElementById('zoomImage').src = src;
+    document.getElementById('zoomCounter').textContent = `${currentImageIndex + 1} / ${productImages.length}`;
+    resetZoom();
 }
+
+function resetZoom() {
+    zoomLevel = 1;
+    translateX = 0;
+    translateY = 0;
+    const zoomImage = document.getElementById('zoomImage');
+    if (zoomImage) {
+        zoomImage.style.transform = 'scale(1) translate(0, 0)';
+    }
+}
+
+function setupZoomControls(zoomImage) {
+    if (!zoomImage) return;
+
+    // Mouse wheel zoom
+    zoomImage.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.2 : 0.2;
+        zoomLevel = Math.max(0.5, Math.min(4, zoomLevel + delta));
+        applyZoom();
+    });
+
+    // Double click to toggle zoom
+    zoomImage.addEventListener('dblclick', function(e) {
+        e.preventDefault();
+        if (zoomLevel > 1) {
+            zoomLevel = 1;
+            translateX = 0;
+            translateY = 0;
+        } else {
+            zoomLevel = 2;
+        }
+        applyZoom();
+    });
+
+    // Drag to pan when zoomed
+    zoomImage.addEventListener('mousedown', function(e) {
+        if (zoomLevel > 1) {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            zoomImage.style.cursor = 'grabbing';
+        }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (isDragging && zoomLevel > 1) {
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            applyZoom();
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        isDragging = false;
+        if (zoomImage) zoomImage.style.cursor = 'grab';
+    });
+
+    // Touch support for mobile
+    let touchStartX, touchStartY;
+    let initialDistance = 0;
+    let initialZoom = 1;
+
+    zoomImage.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1 && zoomLevel > 1) {
+            isDragging = true;
+            touchStartX = e.touches[0].clientX - translateX;
+            touchStartY = e.touches[0].clientY - translateY;
+        } else if (e.touches.length === 2) {
+            // Pinch to zoom
+            initialDistance = getDistance(e.touches[0], e.touches[1]);
+            initialZoom = zoomLevel;
+        }
+    });
+
+    zoomImage.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        if (e.touches.length === 1 && isDragging && zoomLevel > 1) {
+            translateX = e.touches[0].clientX - touchStartX;
+            translateY = e.touches[0].clientY - touchStartY;
+            applyZoom();
+        } else if (e.touches.length === 2) {
+            const currentDistance = getDistance(e.touches[0], e.touches[1]);
+            const scale = currentDistance / initialDistance;
+            zoomLevel = Math.max(0.5, Math.min(4, initialZoom * scale));
+            applyZoom();
+        }
+    });
+
+    zoomImage.addEventListener('touchend', function() {
+        isDragging = false;
+    });
+}
+
+function getDistance(touch1, touch2) {
+    return Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+}
+
+function applyZoom() {
+    const zoomImage = document.getElementById('zoomImage');
+    if (!zoomImage) return;
+
+    zoomImage.style.transform = `scale(${zoomLevel}) translate(${translateX / zoomLevel}px, ${translateY / zoomLevel}px)`;
+    zoomImage.classList.toggle('zoomed', zoomLevel > 1);
+}
+
+// ===== WHATSAPP CONTACT =====
+function toggleWaMenu() {
+    const dropdown = document.getElementById('waDropdown');
+    const list = document.getElementById('waDropdownList');
+
+    if (dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+        return;
+    }
+
+    // Render user options
+    const designers = users.filter(u => u.role === 'designer');
+    const marketings = users.filter(u => u.role === 'pemasaran');
+
+    let html = '';
+
+    if (designers.length > 0) {
+        html += '<div class="wa-group-title">Desainer</div>';
+        designers.forEach(u => {
+            html += `<button class="wa-option" onclick="openWaChat('${u.whatsapp || ''}', '${u.nama || ''}', 'designer')">
+                <span class="wa-option-icon">🎨</span>
+                <span class="wa-option-name">${u.nama || '-'}</span>
+            </button>`;
+        });
+    }
+
+    if (marketings.length > 0) {
+        html += '<div class="wa-group-title">Pemasaran</div>';
+        marketings.forEach(u => {
+            html += `<button class="wa-option" onclick="openWaChat('${u.whatsapp || ''}', '${u.nama || ''}', 'pemasaran')">
+                <span class="wa-option-icon">📢</span>
+                <span class="wa-option-name">${u.nama || '-'}</span>
+            </button>`;
+        });
+    }
+
+    if (designers.length === 0 && marketings.length === 0) {
+        html += '<div class="wa-empty">Belum ada kontak WA</div>';
+    }
+
+    list.innerHTML = html;
+    dropdown.classList.add('show');
+}
+
+function openWaChat(whatsapp, nama, role) {
+    if (!whatsapp) {
+        alert('Nomor WhatsApp belum diset');
+        return;
+    }
+
+    // Format nomor
+    let phone = whatsapp.replace(/[^0-9]/g, '');
+    if (!phone.startsWith('62')) {
+        phone = '62' + phone.substring(1);
+    }
+
+    // Pesan dengan nama produk
+    let message = `Halo ${nama}, saya ingin konsultasi tentang produk *${selectedProduct?.nama || 'MotifKain'}*`;
+    if (role === 'designer') {
+        message = `Halo Desainer ${nama}, saya ingin konsultasi desain tentang *${selectedProduct?.nama || 'produk'}*`;
+    } else if (role === 'pemasaran') {
+        message = `Halo ${nama}, saya ingin info produk *${selectedProduct?.nama || 'MotifKain'}*`;
+    }
+
+    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+
+    // Close dropdown
+    document.getElementById('waDropdown').classList.remove('show');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('waDropdown');
+    const btn = document.querySelector('.wa-button');
+    if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+        dropdown.classList.remove('show');
+    }
+});
+
+// ===== WELCOME SCREEN SELECTOR =====
+function openWelcomeSelector() {
+    const modal = document.getElementById('wsSelectorModal');
+    if (!modal) {
+        // Create modal if it doesn't exist
+        createWelcomeSelectorModal();
+    } else {
+        renderWelcomeSelectorList();
+        modal.classList.add('active');
+    }
+}
+
+function createWelcomeSelectorModal() {
+    const modal = document.createElement('div');
+    modal.id = 'wsSelectorModal';
+    modal.className = 'ws-selector-modal';
+    modal.innerHTML = `
+        <div class="ws-selector-content">
+            <div class="ws-selector-header">
+                <h3>Pilih Welcome Screen</h3>
+                <button class="ws-selector-close" onclick="closeWelcomeSelector()">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
+            </div>
+            <div class="ws-selector-body" id="wsSelectorList">
+                <!-- Welcome screens will be loaded here -->
+                <div class="ws-selector-loading">Memuat...</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.classList.add('active');
+    renderWelcomeSelectorList();
+}
+
+function renderWelcomeSelectorList() {
+    const container = document.getElementById('wsSelectorList');
+    if (!container) return;
+
+    if (allWelcomeScreens.length === 0) {
+        container.innerHTML = '<p class="ws-selector-empty">Belum ada welcome screen. Buka admin untuk membuat.</p>';
+        return;
+    }
+
+    const templateNames = {
+        'cover-dark': 'Gelap',
+        'cover-light': 'Terang',
+        'cover-split': 'Split',
+        'cover-numbered': 'Nomor',
+        'cover-minimal': 'Minimal'
+    };
+
+    let html = '<div class="ws-selector-grid">';
+    for (let i = 0; i < allWelcomeScreens.length; i++) {
+        const ws = allWelcomeScreens[i];
+        const isActive = ws.id === activeWelcomeScreenId;
+        const bgUrl = ws.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${ws.id}/${ws.backgroundImage}` : '';
+        const logoUrl = ws.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${ws.id}/${ws.logo}` : '';
+        const templateName = templateNames[ws.template] || 'Default';
+
+        html += `<div class="ws-selector-card ${isActive ? 'active' : ''}" onclick="selectWelcomeScreen('${ws.id}')">`;
+        html += `<div class="ws-selector-preview">`;
+        if (bgUrl) {
+            html += `<div class="ws-selector-bg" style="background-image:url(${bgUrl});opacity:${(100 - (ws.backgroundOpacity || 50)) / 100};"></div>`;
+        } else {
+            html += `<div class="ws-selector-bg ws-selector-bg-default"></div>`;
+        }
+        if (logoUrl) {
+            html += `<img src="${logoUrl}" class="ws-selector-logo" alt="Logo">`;
+        }
+        html += `<div class="ws-selector-title">${ws.title || 'Untitled'}</div>`;
+        html += `</div>`;
+        html += `<div class="ws-selector-info">`;
+        html += `<span class="ws-selector-badge">${templateName}</span>`;
+        html += `<span class="ws-selector-name">${ws.title || 'Tanpa Judul'}</span>`;
+        html += `</div>`;
+        if (isActive) {
+            html += `<div class="ws-selector-active-badge">Aktif</div>`;
+        }
+        html += `</div>`;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+async function selectWelcomeScreen(id) {
+    const ws = allWelcomeScreens.find(w => w.id === id);
+    if (!ws) return;
+
+    // Save to localStorage
+    activeWelcomeScreenId = id;
+    localStorage.setItem('motifkain_active_ws', id);
+
+    // Update welcome settings
+    welcomeSettings = {
+        id: ws.id,
+        template: ws.template || 'cover-split',
+        colorTheme: ws.colorTheme || 'elegant-cream',
+        fontFamily: ws.fontFamily || 'Playfair Display',
+        logoUrl: ws.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${ws.id}/${ws.logo}` : '',
+        backgroundImage: ws.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${ws.id}/${ws.backgroundImage}` : '',
+        backgroundOpacity: ws.backgroundOpacity || 50,
+        logoSize: ws.logoSize || 60,
+        logoX: ws.logoX || 50,
+        logoY: ws.logoY || 10,
+        titleSize: ws.titleSize || 32,
+        titleX: ws.titleX || 50,
+        titleY: ws.titleY || 50,
+        subtitleSize: ws.subtitleSize || 14,
+        subtitleX: ws.subtitleX || 50,
+        subtitleY: ws.subtitleY || 70,
+        leftText: ws.leftText || ws.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
+        title: ws.title || 'CATALOG',
+        subtitle: ws.subtitle || 'Company Profile',
+        description: ws.description || 'Koleksi produk eksklusif kami'
+    };
+
+    updateFavicon(welcomeSettings.logoUrl);
+    renderWelcomeScreen();
+    closeWelcomeSelector();
+}
+
+function closeWelcomeSelector() {
+    const modal = document.getElementById('wsSelectorModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('wsSelectorModal');
+    if (modal && e.target === modal) {
+        closeWelcomeSelector();
+    }
+});

@@ -373,6 +373,7 @@ class AdminDashboard {
                 if (data.items && data.items.length > 0) {
                     this.welcomeSettings = data.items[0];
                     this.activeWelcomeScreenId = this.welcomeSettings.id;
+                    localStorage.setItem('motifkain_active_ws', this.activeWelcomeScreenId);
                     this.updateSavedStatus(true);
                 } else {
                     this.welcomeSettings = this.getDefaultWelcomeSettings();
@@ -384,6 +385,166 @@ class AdminDashboard {
             this.updateSavedStatus(false);
         }
         this.renderWelcomeSettings();
+    }
+
+    updateSavedStatus(hasData) {
+        const card = document.getElementById('savedWsCard');
+        const status = document.getElementById('savedWsStatus');
+        const actions = document.getElementById('savedWsActions');
+
+        if (status) {
+            if (hasData && this.welcomeSettings) {
+                const ws = this.welcomeSettings;
+                const templateNames = {
+                    'cover-dark': 'Gelap',
+                    'cover-light': 'Terang',
+                    'cover-split': 'Split',
+                    'cover-numbered': 'Nomor',
+                    'cover-minimal': 'Minimal'
+                };
+                const templateName = templateNames[ws.template] || ws.template || 'Default';
+                const isActive = ws.id === this.activeWelcomeScreenId;
+                status.innerHTML = `Template: ${templateName} | Theme: ${ws.colorTheme || 'elegant-gold'} | Judul: ${ws.title || '-'}${isActive ? ' <span style="color:#4CAF50;">(Aktif)</span>' : ''}`;
+
+                if (actions) {
+                    actions.innerHTML = `
+                        <button class="btn btn-sm" onclick="admin.editSavedWelcome()">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            Edit Data Tersimpan
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="admin.previewWelcomeScreen()">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                            Lihat Preview
+                        </button>
+                    `;
+                }
+            } else {
+                status.textContent = 'Belum ada data tersimpan di PocketBase. Buat baru dengan mengisi form di bawah.';
+                if (actions) {
+                    actions.innerHTML = `<button class="btn btn-outline btn-sm" onclick="admin.showNotification('Isi form di bawah, lalu klik Simpan untuk membuat data baru', 'info')">+ Buat Data Baru</button>`;
+                }
+            }
+        }
+    }
+
+    editSavedWelcome() {
+        if (this.welcomeSettings) {
+            this.showNotification('Data welcome screen sudah diload ke form editor. Edit langsung dan simpan.', 'success');
+            document.querySelector('.welcome-settings')?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    refreshWelcomeData() {
+        this.loadWelcomeSettings();
+    }
+
+    getDefaultWelcomeSettings() {
+        return {
+            template: 'cover-dark',
+            colorTheme: 'elegant-gold',
+            fontFamily: 'Playfair Display',
+            title: 'CATALOG',
+            subtitle: 'Company Profile',
+            description: 'Koleksi produk eksklusif kami',
+            leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.'
+        };
+    }
+
+    renderWelcomeSettings() {
+        if (!this.welcomeSettings) return;
+        const ws = this.welcomeSettings;
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+
+        // Set form values
+        document.getElementById('wsTitle').value = ws.title || '';
+        document.getElementById('wsSubtitle').value = ws.subtitle || '';
+        document.getElementById('wsDescription').value = ws.description || '';
+        document.getElementById('wsLeftText').value = ws.leftText || '';
+        document.getElementById('wsFont').value = ws.fontFamily || 'Playfair Display';
+
+        // Set template active
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.template === ws.template);
+        });
+
+        // Set theme active
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === ws.colorTheme);
+        });
+
+        // Load logo if exists
+        if (ws.logo) {
+            const logoUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.logo;
+            document.getElementById('wsLogoPreview').src = logoUrl;
+            document.getElementById('wsLogoPreview').style.display = 'block';
+            document.getElementById('wsLogoPlaceholder').style.display = 'none';
+            document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
+            ws.logoUrl = logoUrl;
+        } else {
+            document.getElementById('wsLogoPreview').style.display = 'none';
+            document.getElementById('wsLogoPlaceholder').style.display = 'flex';
+            document.getElementById('wsLogoRemoveBtn').style.display = 'none';
+            ws.logoUrl = null;
+        }
+
+        // Load background image if exists
+        if (ws.backgroundImage) {
+            const bgUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.backgroundImage;
+            document.getElementById('wsBgPreview').src = bgUrl;
+            document.getElementById('wsBgPreview').style.display = 'block';
+            document.getElementById('wsBgPlaceholder').style.display = 'none';
+            document.getElementById('wsBgRemoveBtn').style.display = 'inline-block';
+            ws.backgroundImageUrl = bgUrl;
+        } else {
+            document.getElementById('wsBgPreview').style.display = 'none';
+            document.getElementById('wsBgPlaceholder').style.display = 'flex';
+            document.getElementById('wsBgRemoveBtn').style.display = 'none';
+            ws.backgroundImageUrl = null;
+        }
+
+        // Load values
+        if (ws.backgroundOpacity) {
+            document.getElementById('wsBgOpacity').value = ws.backgroundOpacity;
+            document.getElementById('bgOpacityValue').textContent = ws.backgroundOpacity;
+        }
+        if (ws.logoSize) {
+            document.getElementById('wsLogoSize').value = ws.logoSize;
+            document.getElementById('logoSizeValue').textContent = ws.logoSize;
+        }
+        if (ws.logoX) {
+            document.getElementById('wsLogoX').value = ws.logoX;
+            document.getElementById('logoXValue').textContent = ws.logoX;
+        }
+        if (ws.logoY) {
+            document.getElementById('wsLogoY').value = ws.logoY;
+            document.getElementById('logoYValue').textContent = ws.logoY;
+        }
+        if (ws.titleSize) {
+            document.getElementById('wsTitleSize').value = ws.titleSize;
+            document.getElementById('titleSizeValue').textContent = ws.titleSize;
+        }
+        if (ws.titleX) {
+            document.getElementById('wsTitleX').value = ws.titleX;
+            document.getElementById('titleXValue').textContent = ws.titleX;
+        }
+        if (ws.titleY) {
+            document.getElementById('wsTitleY').value = ws.titleY;
+            document.getElementById('titleYValue').textContent = ws.titleY;
+        }
+        if (ws.subtitleSize) {
+            document.getElementById('wsSubtitleSize').value = ws.subtitleSize;
+            document.getElementById('subtitleSizeValue').textContent = ws.subtitleSize;
+        }
+        if (ws.subtitleX) {
+            document.getElementById('wsSubtitleX').value = ws.subtitleX;
+            document.getElementById('subtitleXValue').textContent = ws.subtitleX;
+        }
+        if (ws.subtitleY) {
+            document.getElementById('wsSubtitleY').value = ws.subtitleY;
+            document.getElementById('subtitleYValue').textContent = ws.subtitleY;
+        }
+
+        this.updateWelcomePreview();
     }
 
     // ===== LAYANAN CRUD =====
@@ -553,27 +714,6 @@ class AdminDashboard {
     }
 
     // ===== WELCOME SCREEN SETTINGS =====
-    async loadWelcomeSettings() {
-        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
-        try {
-            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=1');
-            if (res.ok) {
-                const data = await res.json();
-                if (data.items && data.items.length > 0) {
-                    this.welcomeSettings = data.items[0];
-                    this.updateSavedStatus(true);
-                } else {
-                    this.welcomeSettings = this.getDefaultWelcomeSettings();
-                    this.updateSavedStatus(false);
-                }
-            }
-        } catch (e) {
-            this.welcomeSettings = this.getDefaultWelcomeSettings();
-            this.updateSavedStatus(false);
-        }
-        this.renderWelcomeSettings();
-    }
-
     updateSavedStatus(hasData) {
         const card = document.getElementById('savedWsCard');
         const status = document.getElementById('savedWsStatus');
@@ -903,6 +1043,42 @@ class AdminDashboard {
                 bgDark: '#1a2a3a',
                 bgCard: '#FFFFFF'
             },
+            'elegant-red': {
+                primary: '#8B0000',
+                secondary: '#B22222',
+                accent: '#CD5C5C',
+                accentAlt: '#DC143C',
+                textDark: '#4A0000',
+                textLight: '#FFF0F0',
+                textMuted: '#8B0000',
+                bgLight: '#FFF5F5',
+                bgDark: '#4A0000',
+                bgCard: '#FFF8F8'
+            },
+            'elegant-cream': {
+                primary: '#8B4513',
+                secondary: '#D2691E',
+                accent: '#DEB887',
+                accentAlt: '#CD853F',
+                textDark: '#3D2314',
+                textLight: '#5C4033',
+                textMuted: '#8B7355',
+                bgLight: '#FFF8DC',
+                bgDark: '#3D2314',
+                bgCard: '#FFFAF0'
+            },
+            'elegant-brown': {
+                primary: '#3E2723',
+                secondary: '#5D4037',
+                accent: '#8D6E63',
+                accentAlt: '#A1887F',
+                textDark: '#1a1a1a',
+                textLight: '#4E342E',
+                textMuted: '#795548',
+                bgLight: '#EFEBE9',
+                bgDark: '#3E2723',
+                bgCard: '#FFFFFF'
+            },
             'ocean-blue': {
                 primary: '#1E3A5F',
                 secondary: '#4A90A4',
@@ -1191,18 +1367,25 @@ class AdminDashboard {
                     body: formData
                 });
             } else {
-                // Create new
-                await this.fetchAPI('/api/collections/' + col + '/records', {
+                // Create new - will become the active one
+                const createRes = await this.fetchAPI('/api/collections/' + col + '/records', {
                     method: 'POST',
                     body: formData
                 });
+                if (createRes.ok) {
+                    const newData = await createRes.json();
+                    this.welcomeSettings = newData;
+                    this.activeWelcomeScreenId = newData.id;
+                    localStorage.setItem('motifkain_active_ws', this.activeWelcomeScreenId);
+                }
             }
 
             this.showNotification('Welcome Screen berhasil disimpan!', 'success');
             this.welcomeLogoData = null;
             this.welcomeBgData = null;
 
-            // Reload settings
+            // Reload all welcome screens list and settings
+            await this.loadAllWelcomeScreens();
             await this.loadWelcomeSettings();
         } catch (e) {
             this.showNotification('Gagal menyimpan: ' + e.message, 'error');
@@ -1321,32 +1504,6 @@ class AdminDashboard {
 
         var wsSave = document.getElementById('wsSaveBtn');
         if (wsSave) wsSave.addEventListener('click', function() { self.saveWelcomeSettings(); });
-    }
-
-    renderKategori() {
-        var container = document.getElementById('kategoriList');
-        if (!container) return;
-
-        if (this.kategori.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada kategori</p>';
-            return;
-        }
-
-        var html = '';
-        for (var i = 0; i < this.kategori.length; i++) {
-            var k = this.kategori[i];
-            html += '<div class="kategori-item">';
-            html += '<div class="kategori-icon">' + (k.name.charAt ? k.name.charAt(0).toUpperCase() : '?') + '</div>';
-            html += '<div class="kategori-info">';
-            html += '<div class="kategori-name">' + k.name + '</div>';
-            html += '<div class="kategori-slug">' + k.slug + '</div>';
-            html += '</div>';
-            html += '<div class="kategori-actions">';
-            html += '<button class="btn btn-sm" onclick="admin.editKategori(\'' + k.id + '\')">Edit</button> ';
-            html += '<button class="btn btn-sm btn-danger" onclick="admin.deleteKategori(\'' + k.id + '\')">Hapus</button>';
-            html += '</div></div>';
-        }
-        container.innerHTML = html;
     }
 
     showAddKategoriModal() {

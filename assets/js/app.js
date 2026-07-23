@@ -34,6 +34,8 @@ let currentCategory = 'desain-motif';
 let currentSubcategory = null;
 
 let selectedProduct = null;
+let allWelcomeScreens = []; // Store all welcome screens
+let activeWelcomeScreenId = null;
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', async () => {
@@ -60,37 +62,56 @@ async function loadUsers() {
 
 // ===== WELCOME SCREEN =====
 async function loadWelcomeSettings() {
+    const savedActiveId = localStorage.getItem('motifkain_active_ws');
+
     try {
-        const res = await fetch(`${CONFIG.pocketbaseUrl}/api/collections/${CONFIG.welcomeCollection}/records?per-page=1`);
-        if (res.ok) {
-            const data = await res.json();
-            if (data.items && data.items.length > 0) {
-                const item = data.items[0];
-                welcomeSettings = {
-                    id: item.id,
-                    template: item.template || 'cover-split',
-                    colorTheme: item.colorTheme || 'elegant-cream',
-                    fontFamily: item.fontFamily || 'Playfair Display',
-                    logoUrl: item.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${item.id}/${item.logo}` : '',
-                    backgroundImage: item.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${item.id}/${item.backgroundImage}` : '',
-                    backgroundOpacity: item.backgroundOpacity || 50,
-                    logoSize: item.logoSize || 60,
-                    logoX: item.logoX || 50,
-                    logoY: item.logoY || 10,
-                    titleSize: item.titleSize || 32,
-                    titleX: item.titleX || 50,
-                    titleY: item.titleY || 50,
-                    subtitleSize: item.subtitleSize || 14,
-                    subtitleX: item.subtitleX || 50,
-                    subtitleY: item.subtitleY || 70,
-                    leftText: item.leftText || item.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
-                    title: item.title || 'CATALOG',
-                    subtitle: item.subtitle || 'Company Profile',
-                    description: item.description || 'Koleksi produk eksklusif kami'
-                };
-                // Update favicon dari logo
-                updateFavicon(welcomeSettings.logoUrl);
-            }
+        // First, load all welcome screens
+        const listRes = await fetch(`${CONFIG.pocketbaseUrl}/api/collections/${CONFIG.welcomeCollection}/records?per-page=500&sort=-created`);
+        if (listRes.ok) {
+            const listData = await listRes.json();
+            allWelcomeScreens = listData.items || [];
+        }
+
+        // Find the active welcome screen
+        let activeWs = null;
+
+        if (savedActiveId) {
+            // Use the saved active ID
+            activeWs = allWelcomeScreens.find(ws => ws.id === savedActiveId);
+        }
+
+        if (!activeWs && allWelcomeScreens.length > 0) {
+            // Use the most recent one
+            activeWs = allWelcomeScreens[0];
+            activeWelcomeScreenId = activeWs.id;
+            localStorage.setItem('motifkain_active_ws', activeWelcomeScreenId);
+        }
+
+        if (activeWs) {
+            activeWelcomeScreenId = activeWs.id;
+            welcomeSettings = {
+                id: activeWs.id,
+                template: activeWs.template || 'cover-split',
+                colorTheme: activeWs.colorTheme || 'elegant-cream',
+                fontFamily: activeWs.fontFamily || 'Playfair Display',
+                logoUrl: activeWs.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${activeWs.id}/${activeWs.logo}` : '',
+                backgroundImage: activeWs.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${activeWs.id}/${activeWs.backgroundImage}` : '',
+                backgroundOpacity: activeWs.backgroundOpacity || 50,
+                logoSize: activeWs.logoSize || 60,
+                logoX: activeWs.logoX || 50,
+                logoY: activeWs.logoY || 10,
+                titleSize: activeWs.titleSize || 32,
+                titleX: activeWs.titleX || 50,
+                titleY: activeWs.titleY || 50,
+                subtitleSize: activeWs.subtitleSize || 14,
+                subtitleX: activeWs.subtitleX || 50,
+                subtitleY: activeWs.subtitleY || 70,
+                leftText: activeWs.leftText || activeWs.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
+                title: activeWs.title || 'CATALOG',
+                subtitle: activeWs.subtitle || 'Company Profile',
+                description: activeWs.description || 'Koleksi produk eksklusif kami'
+            };
+            updateFavicon(welcomeSettings.logoUrl);
         }
     } catch (e) {
         console.log('Welcome settings from config file');
@@ -117,6 +138,42 @@ function getThemeColors(themeId) {
             textMuted: '#A1887F',
             bgLight: '#FFF8F0',
             bgDark: '#1a2a3a',
+            bgCard: '#FFFFFF'
+        },
+        'elegant-red': {
+            primary: '#8B0000',
+            secondary: '#B22222',
+            accent: '#CD5C5C',
+            accentAlt: '#DC143C',
+            textDark: '#4A0000',
+            textLight: '#FFF0F0',
+            textMuted: '#8B0000',
+            bgLight: '#FFF5F5',
+            bgDark: '#4A0000',
+            bgCard: '#FFF8F8'
+        },
+        'elegant-cream': {
+            primary: '#8B4513',
+            secondary: '#D2691E',
+            accent: '#DEB887',
+            accentAlt: '#CD853F',
+            textDark: '#3D2314',
+            textLight: '#5C4033',
+            textMuted: '#8B7355',
+            bgLight: '#FFF8DC',
+            bgDark: '#3D2314',
+            bgCard: '#FFFAF0'
+        },
+        'elegant-brown': {
+            primary: '#3E2723',
+            secondary: '#5D4037',
+            accent: '#8D6E63',
+            accentAlt: '#A1887F',
+            textDark: '#1a1a1a',
+            textLight: '#4E342E',
+            textMuted: '#795548',
+            bgLight: '#EFEBE9',
+            bgDark: '#3E2723',
             bgCard: '#FFFFFF'
         },
         'ocean-blue': {
@@ -195,6 +252,13 @@ function renderWelcomeScreen() {
         default:
             html = renderWelcomeDark(ws, theme);
     }
+
+    // Add settings button to open welcome screen selector
+    html += `
+        <button class="ws-selector-btn" onclick="openWelcomeSelector()" title="Pilih Welcome Screen">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        </button>
+    `;
 
     welcomeScreen.innerHTML = html;
 }
@@ -1077,5 +1141,142 @@ document.addEventListener('click', function(e) {
     const btn = document.querySelector('.wa-button');
     if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
         dropdown.classList.remove('show');
+    }
+});
+
+// ===== WELCOME SCREEN SELECTOR =====
+function openWelcomeSelector() {
+    const modal = document.getElementById('wsSelectorModal');
+    if (!modal) {
+        // Create modal if it doesn't exist
+        createWelcomeSelectorModal();
+    } else {
+        renderWelcomeSelectorList();
+        modal.classList.add('active');
+    }
+}
+
+function createWelcomeSelectorModal() {
+    const modal = document.createElement('div');
+    modal.id = 'wsSelectorModal';
+    modal.className = 'ws-selector-modal';
+    modal.innerHTML = `
+        <div class="ws-selector-content">
+            <div class="ws-selector-header">
+                <h3>Pilih Welcome Screen</h3>
+                <button class="ws-selector-close" onclick="closeWelcomeSelector()">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
+            </div>
+            <div class="ws-selector-body" id="wsSelectorList">
+                <!-- Welcome screens will be loaded here -->
+                <div class="ws-selector-loading">Memuat...</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.classList.add('active');
+    renderWelcomeSelectorList();
+}
+
+function renderWelcomeSelectorList() {
+    const container = document.getElementById('wsSelectorList');
+    if (!container) return;
+
+    if (allWelcomeScreens.length === 0) {
+        container.innerHTML = '<p class="ws-selector-empty">Belum ada welcome screen. Buka admin untuk membuat.</p>';
+        return;
+    }
+
+    const templateNames = {
+        'cover-dark': 'Gelap',
+        'cover-light': 'Terang',
+        'cover-split': 'Split',
+        'cover-numbered': 'Nomor',
+        'cover-minimal': 'Minimal'
+    };
+
+    let html = '<div class="ws-selector-grid">';
+    for (let i = 0; i < allWelcomeScreens.length; i++) {
+        const ws = allWelcomeScreens[i];
+        const isActive = ws.id === activeWelcomeScreenId;
+        const bgUrl = ws.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${ws.id}/${ws.backgroundImage}` : '';
+        const logoUrl = ws.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${ws.id}/${ws.logo}` : '';
+        const templateName = templateNames[ws.template] || 'Default';
+
+        html += `<div class="ws-selector-card ${isActive ? 'active' : ''}" onclick="selectWelcomeScreen('${ws.id}')">`;
+        html += `<div class="ws-selector-preview">`;
+        if (bgUrl) {
+            html += `<div class="ws-selector-bg" style="background-image:url(${bgUrl});opacity:${(100 - (ws.backgroundOpacity || 50)) / 100};"></div>`;
+        } else {
+            html += `<div class="ws-selector-bg ws-selector-bg-default"></div>`;
+        }
+        if (logoUrl) {
+            html += `<img src="${logoUrl}" class="ws-selector-logo" alt="Logo">`;
+        }
+        html += `<div class="ws-selector-title">${ws.title || 'Untitled'}</div>`;
+        html += `</div>`;
+        html += `<div class="ws-selector-info">`;
+        html += `<span class="ws-selector-badge">${templateName}</span>`;
+        html += `<span class="ws-selector-name">${ws.title || 'Tanpa Judul'}</span>`;
+        html += `</div>`;
+        if (isActive) {
+            html += `<div class="ws-selector-active-badge">Aktif</div>`;
+        }
+        html += `</div>`;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+async function selectWelcomeScreen(id) {
+    const ws = allWelcomeScreens.find(w => w.id === id);
+    if (!ws) return;
+
+    // Save to localStorage
+    activeWelcomeScreenId = id;
+    localStorage.setItem('motifkain_active_ws', id);
+
+    // Update welcome settings
+    welcomeSettings = {
+        id: ws.id,
+        template: ws.template || 'cover-split',
+        colorTheme: ws.colorTheme || 'elegant-cream',
+        fontFamily: ws.fontFamily || 'Playfair Display',
+        logoUrl: ws.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${ws.id}/${ws.logo}` : '',
+        backgroundImage: ws.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${ws.id}/${ws.backgroundImage}` : '',
+        backgroundOpacity: ws.backgroundOpacity || 50,
+        logoSize: ws.logoSize || 60,
+        logoX: ws.logoX || 50,
+        logoY: ws.logoY || 10,
+        titleSize: ws.titleSize || 32,
+        titleX: ws.titleX || 50,
+        titleY: ws.titleY || 50,
+        subtitleSize: ws.subtitleSize || 14,
+        subtitleX: ws.subtitleX || 50,
+        subtitleY: ws.subtitleY || 70,
+        leftText: ws.leftText || ws.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
+        title: ws.title || 'CATALOG',
+        subtitle: ws.subtitle || 'Company Profile',
+        description: ws.description || 'Koleksi produk eksklusif kami'
+    };
+
+    updateFavicon(welcomeSettings.logoUrl);
+    renderWelcomeScreen();
+    closeWelcomeSelector();
+}
+
+function closeWelcomeSelector() {
+    const modal = document.getElementById('wsSelectorModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('wsSelectorModal');
+    if (modal && e.target === modal) {
+        closeWelcomeSelector();
     }
 });

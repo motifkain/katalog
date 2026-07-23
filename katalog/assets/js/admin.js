@@ -1,13 +1,17 @@
 /**
  * MOTIFKAIN ADMIN DASHBOARD
- * Logic untuk Dashboard Admin
  */
-
 class AdminDashboard {
     constructor() {
+        this.layanan = [];
         this.kategori = [];
         this.produk = [];
-        this.pages = [];
+        this.welcomeSettings = null;
+        this.welcomeLogoData = null;
+        this.welcomeBgData = null;
+        this.allWelcomeScreens = []; // Array untuk menyimpan semua welcome screen
+        this.activeWelcomeScreenId = null; // ID welcome screen yang aktif ditampilkan
+        this.currentLayanan = null;
         this.currentKategori = null;
         this.currentProduk = null;
         this.pocketbaseToken = '';
@@ -90,413 +94,1302 @@ class AdminDashboard {
         window.open('index.html', '_blank');
     }
 
-    async fetchAPI(endpoint, options = {}) {
-        const headers = { 'Authorization': this.pocketbaseToken, ...options.headers };
+    previewWelcomeScreen() {
+        // Ambil data terbaru dari form
+        const ws = {
+            template: document.querySelector('.template-btn.active')?.dataset.template || 'cover-dark',
+            colorTheme: document.querySelector('.theme-btn.active')?.dataset.theme || 'elegant-gold',
+            fontFamily: document.getElementById('wsFont').value || 'Playfair Display',
+            title: document.getElementById('wsTitle').value || 'CATALOG',
+            subtitle: document.getElementById('wsSubtitle').value || 'Company Profile',
+            description: document.getElementById('wsDescription').value || 'Koleksi produk eksklusif kami',
+            leftText: document.getElementById('wsLeftText').value || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
+            backgroundOpacity: parseInt(document.getElementById('wsBgOpacity').value) || 50,
+            logoSize: parseInt(document.getElementById('wsLogoSize').value) || 60,
+            logoX: parseInt(document.getElementById('wsLogoX').value) || 50,
+            logoY: parseInt(document.getElementById('wsLogoY').value) || 10,
+            titleSize: parseInt(document.getElementById('wsTitleSize').value) || 32,
+            titleX: parseInt(document.getElementById('wsTitleX').value) || 50,
+            titleY: parseInt(document.getElementById('wsTitleY').value) || 50,
+            subtitleSize: parseInt(document.getElementById('wsSubtitleSize').value) || 14,
+            subtitleX: parseInt(document.getElementById('wsSubtitleX').value) || 50,
+            subtitleY: parseInt(document.getElementById('wsSubtitleY').value) || 70,
+            backgroundImage: this.welcomeBgData || (this.welcomeSettings?.backgroundImage ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + this.welcomeSettings.id + '/' + this.welcomeSettings.backgroundImage : null),
+            logo: this.welcomeLogoData || (this.welcomeSettings?.logo ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + this.welcomeSettings.id + '/' + this.welcomeSettings.logo : null)
+        };
+
+        const theme = this.getThemeColors(ws.colorTheme);
+        let html = '';
+
+        switch(ws.template) {
+            case 'cover-dark':
+                html = this.renderPreviewDark(ws, theme);
+                break;
+            case 'cover-light':
+                html = this.renderPreviewLight(ws, theme);
+                break;
+            case 'cover-split':
+                html = this.renderPreviewSplit(ws, theme);
+                break;
+            case 'cover-numbered':
+                html = this.renderPreviewNumbered(ws, theme);
+                break;
+            case 'cover-minimal':
+                html = this.renderPreviewMinimal(ws, theme);
+                break;
+            default:
+                html = this.renderPreviewDark(ws, theme);
+        }
+
+        // Buat modal preview
+        const modal = document.createElement('div');
+        modal.id = 'previewModal';
+        modal.className = 'preview-modal';
+        modal.innerHTML = `
+            <div class="preview-modal-content">
+                <div class="preview-modal-header">
+                    <h3>Preview Welcome Screen</h3>
+                    <button onclick="this.closest('.preview-modal').remove()">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    </button>
+                </div>
+                <div class="preview-modal-body">
+                    <div class="preview-phone-frame">
+                        <div class="preview-phone-screen">
+                            ${html}
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-modal-footer">
+                    <button class="btn btn-outline" onclick="this.closest('.preview-modal').remove()">Tutup</button>
+                </div>
+            </div>
+        `;
+
+        // Hapus modal lama jika ada
+        const oldModal = document.getElementById('previewModal');
+        if (oldModal) oldModal.remove();
+
+        document.body.appendChild(modal);
+        modal.classList.add('active');
+    }
+
+    async fetchAPI(endpoint, options) {
+        options = options || {};
+        const headers = { 'Authorization': 'Bearer ' + this.pocketbaseToken };
+        if (options.headers) Object.assign(headers, options.headers);
         if (options.body && !(options.body instanceof FormData)) {
             headers['Content-Type'] = 'application/json';
         }
-        return fetch(this.pocketbaseUrl + endpoint, { ...options, headers });
+        return fetch(this.pocketbaseUrl + endpoint, {
+            method: options.method || 'GET',
+            headers: headers,
+            body: options.body
+        });
     }
 
     async loadData() {
+        await this.loadLayanan();
+        await this.loadAllWelcomeScreens();
         await this.loadKategori();
         await this.loadProduk();
-        await this.loadPages();
     }
 
-    async loadKategori() {
+    // ===== MULTIPLE WELCOME SCREENS =====
+    async loadAllWelcomeScreens() {
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
         try {
-            const res = await this.fetchAPI('/api/collections/kategori/records?sort=order');
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=500&sort=-created');
             if (res.ok) {
                 const data = await res.json();
-                this.kategori = data.items || [];
-            }
-        } catch (e) {
-            this.kategori = [
-                { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif', order: 0 },
-                { id: 'printing', name: 'Printing Kain', slug: 'printing', order: 1 },
-                { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian', order: 2 },
-                { id: 'asesoris', name: 'Asesoris', slug: 'asesoris', order: 3 }
-            ];
-        }
-        this.renderKategori();
-    }
-
-    async loadProduk() {
-        try {
-            const res = await this.fetchAPI('/api/collections/produk/records?per-page=500&sort=-created');
-            if (res.ok) {
-                const data = await res.json();
-                this.produk = data.items || [];
-            }
-        } catch (e) {
-            this.produk = [];
-        }
-        this.renderProduk();
-        this.updateKategoriDropdown();
-    }
-
-    async loadPages() {
-        try {
-            const res = await this.fetchAPI('/api/collections/catalog_pages/records?sort=order');
-            if (res.ok) {
-                const data = await res.json();
-                this.pages = data.items || [];
-            }
-        } catch (e) {
-            this.pages = [];
-        }
-        this.renderPages();
-    }
-
-    setupTabs() {
-        const tabs = document.querySelectorAll('.tab-btn');
-        const self = this;
-        tabs.forEach(function(tab) {
-            tab.addEventListener('click', function() {
-                tabs.forEach(function(t) { t.classList.remove('active'); });
-                this.classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
-                document.getElementById('tab-' + this.dataset.tab).classList.add('active');
-            });
-        });
-    }
-
-    setupForms() {
-        const self = this;
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('emailInput').value;
-            const password = document.getElementById('passwordInput').value;
-            self.login(email, password);
-        });
-    }
-
-    renderKategori() {
-        const container = document.getElementById('kategoriList');
-        if (!container) return;
-
-        if (this.kategori.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada kategori</p>';
-            return;
-        }
-
-        const self = this;
-        container.innerHTML = this.kategori.map(function(k) {
-            return '<div class="kategori-item">' +
-                '<div class="kategori-icon">' + k.name.charAt(0) + '</div>' +
-                '<div class="kategori-info">' +
-                    '<div class="kategori-name">' + k.name + '</div>' +
-                    '<div class="kategori-slug">' + k.slug + '</div>' +
-                '</div>' +
-                '<div class="kategori-actions">' +
-                    '<button onclick="admin.editKategori(\'' + k.id + '\')" title="Edit">Edit</button>' +
-                    '<button onclick="admin.deleteKategori(\'' + k.id + '\')" title="Hapus">Hapus</button>' +
-                '</div>' +
-            '</div>';
-        }).join('');
-    }
-
-    showAddKategoriModal() {
-        this.currentKategori = null;
-        document.getElementById('kategoriModalTitle').textContent = 'Tambah Kategori';
-        document.getElementById('kategoriName').value = '';
-        document.getElementById('kategoriSlug').value = '';
-        document.getElementById('kategoriOrder').value = this.kategori.length;
-        document.getElementById('kategoriModal').classList.add('active');
-    }
-
-    editKategori(id) {
-        const k = this.kategori.find(function(item) { return item.id === id; });
-        if (!k) return;
-        this.currentKategori = k;
-        document.getElementById('kategoriModalTitle').textContent = 'Edit Kategori';
-        document.getElementById('kategoriName').value = k.name;
-        document.getElementById('kategoriSlug').value = k.slug;
-        document.getElementById('kategoriOrder').value = k.order || 0;
-        document.getElementById('kategoriModal').classList.add('active');
-    }
-
-    async saveKategori() {
-        const name = document.getElementById('kategoriName').value.trim();
-        const slug = document.getElementById('kategoriSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
-        const order = parseInt(document.getElementById('kategoriOrder').value) || 0;
-
-        if (!name || !slug) {
-            this.showNotification('Nama dan slug wajib diisi!', 'error');
-            return;
-        }
-
-        const data = { name: name, slug: slug, order: order };
-        const self = this;
-
-        try {
-            if (this.currentKategori) {
-                await this.fetchAPI('/api/collections/kategori/records/' + this.currentKategori.id, {
-                    method: 'PATCH',
-                    body: JSON.stringify(data)
-                });
+                this.allWelcomeScreens = data.items || [];
             } else {
-                await this.fetchAPI('/api/collections/kategori/records', {
-                    method: 'POST',
-                    body: JSON.stringify(data)
-                });
+                this.allWelcomeScreens = [];
             }
-            this.showNotification('Berhasil disimpan!', 'success');
         } catch (e) {
-            this.showNotification('Gagal menyimpan', 'error');
+            this.allWelcomeScreens = [];
         }
-
-        this.closeModal('kategoriModal');
-        await this.loadKategori();
+        this.renderWelcomeScreensList();
     }
 
-    async deleteKategori(id) {
-        if (!confirm('Yakin ingin menghapus?')) return;
-        try {
-            await this.fetchAPI('/api/collections/kategori/records/' + id, { method: 'DELETE' });
-            this.showNotification('Berhasil dihapus!', 'success');
-        } catch (e) {
-            this.showNotification('Gagal menghapus', 'error');
-        }
-        await this.loadKategori();
-    }
-
-    renderProduk() {
-        const container = document.getElementById('produkGrid');
+    renderWelcomeScreensList() {
+        const container = document.getElementById('welcomeScreensGrid');
         if (!container) return;
 
-        const filterKategori = (document.getElementById('filterKategori') || { value: '' }).value;
-        const searchQuery = ((document.getElementById('searchProduct') || { value: '' }).value || '').toLowerCase();
-
-        let filtered = this.produk;
-
-        if (filterKategori) {
-            filtered = filtered.filter(function(p) { return p.kategori === filterKategori; });
-        }
-
-        if (searchQuery) {
-            filtered = filtered.filter(function(p) {
-                return (p.nama || '').toLowerCase().includes(searchQuery) ||
-                       (p.deskripsi || '').toLowerCase().includes(searchQuery);
-            });
-        }
-
-        if (filtered.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada produk</p>';
+        if (this.allWelcomeScreens.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada welcome screen. Klik tombol "+ Welcome Screen Baru" untuk membuat.</p>';
             return;
         }
 
-        const self = this;
-        container.innerHTML = filtered.map(function(p) {
-            const imageUrl = p.image
-                ? self.pocketbaseUrl + '/api/files/produk/' + p.id + '/' + p.image
-                : 'https://via.placeholder.com/400x300?text=No+Image';
-            const harga = p.harga ? 'Rp ' + p.harga.toLocaleString('id-ID') : 'Hubungi Kami';
+        const templateNames = {
+            'cover-dark': 'Gelap',
+            'cover-light': 'Terang',
+            'cover-split': 'Split',
+            'cover-numbered': 'Nomor',
+            'cover-minimal': 'Minimal'
+        };
 
-            return '<div class="produk-item">' +
-                '<div class="produk-image"><img src="' + imageUrl + '" alt="' + (p.nama || '') + '"></div>' +
-                '<div class="produk-info">' +
-                    '<div class="produk-name">' + (p.nama || '-') + '</div>' +
-                    '<div class="produk-price">' + harga + '</div>' +
-                    '<div class="produk-meta">' + (p.kategori || '-') + ' / ' + (p.subkategori || '-') + '</div>' +
-                    '<div class="produk-actions">' +
-                        '<button class="edit-btn" onclick="admin.editProduk(\'' + p.id + '\')">Edit</button>' +
-                        '<button class="delete-btn" onclick="admin.deleteProduk(\'' + p.id + '\')">Hapus</button>' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-        }).join('');
+        let html = '<div class="ws-grid">';
+        for (let i = 0; i < this.allWelcomeScreens.length; i++) {
+            const ws = this.allWelcomeScreens[i];
+            const templateName = templateNames[ws.template] || 'Default';
+            const isActive = ws.id === this.activeWelcomeScreenId;
+            const bgUrl = ws.backgroundImage ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + ws.id + '/' + ws.backgroundImage : null;
+            const logoUrl = ws.logo ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + ws.id + '/' + ws.logo : null;
+
+            html += '<div class="ws-card ' + (isActive ? 'ws-card-active' : '') + '">';
+            html += '<div class="ws-card-preview">';
+            if (bgUrl) {
+                html += '<div class="ws-card-bg" style="background-image:url(' + bgUrl + ')"></div>';
+            } else {
+                html += '<div class="ws-card-bg ws-card-bg-default"></div>';
+            }
+            if (logoUrl) {
+                html += '<img src="' + logoUrl + '" class="ws-card-logo" alt="Logo">';
+            }
+            html += '<div class="ws-card-title">' + (ws.title || 'Untitled') + '</div>';
+            html += '</div>';
+            html += '<div class="ws-card-info">';
+            html += '<div class="ws-card-template"><span class="ws-badge">' + templateName + '</span></div>';
+            html += '<div class="ws-card-name">' + (ws.title || 'Tanpa Judul') + '</div>';
+            html += '<div class="ws-card-date">' + (ws.created ? new Date(ws.created).toLocaleDateString('id-ID') : '') + '</div>';
+            html += '</div>';
+            html += '<div class="ws-card-actions">';
+            html += '<button class="btn btn-sm" onclick="admin.editWelcomeScreen(\'' + ws.id + '\')">Edit</button> ';
+            html += '<button class="btn btn-sm btn-outline" onclick="admin.duplicateWelcomeScreen(\'' + ws.id + '\')">Duplikat</button> ';
+            if (!isActive) {
+                html += '<button class="btn btn-sm" onclick="admin.setActiveWelcomeScreen(\'' + ws.id + '\')">Aktifkan</button> ';
+            } else {
+                html += '<span class="ws-active-badge">Aktif</span> ';
+            }
+            html += '<button class="btn btn-sm btn-danger" onclick="admin.deleteWelcomeScreen(\'' + ws.id + '\')">Hapus</button>';
+            html += '</div></div>';
+        }
+        html += '</div>';
+        container.innerHTML = html;
     }
 
-    filterProducts() { this.renderProduk(); }
+    showWelcomeListEditor() {
+        this.switchTab('welcome');
+    }
 
-    updateKategoriDropdown() {
-        const selects = document.querySelectorAll('#productKategori, #filterKategori');
-        const self = this;
-        selects.forEach(function(select) {
-            const currentVal = select.value;
-            select.innerHTML = '<option value="">Semua Kategori</option>' +
-                self.kategori.map(function(k) {
-                    return '<option value="' + k.slug + '">' + k.name + '</option>';
-                }).join('');
+    editWelcomeScreen(id) {
+        const ws = this.allWelcomeScreens.find(w => w.id === id);
+        if (!ws) return;
+
+        this.welcomeSettings = ws;
+        this.welcomeLogoData = null;
+        this.welcomeBgData = null;
+
+        this.switchTab('welcome');
+
+        setTimeout(() => {
+            this.renderWelcomeSettings();
+            document.querySelector('.welcome-settings')?.scrollIntoView({ behavior: 'smooth' });
+            this.showNotification('Welcome screen loaded. Edit dan simpan.', 'success');
+        }, 100);
+    }
+
+    async duplicateWelcomeScreen(id) {
+        const ws = this.allWelcomeScreens.find(w => w.id === id);
+        if (!ws) return;
+
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+        const data = { ...ws };
+        delete data.id;
+        delete data.created;
+        delete data.updated;
+        data.title = (data.title || 'Welcome') + ' (Copy)';
+
+        try {
+            await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: JSON.stringify(data) });
+            this.showNotification('Berhasil diduplikat!', 'success');
+            await this.loadAllWelcomeScreens();
+        } catch (e) {
+            this.showNotification('Gagal menduplikat: ' + e.message, 'error');
+        }
+    }
+
+    async setActiveWelcomeScreen(id) {
+        this.activeWelcomeScreenId = id;
+        localStorage.setItem('motifkain_active_ws', id);
+        this.showNotification('Welcome screen berhasil diaktifkan!', 'success');
+        await this.loadAllWelcomeScreens();
+    }
+
+    async deleteWelcomeScreen(id) {
+        if (!confirm('Yakin ingin menghapus welcome screen ini?')) return;
+
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+        try {
+            await this.fetchAPI('/api/collections/' + col + '/records/' + id, { method: 'DELETE' });
+            this.showNotification('Berhasil dihapus!', 'success');
+
+            if (this.activeWelcomeScreenId === id) {
+                this.activeWelcomeScreenId = null;
+                localStorage.removeItem('motifkain_active_ws');
+            }
+
+            await this.loadAllWelcomeScreens();
+        } catch (e) {
+            this.showNotification('Gagal menghapus: ' + e.message, 'error');
+        }
+    }
+
+    switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.toggle('active', content.id === 'tab-' + tabName);
+        });
+    }
+
+    backToWelcomeList() {
+        this.switchTab('welcomelist');
+    }
+
+    // ===== WELCOME SCREEN SETTINGS =====
+    async loadWelcomeSettings() {
+        const savedActiveId = localStorage.getItem('motifkain_active_ws');
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+
+        try {
+            if (savedActiveId) {
+                const res = await this.fetchAPI('/api/collections/' + col + '/records/' + savedActiveId);
+                if (res.ok) {
+                    const ws = await res.json();
+                    this.welcomeSettings = ws;
+                    this.activeWelcomeScreenId = savedActiveId;
+                    this.updateSavedStatus(true);
+                    this.renderWelcomeSettings();
+                    return;
+                }
+            }
+
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=1&sort=-created');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.items && data.items.length > 0) {
+                    this.welcomeSettings = data.items[0];
+                    this.activeWelcomeScreenId = this.welcomeSettings.id;
+                    localStorage.setItem('motifkain_active_ws', this.activeWelcomeScreenId);
+                    this.updateSavedStatus(true);
+                } else {
+                    this.welcomeSettings = this.getDefaultWelcomeSettings();
+                    this.updateSavedStatus(false);
+                }
+            }
+        } catch (e) {
+            this.welcomeSettings = this.getDefaultWelcomeSettings();
+            this.updateSavedStatus(false);
+        }
+        this.renderWelcomeSettings();
+    }
+
+    updateSavedStatus(hasData) {
+        const card = document.getElementById('savedWsCard');
+        const status = document.getElementById('savedWsStatus');
+        const actions = document.getElementById('savedWsActions');
+
+        if (status) {
+            if (hasData && this.welcomeSettings) {
+                const ws = this.welcomeSettings;
+                const templateNames = {
+                    'cover-dark': 'Gelap',
+                    'cover-light': 'Terang',
+                    'cover-split': 'Split',
+                    'cover-numbered': 'Nomor',
+                    'cover-minimal': 'Minimal'
+                };
+                const templateName = templateNames[ws.template] || ws.template || 'Default';
+                const isActive = ws.id === this.activeWelcomeScreenId;
+                status.innerHTML = `Template: ${templateName} | Theme: ${ws.colorTheme || 'elegant-gold'} | Judul: ${ws.title || '-'}${isActive ? ' <span style="color:#4CAF50;">(Aktif)</span>' : ''}`;
+
+                if (actions) {
+                    actions.innerHTML = `
+                        <button class="btn btn-sm" onclick="admin.editSavedWelcome()">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            Edit Data Tersimpan
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="admin.previewWelcomeScreen()">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                            Lihat Preview
+                        </button>
+                    `;
+                }
+            } else {
+                status.textContent = 'Belum ada data tersimpan di PocketBase. Buat baru dengan mengisi form di bawah.';
+                if (actions) {
+                    actions.innerHTML = `<button class="btn btn-outline btn-sm" onclick="admin.showNotification('Isi form di bawah, lalu klik Simpan untuk membuat data baru', 'info')">+ Buat Data Baru</button>`;
+                }
+            }
+        }
+    }
+
+    editSavedWelcome() {
+        if (this.welcomeSettings) {
+            this.showNotification('Data welcome screen sudah diload ke form editor. Edit langsung dan simpan.', 'success');
+            document.querySelector('.welcome-settings')?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    refreshWelcomeData() {
+        this.loadWelcomeSettings();
+    }
+
+    getDefaultWelcomeSettings() {
+        return {
+            template: 'cover-dark',
+            colorTheme: 'elegant-gold',
+            fontFamily: 'Playfair Display',
+            title: 'CATALOG',
+            subtitle: 'Company Profile',
+            description: 'Koleksi produk eksklusif kami',
+            leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.'
+        };
+    }
+
+    renderWelcomeSettings() {
+        if (!this.welcomeSettings) return;
+        const ws = this.welcomeSettings;
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+
+        // Set form values
+        document.getElementById('wsTitle').value = ws.title || '';
+        document.getElementById('wsSubtitle').value = ws.subtitle || '';
+        document.getElementById('wsDescription').value = ws.description || '';
+        document.getElementById('wsLeftText').value = ws.leftText || '';
+        document.getElementById('wsFont').value = ws.fontFamily || 'Playfair Display';
+
+        // Set template active
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.template === ws.template);
+        });
+
+        // Set theme active
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === ws.colorTheme);
+        });
+
+        // Load logo if exists
+        if (ws.logo) {
+            const logoUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.logo;
+            document.getElementById('wsLogoPreview').src = logoUrl;
+            document.getElementById('wsLogoPreview').style.display = 'block';
+            document.getElementById('wsLogoPlaceholder').style.display = 'none';
+            document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
+            ws.logoUrl = logoUrl;
+        } else {
+            document.getElementById('wsLogoPreview').style.display = 'none';
+            document.getElementById('wsLogoPlaceholder').style.display = 'flex';
+            document.getElementById('wsLogoRemoveBtn').style.display = 'none';
+            ws.logoUrl = null;
+        }
+
+        // Load background image if exists
+        if (ws.backgroundImage) {
+            const bgUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.backgroundImage;
+            document.getElementById('wsBgPreview').src = bgUrl;
+            document.getElementById('wsBgPreview').style.display = 'block';
+            document.getElementById('wsBgPlaceholder').style.display = 'none';
+            document.getElementById('wsBgRemoveBtn').style.display = 'inline-block';
+            ws.backgroundImageUrl = bgUrl;
+        } else {
+            document.getElementById('wsBgPreview').style.display = 'none';
+            document.getElementById('wsBgPlaceholder').style.display = 'flex';
+            document.getElementById('wsBgRemoveBtn').style.display = 'none';
+            ws.backgroundImageUrl = null;
+        }
+
+        // Load values
+        if (ws.backgroundOpacity) {
+            document.getElementById('wsBgOpacity').value = ws.backgroundOpacity;
+            document.getElementById('bgOpacityValue').textContent = ws.backgroundOpacity;
+        }
+        if (ws.logoSize) {
+            document.getElementById('wsLogoSize').value = ws.logoSize;
+            document.getElementById('logoSizeValue').textContent = ws.logoSize;
+        }
+        if (ws.logoX) {
+            document.getElementById('wsLogoX').value = ws.logoX;
+            document.getElementById('logoXValue').textContent = ws.logoX;
+        }
+        if (ws.logoY) {
+            document.getElementById('wsLogoY').value = ws.logoY;
+            document.getElementById('logoYValue').textContent = ws.logoY;
+        }
+        if (ws.titleSize) {
+            document.getElementById('wsTitleSize').value = ws.titleSize;
+            document.getElementById('titleSizeValue').textContent = ws.titleSize;
+        }
+        if (ws.titleX) {
+            document.getElementById('wsTitleX').value = ws.titleX;
+            document.getElementById('titleXValue').textContent = ws.titleX;
+        }
+        if (ws.titleY) {
+            document.getElementById('wsTitleY').value = ws.titleY;
+            document.getElementById('titleYValue').textContent = ws.titleY;
+        }
+        if (ws.subtitleSize) {
+            document.getElementById('wsSubtitleSize').value = ws.subtitleSize;
+            document.getElementById('subtitleSizeValue').textContent = ws.subtitleSize;
+        }
+        if (ws.subtitleX) {
+            document.getElementById('wsSubtitleX').value = ws.subtitleX;
+            document.getElementById('subtitleXValue').textContent = ws.subtitleX;
+        }
+        if (ws.subtitleY) {
+            document.getElementById('wsSubtitleY').value = ws.subtitleY;
+            document.getElementById('subtitleYValue').textContent = ws.subtitleY;
+        }
+
+        this.updateWelcomePreview();
+    }
+
+    // ===== LAYANAN CRUD =====
+    async loadLayanan() {
+        const col = window.MOTIFKAIN_CONFIG?.layananCollection || 'layanan';
+        try {
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+order');
+            if (res.ok) {
+                const data = await res.json();
+                this.layanan = data.items || [];
+            } else if (res.status === 400) {
+                // Collection doesn't exist or bad request - ignore
+                console.log('Collection "' + col + '" not available yet');
+                this.layanan = [];
+            }
+        } catch (e) {
+            // Collection might not exist - ignore error
+            console.log('Collection "' + col + '" not available:', e.message);
+            this.layanan = [];
+        }
+        this.renderLayanan();
+        this.populateLayananDropdowns();
+    }
+
+    renderLayanan() {
+        var container = document.getElementById('layananList');
+        if (!container) return;
+
+        if (this.layanan.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada layanan. Tambahkan layanan baru.</p>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < this.layanan.length; i++) {
+            var l = this.layanan[i];
+            var icon = l.icon || '📁';
+            var itemCount = this.getKategoriCountByLayanan(l.id);
+            html += '<div class="layanan-item">';
+            html += '<div class="layanan-icon">' + icon + '</div>';
+            html += '<div class="layanan-info">';
+            html += '<div class="layanan-name">' + l.name + '</div>';
+            html += '<div class="layanan-count">' + itemCount + ' kategori</div>';
+            html += '</div>';
+            html += '<div class="layanan-actions">';
+            html += '<button class="btn btn-sm" onclick="admin.editLayanan(\'' + l.id + '\')">Edit</button> ';
+            html += '<button class="btn btn-sm btn-danger" onclick="admin.deleteLayanan(\'' + l.id + '\')">Hapus</button>';
+            html += '</div></div>';
+        }
+        container.innerHTML = html;
+    }
+
+    getKategoriCountByLayanan(layananId) {
+        return this.kategori.filter(k => k.layanan === layananId || k.layanan_id === layananId).length;
+    }
+
+    populateLayananDropdowns() {
+        var selects = ['filterKategoriLayanan', 'filterProdukLayanan'];
+        selects.forEach(function(selectId) {
+            var select = document.getElementById(selectId);
+            if (!select) return;
+            var currentVal = select.value;
+            select.innerHTML = '<option value="">Semua Layanan</option>';
+            for (var i = 0; i < admin.layanan.length; i++) {
+                var l = admin.layanan[i];
+                select.innerHTML += '<option value="' + l.id + '">' + l.name + '</option>';
+            }
             select.value = currentVal;
         });
     }
 
-    showAddProductModal() {
-        this.currentProduk = null;
-        document.getElementById('productModalTitle').textContent = 'Tambah Produk';
-        document.getElementById('productName').value = '';
-        document.getElementById('productKategori').value = '';
-        document.getElementById('productSubkategori').value = '';
-        document.getElementById('productHarga').value = '';
-        document.getElementById('productDeskripsi').value = '';
-        document.getElementById('productToko').value = 'MotifKain';
-        document.getElementById('productDaerah').value = '';
-        document.getElementById('productImageUpload').classList.remove('has-image');
-        document.getElementById('productImagePreview').style.display = 'none';
-        document.getElementById('productModal').classList.add('active');
+    showAddLayananModal() {
+        this.currentLayanan = null;
+        document.getElementById('layananModalTitle').textContent = 'Tambah Layanan';
+        document.getElementById('layananName').value = '';
+        document.getElementById('layananIcon').value = '';
+        document.getElementById('layananModal').classList.add('active');
     }
 
-    editProduk(id) {
-        const p = this.produk.find(function(item) { return item.id === id; });
-        if (!p) return;
+    editLayanan(id) {
+        var l = null;
+        for (var i = 0; i < this.layanan.length; i++) {
+            if (this.layanan[i].id === id) { l = this.layanan[i]; break; }
+        }
+        if (!l) return;
 
-        this.currentProduk = p;
-        document.getElementById('productModalTitle').textContent = 'Edit Produk';
-        document.getElementById('productName').value = p.nama || '';
-        document.getElementById('productKategori').value = p.kategori || '';
-        document.getElementById('productSubkategori').value = p.subkategori || '';
-        document.getElementById('productHarga').value = p.harga || '';
-        document.getElementById('productDeskripsi').value = p.deskripsi || '';
-        document.getElementById('productToko').value = p.namatoko || 'MotifKain';
-        document.getElementById('productDaerah').value = p.daerah || '';
+        this.currentLayanan = l;
+        document.getElementById('layananModalTitle').textContent = 'Edit Layanan';
+        document.getElementById('layananName').value = l.name || '';
+        document.getElementById('layananIcon').value = l.icon || '';
+        document.getElementById('layananModal').classList.add('active');
+    }
 
-        if (p.image) {
-            const imageUrl = this.pocketbaseUrl + '/api/files/produk/' + p.id + '/' + p.image;
-            document.getElementById('productImagePreview').src = imageUrl;
-            document.getElementById('productImagePreview').style.display = 'block';
-            document.getElementById('productImageUpload').classList.add('has-image');
+    async saveLayanan() {
+        var name = document.getElementById('layananName').value.trim();
+        var icon = document.getElementById('layananIcon').value.trim();
+
+        if (!name) {
+            this.showNotification('Nama layanan wajib diisi!', 'error');
+            return;
         }
 
-        document.getElementById('productModal').classList.add('active');
+        var data = { name: name, icon: icon || '📁' };
+
+        var col = window.MOTIFKAIN_CONFIG?.layananCollection || 'layanan';
+
+        try {
+            if (this.currentLayanan) {
+                await this.fetchAPI('/api/collections/' + col + '/records/' + this.currentLayanan.id, { method: 'PATCH', body: JSON.stringify(data) });
+                this.showNotification('Berhasil disimpan!', 'success');
+            } else {
+                await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: JSON.stringify(data) });
+                this.showNotification('Berhasil ditambahkan!', 'success');
+            }
+        } catch (e) {
+            this.showNotification('Gagal menyimpan: ' + e.message, 'error');
+        }
+
+        this.closeModal('layananModal');
+        await this.loadLayanan();
     }
 
-    handleImageUpload(input) {
+    async deleteLayanan(id) {
+        if (!confirm('Yakin ingin menghapus layanan ini? Kategori di dalamnya tidak akan terhapus.')) return;
+        var col = window.MOTIFKAIN_CONFIG?.layananCollection || 'layanan';
+        try {
+            await this.fetchAPI('/api/collections/' + col + '/records/' + id, { method: 'DELETE' });
+            this.showNotification('Berhasil dihapus!', 'success');
+        } catch (e) {
+            this.showNotification('Gagal menghapus: ' + e.message, 'error');
+        }
+        await this.loadLayanan();
+    }
+
+    filterKategoriByLayanan() {
+        var layananId = document.getElementById('filterKategoriLayanan').value;
+        this.renderKategori(layananId);
+    }
+
+    filterProductsByLayanan() {
+        var layananId = document.getElementById('filterProdukLayanan').value;
+        var kategoriId = document.getElementById('filterKategori').value;
+        // Update kategori dropdown based on layanan
+        this.updateKategoriDropdown(layananId);
+        this.filterProducts();
+    }
+
+    updateKategoriDropdown(layananId) {
+        var select = document.getElementById('filterKategori');
+        if (!select) return;
+        var currentVal = select.value;
+        select.innerHTML = '<option value="">Semua Kategori</option>';
+
+        if (layananId) {
+            var filteredKategori = this.kategori.filter(k => k.layanan === layananId || k.layanan_id === layananId);
+            for (var i = 0; i < filteredKategori.length; i++) {
+                var k = filteredKategori[i];
+                select.innerHTML += '<option value="' + k.id + '">' + k.name + '</option>';
+            }
+        } else {
+            for (var i = 0; i < this.kategori.length; i++) {
+                var k = this.kategori[i];
+                select.innerHTML += '<option value="' + k.id + '">' + k.name + '</option>';
+            }
+        }
+        select.value = currentVal;
+    }
+
+    // ===== WELCOME SCREEN SETTINGS =====
+    updateSavedStatus(hasData) {
+        const card = document.getElementById('savedWsCard');
+        const status = document.getElementById('savedWsStatus');
+        const actions = document.getElementById('savedWsActions');
+
+        if (status) {
+            if (hasData && this.welcomeSettings) {
+                const ws = this.welcomeSettings;
+                const templateNames = {
+                    'cover-dark': 'Gelap',
+                    'cover-light': 'Terang',
+                    'cover-split': 'Split',
+                    'cover-numbered': 'Nomor',
+                    'cover-minimal': 'Minimal'
+                };
+                const templateName = templateNames[ws.template] || ws.template || 'Default';
+                status.textContent = `Template: ${templateName} | Theme: ${ws.colorTheme || 'elegant-gold'} | Judul: ${ws.title || '-'}`;
+
+                if (actions) {
+                    actions.innerHTML = `
+                        <button class="btn btn-sm" onclick="admin.editSavedWelcome()">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            Edit Data Tersimpan
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="admin.previewWelcomeScreen()">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                            Lihat Preview
+                        </button>
+                    `;
+                }
+            } else {
+                status.textContent = 'Belum ada data tersimpan di PocketBase. Buat baru dengan mengisi form di bawah.';
+                if (actions) {
+                    actions.innerHTML = `<button class="btn btn-outline btn-sm" onclick="admin.showNotification('Isi form di bawah, lalu klik Simpan untuk membuat data baru', 'info')">+ Buat Data Baru</button>`;
+                }
+            }
+        }
+    }
+
+    editSavedWelcome() {
+        if (this.welcomeSettings) {
+            this.showNotification('Data welcome screen sudah diload ke form editor. Edit langsung dan simpan.', 'success');
+            // Scroll to editor form
+            document.querySelector('.welcome-settings')?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    refreshWelcomeData() {
+        this.loadWelcomeSettings();
+    }
+
+    getDefaultWelcomeSettings() {
+        return {
+            template: 'cover-dark',
+            colorTheme: 'elegant-gold',
+            fontFamily: 'Playfair Display',
+            title: 'CATALOG',
+            subtitle: 'Company Profile',
+            description: 'Koleksi produk eksklusif kami',
+            leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.'
+        };
+    }
+
+    renderWelcomeSettings() {
+        if (!this.welcomeSettings) return;
+        const ws = this.welcomeSettings;
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+
+        // Set form values
+        document.getElementById('wsTitle').value = ws.title || '';
+        document.getElementById('wsSubtitle').value = ws.subtitle || '';
+        document.getElementById('wsDescription').value = ws.description || '';
+        document.getElementById('wsLeftText').value = ws.leftText || '';
+        document.getElementById('wsFont').value = ws.fontFamily || 'Playfair Display';
+
+        // Set template active
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.template === ws.template);
+        });
+
+        // Set theme active
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === ws.colorTheme);
+        });
+
+        // Load logo if exists - build full URL
+        if (ws.logo) {
+            const logoUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.logo;
+            document.getElementById('wsLogoPreview').src = logoUrl;
+            document.getElementById('wsLogoPreview').style.display = 'block';
+            document.getElementById('wsLogoPlaceholder').style.display = 'none';
+            document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
+            // Simpan URL lengkap untuk preview
+            ws.logoUrl = logoUrl;
+        } else {
+            document.getElementById('wsLogoPreview').style.display = 'none';
+            document.getElementById('wsLogoPlaceholder').style.display = 'flex';
+            document.getElementById('wsLogoRemoveBtn').style.display = 'none';
+            ws.logoUrl = null;
+        }
+
+        // Load background image if exists - build full URL
+        if (ws.backgroundImage) {
+            const bgUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.backgroundImage;
+            document.getElementById('wsBgPreview').src = bgUrl;
+            document.getElementById('wsBgPreview').style.display = 'block';
+            document.getElementById('wsBgPlaceholder').style.display = 'none';
+            document.getElementById('wsBgRemoveBtn').style.display = 'inline-block';
+            // Simpan URL lengkap untuk preview
+            ws.backgroundImageUrl = bgUrl;
+        } else {
+            document.getElementById('wsBgPreview').style.display = 'none';
+            document.getElementById('wsBgPlaceholder').style.display = 'flex';
+            document.getElementById('wsBgRemoveBtn').style.display = 'none';
+            ws.backgroundImageUrl = null;
+        }
+
+        // Load background opacity
+        if (ws.backgroundOpacity) {
+            document.getElementById('wsBgOpacity').value = ws.backgroundOpacity;
+            document.getElementById('bgOpacityValue').textContent = ws.backgroundOpacity;
+        }
+
+        // Load position values
+        if (ws.logoSize) {
+            document.getElementById('wsLogoSize').value = ws.logoSize;
+            document.getElementById('logoSizeValue').textContent = ws.logoSize;
+        }
+        if (ws.logoX) {
+            document.getElementById('wsLogoX').value = ws.logoX;
+            document.getElementById('logoXValue').textContent = ws.logoX;
+        }
+        if (ws.logoY) {
+            document.getElementById('wsLogoY').value = ws.logoY;
+            document.getElementById('logoYValue').textContent = ws.logoY;
+        }
+        if (ws.titleSize) {
+            document.getElementById('wsTitleSize').value = ws.titleSize;
+            document.getElementById('titleSizeValue').textContent = ws.titleSize;
+        }
+        if (ws.titleX) {
+            document.getElementById('wsTitleX').value = ws.titleX;
+            document.getElementById('titleXValue').textContent = ws.titleX;
+        }
+        if (ws.titleY) {
+            document.getElementById('wsTitleY').value = ws.titleY;
+            document.getElementById('titleYValue').textContent = ws.titleY;
+        }
+        if (ws.subtitleSize) {
+            document.getElementById('wsSubtitleSize').value = ws.subtitleSize;
+            document.getElementById('subtitleSizeValue').textContent = ws.subtitleSize;
+        }
+        if (ws.subtitleX) {
+            document.getElementById('wsSubtitleX').value = ws.subtitleX;
+            document.getElementById('subtitleXValue').textContent = ws.subtitleX;
+        }
+        if (ws.subtitleY) {
+            document.getElementById('wsSubtitleY').value = ws.subtitleY;
+            document.getElementById('subtitleYValue').textContent = ws.subtitleY;
+        }
+
+        // Initial preview render
+        this.updateWelcomePreview();
+    }
+
+    selectTemplate(templateId) {
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.template === templateId);
+        });
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.template = templateId;
+        this.updateWelcomePreview();
+    }
+
+    selectTheme(themeId) {
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === themeId);
+        });
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.colorTheme = themeId;
+        this.updateWelcomePreview();
+    }
+
+    updateWelcomePreview() {
+        if (!this.welcomeSettings) this.welcomeSettings = this.getDefaultWelcomeSettings();
+
+        const ws = this.welcomeSettings;
+        ws.title = document.getElementById('wsTitle').value;
+        ws.subtitle = document.getElementById('wsSubtitle').value;
+        ws.description = document.getElementById('wsDescription').value;
+        ws.leftText = document.getElementById('wsLeftText').value;
+        ws.fontFamily = document.getElementById('wsFont').value;
+        ws.backgroundOpacity = parseInt(document.getElementById('wsBgOpacity').value) || 50;
+        ws.logoSize = parseInt(document.getElementById('wsLogoSize').value) || 60;
+        ws.logoX = parseInt(document.getElementById('wsLogoX').value) || 50;
+        ws.logoY = parseInt(document.getElementById('wsLogoY').value) || 10;
+        ws.titleSize = parseInt(document.getElementById('wsTitleSize').value) || 32;
+        ws.titleX = parseInt(document.getElementById('wsTitleX').value) || 50;
+        ws.titleY = parseInt(document.getElementById('wsTitleY').value) || 50;
+        ws.subtitleSize = parseInt(document.getElementById('wsSubtitleSize').value) || 14;
+        ws.subtitleX = parseInt(document.getElementById('wsSubtitleX').value) || 50;
+        ws.subtitleY = parseInt(document.getElementById('wsSubtitleY').value) || 70;
+
+        // Use URL from PocketBase or from upload (base64)
+        ws.backgroundImageUrl = ws.backgroundImageUrl || ws.backgroundImage;
+        ws.logoUrl = ws.logoUrl || ws.logo;
+
+        const preview = document.getElementById('wsPreviewArea');
+        if (!preview) return;
+
+        const theme = this.getThemeColors(ws.colorTheme);
+        const template = ws.template || 'cover-dark';
+
+        let html = '';
+        switch(template) {
+            case 'cover-dark':
+                html = this.renderPreviewDark(ws, theme);
+                break;
+            case 'cover-light':
+                html = this.renderPreviewLight(ws, theme);
+                break;
+            case 'cover-split':
+                html = this.renderPreviewSplit(ws, theme);
+                break;
+            case 'cover-numbered':
+                html = this.renderPreviewNumbered(ws, theme);
+                break;
+            case 'cover-minimal':
+                html = this.renderPreviewMinimal(ws, theme);
+                break;
+            default:
+                html = this.renderPreviewDark(ws, theme);
+        }
+
+        preview.innerHTML = html;
+    }
+
+    getLogoStyle(ws) {
+        const size = ws.logoSize || 60;
+        const x = ws.logoX || 50;
+        const y = ws.logoY || 10;
+
+        return `height:${size}px;max-width:150px;object-fit:contain;position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, 0);`;
+    }
+
+    getTitleStyle(ws) {
+        const x = ws.titleX || 50;
+        const y = ws.titleY || 50;
+        const size = ws.titleSize || 32;
+        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
+    }
+
+    getSubtitleStyle(ws) {
+        const x = ws.subtitleX || 50;
+        const y = ws.subtitleY || 70;
+        const size = ws.subtitleSize || 14;
+        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
+    }
+
+    // Background Image handlers
+    handleWelcomeBgUpload(input) {
         const file = input.files[0];
         if (!file) return;
+
         const reader = new FileReader();
-        const preview = document.getElementById('productImagePreview');
-        const upload = document.getElementById('productImageUpload');
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            upload.classList.add('has-image');
+        reader.onload = (e) => {
+            this.welcomeBgData = e.target.result;
+            document.getElementById('wsBgPreview').src = e.target.result;
+            document.getElementById('wsBgPreview').style.display = 'block';
+            document.getElementById('wsBgPlaceholder').style.display = 'none';
+            document.getElementById('wsBgRemoveBtn').style.display = 'inline-block';
+            this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
+            this.updateWelcomePreview();
         };
         reader.readAsDataURL(file);
     }
 
-    async saveProduct() {
-        const nama = document.getElementById('productName').value.trim();
-        const kategori = document.getElementById('productKategori').value;
-        const subkategori = document.getElementById('productSubkategori').value.trim();
-        const harga = parseInt(document.getElementById('productHarga').value) || 0;
-        const deskripsi = document.getElementById('productDeskripsi').value.trim();
-        const namatoko = document.getElementById('productToko').value.trim() || 'MotifKain';
-        const daerah = document.getElementById('productDaerah').value.trim();
-        const imagePreview = document.getElementById('productImagePreview');
-        const imageData = imagePreview.src && imagePreview.style.display !== 'none' ? imagePreview.src : null;
+    removeWelcomeBg() {
+        this.welcomeBgData = null;
+        document.getElementById('wsBgPreview').style.display = 'none';
+        document.getElementById('wsBgPlaceholder').style.display = 'flex';
+        document.getElementById('wsBgRemoveBtn').style.display = 'none';
+        document.getElementById('wsBgInput').value = '';
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.backgroundImage = null;
+        this.updateWelcomePreview();
+    }
 
-        if (!nama) {
-            this.showNotification('Nama produk wajib diisi!', 'error');
-            return;
+    updateBgOpacity() {
+        const val = document.getElementById('wsBgOpacity').value;
+        document.getElementById('bgOpacityValue').textContent = val;
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.backgroundOpacity = parseInt(val);
+        this.updateWelcomePreview();
+    }
+
+    // Logo handlers
+    updateLogoSize() {
+        const val = document.getElementById('wsLogoSize').value;
+        document.getElementById('logoSizeValue').textContent = val;
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.logoSize = parseInt(val);
+        this.updateWelcomePreview();
+    }
+
+    setLogoPosition(position) {
+        document.querySelectorAll('.pos-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.position === position);
+        });
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.logoPosition = position;
+        this.updateWelcomePreview();
+    }
+
+    getThemeColors(themeId) {
+        const themes = {
+            'elegant-gold': {
+                primary: '#5D4037',
+                secondary: '#8D6E63',
+                accent: '#C9A66B',
+                accentAlt: '#008B8B',
+                textDark: '#1a1a1a',
+                textLight: '#6D4C41',
+                textMuted: '#A1887F',
+                bgLight: '#FFF8F0',
+                bgDark: '#1a2a3a',
+                bgCard: '#FFFFFF'
+            },
+            'elegant-red': {
+                primary: '#8B0000',
+                secondary: '#B22222',
+                accent: '#CD5C5C',
+                accentAlt: '#DC143C',
+                textDark: '#4A0000',
+                textLight: '#FFF0F0',
+                textMuted: '#8B0000',
+                bgLight: '#FFF5F5',
+                bgDark: '#4A0000',
+                bgCard: '#FFF8F8'
+            },
+            'elegant-cream': {
+                primary: '#8B4513',
+                secondary: '#D2691E',
+                accent: '#DEB887',
+                accentAlt: '#CD853F',
+                textDark: '#3D2314',
+                textLight: '#5C4033',
+                textMuted: '#8B7355',
+                bgLight: '#FFF8DC',
+                bgDark: '#3D2314',
+                bgCard: '#FFFAF0'
+            },
+            'elegant-brown': {
+                primary: '#3E2723',
+                secondary: '#5D4037',
+                accent: '#8D6E63',
+                accentAlt: '#A1887F',
+                textDark: '#1a1a1a',
+                textLight: '#4E342E',
+                textMuted: '#795548',
+                bgLight: '#EFEBE9',
+                bgDark: '#3E2723',
+                bgCard: '#FFFFFF'
+            },
+            'ocean-blue': {
+                primary: '#1E3A5F',
+                secondary: '#4A90A4',
+                accent: '#E8F4F8',
+                accentAlt: '#26C6DA',
+                textDark: '#0D2137',
+                textLight: '#3D5A73',
+                textMuted: '#6B8BA4',
+                bgLight: '#F0F8FF',
+                bgDark: '#0D2137',
+                bgCard: '#FFFFFF'
+            },
+            'forest-green': {
+                primary: '#2D4739',
+                secondary: '#4CAF50',
+                accent: '#A5D6A7',
+                accentAlt: '#8BC34A',
+                textDark: '#1B3324',
+                textLight: '#3D5C4A',
+                textMuted: '#6B8B7A',
+                bgLight: '#F1F8E9',
+                bgDark: '#1B3324',
+                bgCard: '#FFFFFF'
+            },
+            'monochrome': {
+                primary: '#212121',
+                secondary: '#616161',
+                accent: '#BDBDBD',
+                accentAlt: '#9E9E9E',
+                textDark: '#000000',
+                textLight: '#424242',
+                textMuted: '#757575',
+                bgLight: '#FAFAFA',
+                bgDark: '#000000',
+                bgCard: '#FFFFFF'
+            }
+        };
+        return themes[themeId] || themes['elegant-gold'];
+    }
+
+    renderPreviewDark(ws, theme) {
+        // Use URL from PocketBase or from upload (base64)
+        const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
+        let bgStyle;
+        if (bgUrl) {
+            bgStyle = `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover;`;
+        } else {
+            bgStyle = `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
         }
 
-        const formData = new FormData();
-        formData.append('nama', nama);
-        if (kategori) formData.append('kategori', kategori);
-        if (subkategori) formData.append('subkategori', subkategori);
-        if (harga) formData.append('harga', harga);
-        if (deskripsi) formData.append('deskripsi', deskripsi);
-        formData.append('namatoko', namatoko);
-        if (daerah) formData.append('daerah', daerah);
+        const logoStyle = this.getLogoStyle(ws);
+        const titleStyle = this.getTitleStyle(ws);
+        const subtitleStyle = this.getSubtitleStyle(ws);
 
-        if (imageData && imageData.startsWith('data:')) {
-            const blob = this.dataURLtoBlob(imageData);
-            formData.append('image', blob, 'image.jpg');
+        // Handle logo - bisa dari upload (base64) atau dari PocketBase (URL)
+        const logoUrl = ws.logoUrl || ws.logo;
+        let logoHtml;
+        if (logoUrl) {
+            logoHtml = `<img src="${logoUrl}" style="${logoStyle}" class="preview-logo">`;
+        } else {
+            logoHtml = `<div style="${logoStyle}" class="preview-logo-placeholder">📷</div>`;
         }
+
+        return `
+        <div style="width:100%;height:100%;${bgStyle}padding:12%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+            ${logoHtml}
+            <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
+            <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
+            <div style="position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:80%;background:rgba(255,255,255,0.95);border-radius:8px;padding:8%;text-align:center;">
+                <p style="font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+            </div>
+            <div style="${titleStyle}">
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.1rem;color:#fff;margin-bottom:4%;letter-spacing:0.05em;">${ws.title}</h1>
+                <p style="color:${theme.accent};font-size:0.5rem;letter-spacing:0.2em;margin-bottom:4%;">${ws.subtitle}</p>
+                <div style="width:30px;height:1px;background:${theme.accent};margin:0 auto;"></div>
+                ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.45rem;margin-top:4%;line-height:1.4;">${ws.description}</p>` : ''}
+            </div>
+        </div>`;
+    }
+
+    renderPreviewLight(ws, theme) {
+        // Use URL from PocketBase or from upload (base64)
+        const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
+        let bgStyle;
+        if (bgUrl) {
+            bgStyle = `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover;`;
+        } else {
+            bgStyle = `background:${theme.bgLight};`;
+        }
+        const logoStyle = this.getLogoStyle(ws);
+        const logoUrl = ws.logoUrl || ws.logo;
+        let logoHtml;
+        if (logoUrl) {
+            logoHtml = `<img src="${logoUrl}" style="${logoStyle}" class="preview-logo">`;
+        } else {
+            logoHtml = `<div class="preview-logo-placeholder">📷</div>`;
+        }
+
+        return `
+        <div style="width:100%;height:100%;${bgStyle}padding:12%;display:flex;flex-direction:column;">
+            <div style="text-align:center;margin-bottom:auto;">
+                ${logoHtml}
+            </div>
+            <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.1rem;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
+                <p style="color:${theme.accentAlt};font-size:0.5rem;letter-spacing:0.2em;margin-bottom:4%;">${ws.subtitle}</p>
+                <div style="width:30px;height:1px;background:${theme.accent};margin:0 auto;"></div>
+                ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.45rem;margin-top:4%;line-height:1.4;">${ws.description}</p>` : ''}
+            </div>
+            <div style="text-align:center;margin-top:auto;padding:8%;background:${theme.bgDark};border-radius:8px;">
+                <p style="font-size:0.45rem;color:rgba(255,255,255,0.8);line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+            </div>
+        </div>`;
+    }
+
+    renderPreviewSplit(ws, theme) {
+        // Use URL from PocketBase or from upload (base64)
+        const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
+        let leftBgStyle = theme.bgDark;
+        let rightBgStyle = theme.bgCard;
+
+        if (bgUrl) {
+            // For split, use background on right side
+            rightBgStyle = `linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover`;
+        }
+
+        const logoStyle = this.getLogoStyle(ws);
+        const logoUrl = ws.logoUrl || ws.logo;
+        const logoHtml = logoUrl ? `<img src="${logoUrl}" style="${logoStyle}">` : '';
+        return `
+        <div style="width:100%;height:100%;display:flex;">
+            <div style="width:35%;height:100%;background:${leftBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;">
+                ${logoHtml}
+                <div style="width:30px;height:1px;background:${theme.accent};margin:12% 0;"></div>
+                <p style="color:rgba(255,255,255,0.5);font-size:0.4rem;line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+            </div>
+            <div style="width:65%;height:100%;background:${rightBgStyle};padding:10%;display:flex;flex-direction:column;justify-content:center;">
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:0.9rem;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
+                <p style="color:${theme.accentAlt};font-size:0.4rem;letter-spacing:0.1em;margin-bottom:4%;">${ws.subtitle}</p>
+                <div style="width:25px;height:1px;background:${theme.textDark};margin-bottom:8%;"></div>
+                ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.4rem;line-height:1.4;">${ws.description}</p>` : ''}
+            </div>
+        </div>`;
+    }
+
+    renderPreviewNumbered(ws, theme) {
+        // Use URL from PocketBase or from upload (base64)
+        const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
+        let bgStyle;
+        if (bgUrl) {
+            bgStyle = `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover;`;
+        } else {
+            bgStyle = `background:${theme.bgDark};`;
+        }
+        const logoStyle = this.getLogoStyle(ws);
+        const logoUrl = ws.logoUrl || ws.logo;
+        let logoHtml;
+        if (logoUrl) {
+            logoHtml = `<img src="${logoUrl}" style="${logoStyle}">`;
+        } else {
+            logoHtml = `<div style="width:60px;height:60px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;font-size:1.5rem;">📷</div>`;
+        }
+        return `
+        <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+            ${logoHtml}
+            <div style="position:absolute;top:5%;left:5%;width:30px;height:30px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
+            <div style="position:absolute;bottom:5%;right:5%;width:30px;height:30px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1rem;color:#fff;margin-bottom:10px;letter-spacing:0.1em;">${ws.title}</h1>
+                <p style="color:${theme.accent};font-size:0.5rem;letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
+                <div style="width:40px;height:1px;background:${theme.accent};margin-bottom:15px;"></div>
+                ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.45rem;line-height:1.5;max-width:80%;">${ws.description}</p>` : ''}
+            </div>
+            <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.95);border-radius:8px;">
+                <p style="font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+            </div>
+        </div>`;
+    }
+
+    renderPreviewMinimal(ws, theme) {
+        // Use URL from PocketBase or from upload (base64)
+        const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
+        let bgStyle;
+        if (bgUrl) {
+            bgStyle = `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover;`;
+        } else {
+            bgStyle = `background:${theme.bgLight};`;
+        }
+        const logoStyle = this.getLogoStyle(ws);
+        const logoUrl = ws.logoUrl || ws.logo;
+        let logoHtml;
+        if (logoUrl) {
+            logoHtml = `<img src="${logoUrl}" style="${logoStyle}">`;
+        } else {
+            logoHtml = `<div style="width:40px;height:40px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;">📷</div>`;
+        }
+        return `
+        <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;justify-content:center;">
+            ${logoHtml}
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+                <p style="color:${theme.textMuted};font-size:0.4rem;letter-spacing:0.2em;margin-bottom:4%;text-transform:uppercase;">${ws.subtitle}</p>
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1rem;color:${theme.textDark};margin-bottom:6%;font-weight:300;">${ws.title}</h1>
+                <div style="width:30px;height:1px;background:${theme.accentAlt};margin-bottom:6%;"></div>
+                ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.4rem;line-height:1.4;font-style:italic;">${ws.description}</p>` : ''}
+            </div>
+        </div>`;
+    }
+
+    handleWelcomeLogoUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.welcomeLogoData = e.target.result;
+            document.getElementById('wsLogoPreview').src = e.target.result;
+            document.getElementById('wsLogoPreview').style.display = 'block';
+            document.getElementById('wsLogoPlaceholder').style.display = 'none';
+            document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
+            if (!this.welcomeSettings) this.welcomeSettings = {};
+            this.welcomeSettings.logo = e.target.result;
+            this.updateWelcomePreview();
+        };
+        reader.readAsDataURL(file);
+    }
+
+    removeWelcomeLogo() {
+        this.welcomeLogoData = null;
+        document.getElementById('wsLogoPreview').style.display = 'none';
+        document.getElementById('wsLogoPlaceholder').style.display = 'flex';
+        document.getElementById('wsLogoRemoveBtn').style.display = 'none';
+        document.getElementById('wsLogoInput').value = '';
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.logo = null;
+        this.updateWelcomePreview();
+    }
+
+    async saveWelcomeSettings() {
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+
+        // Get form values
+        const data = {
+            template: this.welcomeSettings?.template || 'cover-dark',
+            colorTheme: this.welcomeSettings?.colorTheme || 'elegant-gold',
+            fontFamily: document.getElementById('wsFont').value,
+            title: document.getElementById('wsTitle').value,
+            subtitle: document.getElementById('wsSubtitle').value,
+            description: document.getElementById('wsDescription').value,
+            leftText: document.getElementById('wsLeftText').value,
+            backgroundOpacity: parseInt(document.getElementById('wsBgOpacity').value) || 50,
+            logoSize: parseInt(document.getElementById('wsLogoSize').value) || 60,
+            logoX: parseInt(document.getElementById('wsLogoX').value) || 50,
+            logoY: parseInt(document.getElementById('wsLogoY').value) || 10,
+            titleSize: parseInt(document.getElementById('wsTitleSize').value) || 32,
+            titleX: parseInt(document.getElementById('wsTitleX').value) || 50,
+            titleY: parseInt(document.getElementById('wsTitleY').value) || 50,
+            subtitleSize: parseInt(document.getElementById('wsSubtitleSize').value) || 14,
+            subtitleX: parseInt(document.getElementById('wsSubtitleX').value) || 50,
+            subtitleY: parseInt(document.getElementById('wsSubtitleY').value) || 70
+        };
 
         try {
-            if (this.currentProduk) {
-                await this.fetchAPI('/api/collections/produk/records/' + this.currentProduk.id, {
+            const formData = new FormData();
+
+            // Add text fields
+            for (const [key, value] of Object.entries(data)) {
+                formData.append(key, value);
+            }
+
+            // Add logo if changed
+            if (this.welcomeLogoData) {
+                const blob = this.dataURLtoBlob(this.welcomeLogoData);
+                formData.append('logo', blob, 'logo.png');
+            }
+
+            // Add background image if changed
+            if (this.welcomeBgData) {
+                const blob = this.dataURLtoBlob(this.welcomeBgData);
+                formData.append('backgroundImage', blob, 'background.jpg');
+            }
+
+            if (this.welcomeSettings && this.welcomeSettings.id) {
+                // Update existing
+                await this.fetchAPI('/api/collections/' + col + '/records/' + this.welcomeSettings.id, {
                     method: 'PATCH',
                     body: formData
                 });
             } else {
-                await this.fetchAPI('/api/collections/produk/records', {
+                // Create new - will become the active one
+                const createRes = await this.fetchAPI('/api/collections/' + col + '/records', {
                     method: 'POST',
                     body: formData
                 });
+                if (createRes.ok) {
+                    const newData = await createRes.json();
+                    this.welcomeSettings = newData;
+                    this.activeWelcomeScreenId = newData.id;
+                    localStorage.setItem('motifkain_active_ws', this.activeWelcomeScreenId);
+                }
             }
-            this.showNotification('Berhasil disimpan!', 'success');
+
+            this.showNotification('Welcome Screen berhasil disimpan!', 'success');
+            this.welcomeLogoData = null;
+            this.welcomeBgData = null;
+
+            // Reload all welcome screens list and settings
+            await this.loadAllWelcomeScreens();
+            await this.loadWelcomeSettings();
         } catch (e) {
-            this.showNotification('Gagal menyimpan', 'error');
+            this.showNotification('Gagal menyimpan: ' + e.message, 'error');
         }
-
-        this.closeModal('productModal');
-        await this.loadProduk();
-    }
-
-    async deleteProduk(id) {
-        if (!confirm('Yakin ingin menghapus produk ini?')) return;
-        try {
-            await this.fetchAPI('/api/collections/produk/records/' + id, { method: 'DELETE' });
-            this.showNotification('Berhasil dihapus!', 'success');
-        } catch (e) {
-            this.showNotification('Gagal menghapus', 'error');
-        }
-        await this.loadProduk();
-    }
-
-    renderPages() {
-        const container = document.getElementById('pagesList');
-        if (!container) return;
-
-        if (this.pages.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Belum ada halaman</p>';
-            return;
-        }
-
-        const self = this;
-        container.innerHTML = this.pages.map(function(p, i) {
-            return '<div class="page-item' + (i === 0 ? ' active' : '') + '" onclick="admin.selectPage(' + i + ')">' +
-                '<strong>' + (i + 1) + '.</strong> ' + (p.mainTitle || p.title || 'Halaman ' + (i + 1)) +
-            '</div>';
-        }).join('');
-    }
-
-    selectPage(index) {
-        document.querySelectorAll('.page-item').forEach(function(el, i) {
-            el.classList.toggle('active', i === index);
-        });
-
-        const preview = document.getElementById('pagePreview');
-        if (this.pages[index]) {
-            const page = this.pages[index];
-            const pageData = {
-                ...page,
-                image: page.image ? this.pocketbaseUrl + '/api/files/catalog_pages/' + page.id + '/' + page.image : '',
-                logo: page.logo ? this.pocketbaseUrl + '/api/files/catalog_pages/' + page.id + '/' + page.logo : ''
-            };
-            preview.innerHTML = '<div style="width:300px;height:400px;">' + PageTemplates.renderPage(pageData, index + 1) + '</div>';
-        }
-    }.bind(this);
-
-    async addPage() {
-        const newPage = { ...PageTemplates.createEmptyPage('cover-dark'), order: this.pages.length };
-        try {
-            const formData = new FormData();
-            formData.append('template', newPage.template);
-            formData.append('order', newPage.order);
-            formData.append('mainTitle', newPage.mainTitle || '');
-            formData.append('subtitle', newPage.subtitle || '');
-            formData.append('description', newPage.description || '');
-
-            const res = await this.fetchAPI('/api/collections/catalog_pages/records', {
-                method: 'POST',
-                body: formData
-            });
-            if (res.ok) this.showNotification('Halaman baru ditambahkan!', 'success');
-        } catch (e) {
-            this.showNotification('Gagal menambahkan halaman', 'error');
-        }
-        await this.loadPages();
-    }
-
-    closeModal(id) {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
     }
 
     dataURLtoBlob(dataurl) {
@@ -509,16 +1402,407 @@ class AdminDashboard {
         return new Blob([u8arr], { type: mime });
     }
 
-    showNotification(message, type) {
+    async loadKategori() {
+        const col = window.MOTIFKAIN_CONFIG?.kategoriCollection || 'kategori';
+        try {
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+order');
+            if (res.ok) {
+                const data = await res.json();
+                this.kategori = data.items || [];
+            }
+        } catch (e) {
+            this.kategori = [
+                { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif', layanan: null },
+                { id: 'printing', name: 'Printing Kain', slug: 'printing', layanan: null },
+                { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian', layanan: null },
+                { id: 'asesoris', name: 'Asesoris', slug: 'asesoris', layanan: null }
+            ];
+        }
+        this.renderKategori();
+        this.populateLayananDropdowns();
+    }
+
+    renderKategori(layananFilter) {
+        var container = document.getElementById('kategoriList');
+        if (!container) return;
+
+        var filtered = this.kategori;
+        if (layananFilter) {
+            filtered = this.kategori.filter(function(k) {
+                return k.layanan === layananFilter || k.layanan_id === layananFilter;
+            });
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada kategori' + (layananFilter ? ' di layanan ini' : '') + '</p>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < filtered.length; i++) {
+            var k = filtered[i];
+            var layananName = '';
+            if (k.layanan || k.layanan_id) {
+                var layanan = this.layanan.find(function(l) { return l.id === (k.layanan || k.layanan_id); });
+                if (layanan) layananName = '<span class="kategori-layanan-badge">' + layanan.name + '</span>';
+            }
+            html += '<div class="kategori-item">';
+            html += '<div class="kategori-icon">' + (k.name.charAt ? k.name.charAt(0).toUpperCase() : '?') + '</div>';
+            html += '<div class="kategori-info">';
+            html += '<div class="kategori-name">' + k.name + '</div>';
+            html += '<div class="kategori-slug">' + k.slug + '</div>';
+            if (layananName) html += '<div>' + layananName + '</div>';
+            html += '</div>';
+            html += '<div class="kategori-actions">';
+            html += '<button class="btn btn-sm" onclick="admin.editKategori(\'' + k.id + '\')">Edit</button> ';
+            html += '<button class="btn btn-sm btn-danger" onclick="admin.deleteKategori(\'' + k.id + '\')">Hapus</button>';
+            html += '</div></div>';
+        }
+        container.innerHTML = html;
+    }
+
+    async loadProduk() {
+        const col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
+        try {
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=500&sort=-created');
+            if (res.ok) {
+                const data = await res.json();
+                this.produk = data.items || [];
+            }
+        } catch (e) {
+            this.produk = [];
+        }
+        this.renderProduk();
+    }
+
+    setupTabs() {
+        var tabs = document.querySelectorAll('.tab-btn');
+        for (var i = 0; i < tabs.length; i++) {
+            tabs[i].addEventListener('click', (function(tab) {
+                for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove('active');
+                tab.classList.add('active');
+                var tabName = tab.dataset.tab;
+                var contents = document.querySelectorAll('.tab-content');
+                for (var k = 0; k < contents.length; k++) contents[k].classList.remove('active');
+                var target = document.getElementById('tab-' + tabName);
+                if (target) target.classList.add('active');
+            }).bind(null, tabs[i]));
+        }
+    }
+
+    setupForms() {
+        var self = this;
+        var form = document.getElementById('loginForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var email = document.getElementById('emailInput').value;
+                var password = document.getElementById('passwordInput').value;
+                self.login(email, password);
+            });
+        }
+
+        var wsSave = document.getElementById('wsSaveBtn');
+        if (wsSave) wsSave.addEventListener('click', function() { self.saveWelcomeSettings(); });
+    }
+
+    showAddKategoriModal() {
+        this.currentKategori = null;
+        document.getElementById('kategoriModalTitle').textContent = 'Tambah Kategori';
+        document.getElementById('kategoriName').value = '';
+        document.getElementById('kategoriSlug').value = '';
+        document.getElementById('kategoriOrder').value = this.kategori.length;
+        // Populate layanan dropdown
+        var select = document.getElementById('kategoriLayanan');
+        if (select) {
+            select.innerHTML = '<option value="">Pilih Layanan (opsional)</option>';
+            for (var i = 0; i < this.layanan.length; i++) {
+                var l = this.layanan[i];
+                select.innerHTML += '<option value="' + l.id + '">' + l.name + '</option>';
+            }
+        }
+        document.getElementById('kategoriModal').classList.add('active');
+    }
+
+    editKategori(id) {
+        var k = null;
+        for (var i = 0; i < this.kategori.length; i++) {
+            if (this.kategori[i].id === id) { k = this.kategori[i]; break; }
+        }
+        if (!k) return;
+
+        this.currentKategori = k;
+        document.getElementById('kategoriModalTitle').textContent = 'Edit Kategori';
+        document.getElementById('kategoriName').value = k.name || '';
+        document.getElementById('kategoriSlug').value = k.slug || '';
+        document.getElementById('kategoriOrder').value = k.order || 0;
+        // Populate layanan dropdown
+        var select = document.getElementById('kategoriLayanan');
+        if (select) {
+            select.innerHTML = '<option value="">Pilih Layanan (opsional)</option>';
+            for (var i = 0; i < this.layanan.length; i++) {
+                var l = this.layanan[i];
+                var selected = (k.layanan === l.id || k.layanan_id === l.id) ? ' selected' : '';
+                select.innerHTML += '<option value="' + l.id + '"' + selected + '>' + l.name + '</option>';
+            }
+        }
+        document.getElementById('kategoriModal').classList.add('active');
+    }
+
+    async saveKategori() {
+        var name = document.getElementById('kategoriName').value.trim();
+        var slug = document.getElementById('kategoriSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
+        var order = parseInt(document.getElementById('kategoriOrder').value) || 0;
+        var layanan = document.getElementById('kategoriLayanan').value;
+
+        if (!name || !slug) {
+            this.showNotification('Nama dan slug wajib diisi!', 'error');
+            return;
+        }
+
+        var data = { name: name, slug: slug, order: order };
+        if (layanan) data.layanan = layanan;
+
+        var col = window.MOTIFKAIN_CONFIG?.kategoriCollection || 'kategori';
+        var self = this;
+
+        try {
+            if (this.currentKategori) {
+                await this.fetchAPI('/api/collections/' + col + '/records/' + this.currentKategori.id, { method: 'PATCH', body: JSON.stringify(data) });
+                this.showNotification('Berhasil disimpan!', 'success');
+            } else {
+                await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: JSON.stringify(data) });
+                this.showNotification('Berhasil ditambahkan!', 'success');
+            }
+        } catch (e) {
+            this.showNotification('Gagal menyimpan: ' + e.message, 'error');
+        }
+
+        this.closeModal('kategoriModal');
+        await this.loadKategori();
+    }
+
+    async deleteKategori(id) {
+        if (!confirm('Yakin ingin menghapus?')) return;
+        var col = window.MOTIFKAIN_CONFIG?.kategoriCollection || 'kategori';
+        try {
+            await this.fetchAPI('/api/collections/' + col + '/records/' + id, { method: 'DELETE' });
+            this.showNotification('Berhasil dihapus!', 'success');
+        } catch (e) {
+            this.showNotification('Gagal menghapus: ' + e.message, 'error');
+        }
+        await this.loadKategori();
+    }
+
+    renderProduk() {
+        var container = document.getElementById('produkGrid');
+        if (!container) return;
+
+        var filterKat = document.getElementById('filterKategori');
+        var filterVal = filterKat ? filterKat.value : '';
+        var searchVal = (document.getElementById('searchProduk') || { value: '' }).value.toLowerCase();
+
+        var filtered = this.produk;
+        if (filterVal) {
+            filtered = [];
+            for (var i = 0; i < this.produk.length; i++) {
+                if (this.produk[i].kategori === filterVal) filtered.push(this.produk[i]);
+            }
+        }
+        if (searchVal) {
+            var filtered2 = [];
+            for (var j = 0; j < filtered.length; j++) {
+                var p = filtered[j];
+                if ((p.nama && p.nama.toLowerCase().includes(searchVal)) || (p.deskripsi && p.deskripsi.toLowerCase().includes(searchVal))) {
+                    filtered2.push(p);
+                }
+            }
+            filtered = filtered2;
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada produk</p>';
+            return;
+        }
+
+        var html = '';
+        for (var k = 0; k < filtered.length; k++) {
+            var prod = filtered[k];
+            var imgUrl = prod.image ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + prod.id + '/' + prod.image : 'https://via.placeholder.com/300x300?text=No+Image';
+            var harga = prod.harga ? 'Rp ' + prod.harga.toLocaleString('id-ID') : 'Hubungi Kami';
+            html += '<div class="produk-item">';
+            html += '<div class="produk-image"><img src="' + imgUrl + '" alt="' + (prod.nama || '') + '"></div>';
+            html += '<div class="produk-info">';
+            html += '<div class="produk-name">' + (prod.nama || '-') + '</div>';
+            html += '<div class="produk-price">' + harga + '</div>';
+            html += '<div class="produk-meta">' + (prod.kategori || '-') + ' / ' + (prod.subkategori || '-') + '</div>';
+            html += '<div class="produk-actions">';
+            html += '<button class="edit-btn" onclick="admin.editProduk(\'' + prod.id + '\')">Edit</button> ';
+            html += '<button class="delete-btn" onclick="admin.deleteProduk(\'' + prod.id + '\')">Hapus</button>';
+            html += '</div></div></div>';
+        }
+        container.innerHTML = html;
+
+        this.populateKategoriDropdown();
+    }
+
+    populateKategoriDropdown() {
+        var selects = document.querySelectorAll('#productKategori, #filterKategori');
+        for (var s = 0; s < selects.length; s++) {
+            var sel = selects[s];
+            var cur = sel.value;
+            var html = '<option value="">Semua Kategori</option>';
+            for (var i = 0; i < this.kategori.length; i++) {
+                var k = this.kategori[i];
+                html += '<option value="' + k.slug + '">' + k.name + '</option>';
+            }
+            sel.innerHTML = html;
+            sel.value = cur;
+        }
+    }
+
+    showAddProductModal() {
+        this.currentProduk = null;
+        document.getElementById('productModalTitle').textContent = 'Tambah Produk';
+        var fields = ['productName', 'productKategori', 'productSubkategori', 'productHarga', 'productDeskripsi', 'productToko', 'productDaerah'];
+        for (var i = 0; i < fields.length; i++) {
+            var f = document.getElementById(fields[i]);
+            if (f) f.value = fields[i] === 'productToko' ? 'MotifKain' : '';
+        }
+        var upload = document.getElementById('productImageUpload');
+        var preview = document.getElementById('productImagePreview');
+        if (upload) upload.classList.remove('has-image');
+        if (preview) { preview.src = ''; preview.style.display = 'none'; }
+        document.getElementById('productModal').classList.add('active');
+    }
+
+    editProduk(id) {
+        var p = null;
+        for (var i = 0; i < this.produk.length; i++) {
+            if (this.produk[i].id === id) { p = this.produk[i]; break; }
+        }
+        if (!p) return;
+
+        this.currentProduk = p;
+        document.getElementById('prodModalTitle').textContent = 'Edit Produk';
+        document.getElementById('productName').value = p.nama || '';
+        document.getElementById('productKategori').value = p.kategori || '';
+        document.getElementById('productSubkategori').value = p.subkategori || '';
+        document.getElementById('productHarga').value = p.harga || '';
+        document.getElementById('productDeskripsi').value = p.deskripsi || '';
+        document.getElementById('productToko').value = p.namatoko || 'MotifKain';
+        document.getElementById('productDaerah').value = p.daerah || '';
+
+        if (p.image) {
+            var imgUrl = this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + p.id + '/' + p.image;
+            document.getElementById('productImagePreview').src = imgUrl;
+            document.getElementById('productImagePreview').style.display = 'block';
+            document.getElementById('productImageUpload').classList.add('has-image');
+        }
+
+        document.getElementById('productModal').classList.add('active');
+    }
+
+    handleImageUpload(input) {
+        var file = input.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        var preview = document.getElementById('productImagePreview');
+        var upload = document.getElementById('productImageUpload');
+        var self = this;
+        reader.onload = function(e) {
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                if (upload) upload.classList.add('has-image');
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async saveProduk() {
+        var nama = document.getElementById('productName').value.trim();
+        var kategori = document.getElementById('productKategori').value;
+        var subkategori = document.getElementById('productSubkategori').value.trim();
+        var harga = parseInt(document.getElementById('productHarga').value) || 0;
+        var deskripsi = document.getElementById('productDeskripsi').value.trim();
+        var namatoko = document.getElementById('productToko').value.trim() || 'MotifKain';
+        var daerah = document.getElementById('productDaerah').value.trim();
+        var imgEl = document.getElementById('productImagePreview');
+        var imgData = imgEl && imgEl.src && imgEl.style.display !== 'none' ? imgEl.src : null;
+
+        if (!nama) {
+            this.showNotification('Nama produk wajib diisi!', 'error');
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('nama', nama);
+        if (kategori) formData.append('kategori', kategori);
+        if (subkategori) formData.append('subkategori', subkategori);
+        if (harga) formData.append('harga', harga);
+        if (deskripsi) formData.append('deskripsi', deskripsi);
+        formData.append('namatoko', namatoko);
+        if (daerah) formData.append('daerah', daerah);
+
+        if (imgData && imgData.startsWith('data:')) {
+            var blob = this.dataURLtoBlob(imgData);
+            formData.append('image', blob, 'image.jpg');
+        }
+
+        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
+
+        try {
+            if (this.currentProduk) {
+                await this.fetchAPI('/api/collections/' + col + '/records/' + this.currentProduk.id, { method: 'PATCH', body: formData });
+                this.showNotification('Berhasil disimpan!', 'success');
+            } else {
+                await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: formData });
+                this.showNotification('Berhasil ditambahkan!', 'success');
+            }
+        } catch (e) {
+            this.showNotification('Gagal menyimpan: ' + e.message, 'error');
+        }
+        this.closeModal('productModal');
+        await this.loadProduk();
+    }
+
+    async deleteProduk(id) {
+        if (!confirm('Yakin ingin menghapus produk ini?')) return;
+        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
+        try {
+            await this.fetchAPI('/api/collections/' + col + '/records/' + id, { method: 'DELETE' });
+            this.showNotification('Berhasil dihapus!', 'success');
+        } catch (e) {
+            this.showNotification('Gagal menghapus: ' + e.message, 'error');
+        }
+        await this.loadProduk();
+    }
+
+    closeModal(id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+    }
+
+    dataURLtoBlob(dataurl) {
+        var arr = dataurl.split(',');
+        var mime = arr[0].match(/:(.*?);/)[1];
+        var bstr = atob(arr[1]);
+        var n = bstr.length;
+        var u8arr = new Uint8Array(n);
+        while (n--) u8arr[n] = bstr.charCodeAt(n);
+        return new Blob([u8arr], { type: mime });
+    }
+
+    showNotification(msg, type) {
         type = type || '';
-        const notif = document.getElementById('notification');
-        notif.textContent = message;
+        var notif = document.getElementById('notification');
+        notif.textContent = msg;
         notif.className = 'notification show' + (type ? ' ' + type : '');
+        var self = this;
         setTimeout(function() { notif.classList.remove('show'); }, 3000);
     }
 }
 
-let admin;
-document.addEventListener('DOMContentLoaded', function() {
-    admin = new AdminDashboard();
-});
+var admin;
+document.addEventListener('DOMContentLoaded', function() { admin = new AdminDashboard(); });
