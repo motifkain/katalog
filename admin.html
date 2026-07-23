@@ -249,6 +249,14 @@
                         </div>
                     </div>
 
+                    <div class="settings-section" id="splitSettings" style="display:none;">
+                        <h3>Pengaturan Split Layout</h3>
+                        <div class="form-group">
+                            <label>Lebar Bagian Kiri: <span id="splitLeftWidthValue">40</span>%</label>
+                            <input type="range" id="wsSplitLeftWidth" min="20" max="50" value="40" style="width:100%;" oninput="admin.updateWelcomePreview()">
+                        </div>
+                    </div>
+
                     <div class="settings-section">
                         <h3>Logo</h3>
                         <div class="logo-upload-area" id="wsLogoUpload" onclick="document.getElementById('wsLogoInput').click()">

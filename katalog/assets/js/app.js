@@ -118,7 +118,9 @@ async function loadWelcomeSettings() {
                 btnY: activeWs.btnY ?? 90,
                 btnBgColor: activeWs.btnBgColor || '#1B5E20',
                 btnTextColor: activeWs.btnTextColor || '#FFFFFF',
-                btnFontSize: activeWs.btnFontSize ?? 14
+                btnFontSize: activeWs.btnFontSize ?? 14,
+                // Split layout width
+                splitLeftWidth: activeWs.splitLeftWidth ?? 40
             };
             updateFavicon(welcomeSettings.logoUrl);
         }
@@ -391,13 +393,16 @@ function renderWelcomeSplit(ws, theme) {
         ? `background: linear-gradient(rgba(255,255,255,${(100 - (ws.backgroundOpacity || 50))/100}), rgba(255,255,255,${(100 - (ws.backgroundOpacity || 50))/100})), url('${bgImg}') center/cover;`
         : `background:${theme.bgCard || '#FFFAF0'};`;
 
+    const splitLeftWidth = ws.splitLeftWidth || 40;
+    const splitRightWidth = 100 - splitLeftWidth;
+
     return `
     <div style="width:100%;height:100%;display:flex;position:relative;">
-        <div style="width:40%;height:100%;background:${theme.bgDark};padding:6%;display:flex;flex-direction:column;justify-content:center;position:relative;">
+        <div style="width:${splitLeftWidth}%;height:100%;background:${theme.bgDark};padding:6%;display:flex;flex-direction:column;justify-content:center;position:relative;">
             ${ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : ''}
             ${ws.leftText ? `<div style="width:25px;height:1px;background:${theme.accent};margin:20px 0;"></div><div style="${taglineStyle}color:rgba(255,255,255,0.6);">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
         </div>
-        <div style="width:60%;height:100%;${rightBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;position:relative;">
+        <div style="width:${splitRightWidth}%;height:100%;${rightBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;position:relative;">
             <div style="${titleStyle}">
                 <h1 style="font-family:'${ws.fontFamily}',serif;font-size:${ws.titleSize || 32}px;margin-bottom:15px;">${ws.title}</h1>
                 <p style="color:${theme.accentAlt};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.2em;margin-bottom:15px;">${ws.subtitle}</p>

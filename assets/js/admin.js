@@ -555,6 +555,10 @@ class AdminDashboard {
             document.getElementById('wsDescriptionY').value = ws.descriptionY;
             document.getElementById('descriptionYValue').textContent = ws.descriptionY;
         }
+        if (ws.splitLeftWidth) {
+            document.getElementById('wsSplitLeftWidth').value = ws.splitLeftWidth;
+            document.getElementById('splitLeftWidthValue').textContent = ws.splitLeftWidth;
+        }
 
         this.updateWelcomePreview();
     }
@@ -897,6 +901,13 @@ class AdminDashboard {
         });
         if (!this.welcomeSettings) this.welcomeSettings = {};
         this.welcomeSettings.template = templateId;
+
+        // Show/hide split settings
+        const splitSettings = document.getElementById('splitSettings');
+        if (splitSettings) {
+            splitSettings.style.display = templateId === 'cover-split' ? 'block' : 'none';
+        }
+
         this.updateWelcomePreview();
     }
 
@@ -936,6 +947,7 @@ class AdminDashboard {
         ws.btnBgColor = document.getElementById('wsBtnBgColor').value || '#1B5E20';
         ws.btnTextColor = document.getElementById('wsBtnTextColor').value || '#FFFFFF';
         ws.btnFontSize = parseInt(document.getElementById('wsBtnFontSize').value) || 14;
+        ws.splitLeftWidth = parseInt(document.getElementById('wsSplitLeftWidth').value) || 40;
 
         // Use URL from PocketBase or from upload (base64)
         ws.backgroundImageUrl = ws.backgroundImageUrl || ws.backgroundImage;
@@ -1261,13 +1273,16 @@ class AdminDashboard {
         const logoUrl = ws.logoUrl || ws.logo;
         const logoHtml = logoUrl ? `<img src="${logoUrl}" style="${logoStyle}">` : '';
 
+        const splitLeftWidth = ws.splitLeftWidth || 40;
+        const splitRightWidth = 100 - splitLeftWidth;
+
         return `
         <div style="width:100%;height:100%;display:flex;position:relative;">
-            <div style="width:40%;height:100%;background:${theme.bgDark};padding:6%;display:flex;flex-direction:column;justify-content:center;position:relative;">
+            <div style="width:${splitLeftWidth}%;height:100%;background:${theme.bgDark};padding:6%;display:flex;flex-direction:column;justify-content:center;position:relative;">
                 ${logoHtml}
                 ${ws.leftText ? `<div style="width:25px;height:1px;background:${theme.accent};margin:12% 0;"></div><div style="font-size:0.4rem;color:rgba(255,255,255,0.6);line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
             </div>
-            <div style="width:60%;height:100%;background:${rightBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;position:relative;">
+            <div style="width:${splitRightWidth}%;height:100%;background:${rightBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;position:relative;">
                 <div style="${titleStyle}">
                     <h1 style="font-family:'${ws.fontFamily}',serif;font-size:${ws.titleSize || 32}px;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
                     <p style="color:${theme.accentAlt};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.1em;margin-bottom:4%;">${ws.subtitle}</p>
@@ -1399,6 +1414,7 @@ class AdminDashboard {
         data.btnBgColor = document.getElementById('wsBtnBgColor') ? document.getElementById('wsBtnBgColor').value : '#1B5E20';
         data.btnTextColor = document.getElementById('wsBtnTextColor') ? document.getElementById('wsBtnTextColor').value : '#FFFFFF';
         data.btnFontSize = parseInt(document.getElementById('wsBtnFontSize') ? document.getElementById('wsBtnFontSize').value : 14);
+        data.splitLeftWidth = parseInt(document.getElementById('wsSplitLeftWidth') ? document.getElementById('wsSplitLeftWidth').value : 40);
 
         try {
             const formData = new FormData();
