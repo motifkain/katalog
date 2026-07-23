@@ -1293,6 +1293,7 @@ class AdminDashboard {
     }
 
     setupTabs() {
+        var self = this;
         var tabs = document.querySelectorAll('.tab-btn');
         for (var i = 0; i < tabs.length; i++) {
             tabs[i].addEventListener('click', (function(tab) {
@@ -1303,6 +1304,10 @@ class AdminDashboard {
                 for (var k = 0; k < contents.length; k++) contents[k].classList.remove('active');
                 var target = document.getElementById('tab-' + tabName);
                 if (target) target.classList.add('active');
+                // Refresh dropdown when switching to produk tab
+                if (tabName === 'produk') {
+                    self.populateKategoriDropdown();
+                }
             }).bind(null, tabs[i]));
         }
     }
