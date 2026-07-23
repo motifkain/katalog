@@ -3,10 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - MotifKain Katalog</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/admin.css">
+    <title>Admin - MotifKain</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* EARTH TONE THEME */
+        :root {
+            --primary: #8B5A2B;
+            --primary-light: #A67C52;
+            --accent: #CD853F;
+            --background: #FAF0E6;
+            --surface: #FFFFFF;
+            --text-primary: #3E2723;
+            --text-secondary: #8B7355;
+            --divider: #D4C4B0;
+            --success: #6B8E23;
+            --danger: #C62828;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* LOGIN */
+        .login-section {
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 20px;
+        }
+        .login-card {
+            background: var(--surface);
+            padding: 40px; border-radius: 16px;
+            width: 100%; max-width: 400px;
+            box-shadow: 0 4px 20px rgba(139,90,43,0.1);
+        }
+        .login-card h1 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary); margin: 16px 0 8px;
+        }
+        .login-card p { color: var(--text-secondary); margin-bottom: 24px; }
+        .login-logo { width: 80px; margin-bottom: 16px; }
+
+        .form-input {
+            width: 100%; padding: 14px 16px;
+            border: 1px solid var(--divider);
+            border-radius: 10px; font-size: 14px;
+            margin-bottom: 12px; background: var(--surface);
+        }
+        .form-input:focus {
+            outline: none; border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 12px 24px; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--primary); color: white;
+        }
+        .btn-primary:hover { background: #7A4E26; }
+        .btn-outline {
+            background: transparent; border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #B71C1C; }
+        .btn-sm { padding: 8px 16px; font-size: 13px; }
+        .btn-block { width: 100%; }
+
+        /* DASHBOARD */
+        .dashboard-section { display: none; }
+        .dashboard-section.active { display: block; }
+
+        .dashboard-header {
+            background: var(--primary); color: white;
+            padding: 16px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-logo { width: 40px; height: 40px; border-radius: 50%; }
+        .header-left h1 { font-family: 'Playfair Display', serif; font-size: 20px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-right .btn-outline {
+            border-color: white; color: white;
+        }
+        .header-right .btn-outline:hover {
+            background: white; color: var(--primary);
+        }
+
+        /* MAIN CONTENT */
+        .dashboard-content {
+            padding: 24px; max-width: 1200px; margin: 0 auto;
+        }
+
+        /* SECTION CARDS */
+        .section-card {
+            background: var(--surface);
+            border-radius: 16px; padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 10px rgba(139,90,43,0.08);
+        }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 16px;
+            border-bottom: 1px solid var(--divider);
+        }
+        .section-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px; color: var(--primary);
+        }
+
+        /* LAYANAN CHIPS */
+        .layanan-chips {
+            display: flex; flex-wrap: wrap; gap: 10px;
+        }
+        .layanan-chip {
+            padding: 10px 20px; border-radius: 25px;
+            background: var(--surface); border: 1px solid var(--divider);
+            color: var(--text-secondary); cursor: pointer;
+            font-size: 14px; transition: all 0.2s;
+        }
+        .layanan-chip:hover { border-color: var(--primary); }
+        .layanan-chip.active {
+            background: var(--primary); border-color: var(--primary);
+            color: white;
+        }
+
+        /* KATEGORI & SUB KATEGORI */
+        .kategori-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+        .kategori-box, .subkategori-box {
+            background: #FAF8F5; padding: 16px; border-radius: 12px;
+        }
+        .kategori-box h4, .subkategori-box h4 {
+            font-size: 14px; color: var(--text-secondary);
+            margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .kategori-list, .subkategori-list {
+            display: flex; flex-wrap: wrap; gap: 8px;
+        }
+        .kategori-item, .subkategori-item {
+            padding: 8px 16px; background: var(--surface);
+            border: 1px solid var(--divider); border-radius: 20px;
+            font-size: 13px; cursor: pointer; display: flex;
+            align-items: center; gap: 8px;
+        }
+        .kategori-item:hover, .subkategori-item:hover {
+            border-color: var(--primary);
+        }
+        .kategori-item.active {
+            background: var(--primary); border-color: var(--primary);
+            color: white;
+        }
+        .item-delete {
+            background: none; border: none; color: inherit;
+            cursor: pointer; opacity: 0.6; font-size: 16px;
+        }
+        .item-delete:hover { opacity: 1; }
+
+        .add-item-input {
+            display: flex; gap: 8px; margin-top: 12px;
+        }
+        .add-item-input input {
+            flex: 1; padding: 10px 14px;
+            border: 1px dashed var(--divider);
+            border-radius: 20px; font-size: 13px;
+            background: transparent;
+        }
+        .add-item-input input:focus {
+            outline: none; border-style: solid; border-color: var(--primary);
+        }
+
+        /* PRODUCTS GRID */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .product-card {
+            background: var(--surface);
+            border-radius: 12px; overflow: hidden;
+            border: 1px solid var(--divider);
+            cursor: pointer; transition: all 0.2s;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(139,90,43,0.15);
+        }
+        .product-img {
+            width: 100%; aspect-ratio: 1;
+            background: #F5F0EB;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-secondary); font-size: 12px;
+            position: relative; overflow: hidden;
+        }
+        .product-img img { width: 100%; height: 100%; object-fit: cover; }
+        .product-img-count {
+            position: absolute; bottom: 4px; right: 4px;
+            background: rgba(0,0,0,0.6); color: white;
+            padding: 2px 8px; border-radius: 8px;
+            font-size: 10px;
+        }
+        .product-info { padding: 12px; }
+        .product-info h4 {
+            font-size: 14px; margin-bottom: 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .product-info .price {
+            color: var(--primary); font-weight: 600; font-size: 13px;
+        }
+        .product-info .category {
+            font-size: 11px; color: var(--text-secondary);
+        }
+
+        /* MODAL */
+        .modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 9999;
+            justify-content: center; align-items: center;
+            padding: 20px;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: var(--surface);
+            border-radius: 16px; width: 100%; max-width: 500px;
+            max-height: 90vh; overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--divider);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+        }
+        .modal-close {
+            background: none; border: none; font-size: 24px;
+            cursor: pointer; color: var(--text-secondary);
+        }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-body { padding: 24px; }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--divider);
+            display: flex; justify-content: flex-end; gap: 12px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; font-size: 13px;
+            font-weight: 500; margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+        .form-group small {
+            display: block; font-size: 11px;
+            color: var(--text-secondary); margin-top: 4px;
+        }
+
+        /* IMAGE UPLOAD */
+        .image-upload-area {
+            border: 2px dashed var(--divider);
+            border-radius: 12px; padding: 40px;
+            text-align: center; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .image-upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(139,90,43,0.05);
+        }
+        .image-upload-area .icon {
+            font-size: 32px; margin-bottom: 8px;
+        }
+        .image-upload-area p { color: var(--text-secondary); font-size: 13px; }
+
+        .uploaded-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px; margin-top: 16px;
+        }
+        .uploaded-img {
+            position: relative; aspect-ratio: 1;
+            border-radius: 8px; overflow: hidden;
+            border: 1px solid var(--divider);
+        }
+        .uploaded-img img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .uploaded-img .delete-btn {
+            position: absolute; top: 4px; right: 4px;
+            background: var(--danger); color: white;
+            border: none; width: 24px; height: 24px;
+            border-radius: 50%; cursor: pointer;
+            font-size: 14px; line-height: 24px;
+        }
+        .uploaded-img .edit-btn {
+            position: absolute; bottom: 4px; right: 4px;
+            background: var(--primary); color: white;
+            border: none; width: 24px; height: 24px;
+            border-radius: 50%; cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* IMAGE DETAIL FORM */
+        .image-detail-section {
+            background: #FAF8F5; padding: 16px;
+            border-radius: 12px; margin-top: 12px;
+        }
+        .image-detail-section h4 {
+            font-size: 13px; color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        /* NOTIFICATION */
+        .notification {
+            position: fixed; bottom: 24px; right: 24px;
+            padding: 14px 24px; border-radius: 10px;
+            color: white; font-weight: 500;
+            z-index: 99999; animation: slideIn 0.3s ease;
+        }
+        .notification.success { background: var(--success); }
+        .notification.error { background: var(--danger); }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center; padding: 40px;
+            color: var(--text-secondary);
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    </style>
 </head>
 <body>
     <!-- LOGIN -->
@@ -18,415 +357,135 @@
             <form id="loginForm">
                 <input type="email" id="emailInput" class="form-input" placeholder="Email" required>
                 <input type="password" id="passwordInput" class="form-input" placeholder="Password" required>
-                <button type="submit" class="btn btn-primary">Masuk</button>
+                <button type="submit" class="btn btn-primary btn-block">Masuk</button>
             </form>
-            <p id="loginError" class="login-error">Email atau password salah!</p>
+            <p id="loginError" class="login-error" style="color: var(--danger); margin-top: 12px; display: none;">Email atau password salah!</p>
         </div>
     </div>
 
     <!-- DASHBOARD -->
     <div id="dashboardSection" class="dashboard-section">
-        <!-- Header -->
         <header class="dashboard-header">
             <div class="header-left">
                 <img src="assets/images/logo-motifkain.png" alt="Logo" class="header-logo">
                 <h1>Dashboard Admin</h1>
             </div>
             <div class="header-right">
-                <span id="userEmail" class="user-email"></span>
                 <button class="btn btn-outline btn-sm" onclick="admin.openCatalog()">Lihat Katalog</button>
                 <button class="btn btn-outline btn-sm" onclick="admin.logout()">Logout</button>
             </div>
         </header>
 
-        <!-- Tabs -->
-        <nav class="dashboard-tabs">
-            <button class="tab-btn active" data-tab="kategori">Kategori</button>
-            <button class="tab-btn" data-tab="produk">Produk</button>
-            <button class="tab-btn" data-tab="user">User</button>
-            <button class="tab-btn" data-tab="welcomelist">Welcome Screens</button>
-        </nav>
+        <div class="dashboard-content">
+            <!-- LAYANAN -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2>Layanan</h2>
+                </div>
+                <div class="layanan-chips" id="layananChips">
+                    <!-- Loaded from config -->
+                </div>
+            </div>
 
-        <!-- Tab Content: Welcome Screens List -->
-        <div id="tab-welcomelist" class="tab-content">
-            <div class="content-header">
-                <h2>Daftar Welcome Screen</h2>
-                <button class="btn btn-primary btn-sm" onclick="admin.showWelcomeListEditor()">+ Welcome Screen Baru</button>
-            </div>
-            <div class="welcome-screens-grid" id="welcomeScreensGrid">
-                <!-- Welcome screens list will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Tab Content: User -->
-        <div id="tab-user" class="tab-content">
-            <div class="content-header">
-                <h2>User (Desainer & Pemasaran)</h2>
-                <button class="btn btn-primary btn-sm" onclick="admin.showAddUserModal()">+ Tambah User</button>
-            </div>
-            <div class="user-list" id="userList">
-                <!-- User items will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Tab Content: Kategori (Gabungan Layanan + Kategori) -->
-        <div id="tab-kategori" class="tab-content active">
-            <div class="content-header">
-                <h2>Kategori & Layanan</h2>
-                <div class="header-actions">
+            <!-- KATEGORI & SUB KATEGORI -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2>Kategori & Sub Kategori</h2>
                     <button class="btn btn-outline btn-sm" onclick="admin.showAddKategoriModal()">+ Tambah Kategori</button>
-                    <button class="btn btn-outline btn-sm" onclick="admin.showAddLayananModal()">+ Tambah Layanan</button>
+                </div>
+                <div class="kategori-row">
+                    <div class="kategori-box">
+                        <h4>Kategori</h4>
+                        <div class="kategori-list" id="kategoriList">
+                            <!-- Loaded from PocketBase -->
+                        </div>
+                        <div class="add-item-input">
+                            <input type="text" id="newKategoriInput" placeholder="Ketik nama kategori baru...">
+                            <button class="btn btn-primary btn-sm" onclick="admin.addKategori()">Tambah</button>
+                        </div>
+                    </div>
+                    <div class="subkategori-box">
+                        <h4>Sub Kategori</h4>
+                        <div class="subkategori-list" id="subkategoriList">
+                            <!-- Loaded based on selected kategori -->
+                        </div>
+                        <div class="add-item-input">
+                            <input type="text" id="newSubkategoriInput" placeholder="Ketik nama sub kategori...">
+                            <button class="btn btn-primary btn-sm" onclick="admin.addSubkategori()">Tambah</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Layanan Section -->
-            <div class="kategori-section">
-                <h3 class="section-title">Layanan</h3>
-                <div class="layanan-list" id="layananList">
-                    <!-- Layanan items will be loaded here -->
+            <!-- PRODUK -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2>Produk</h2>
+                    <button class="btn btn-primary btn-sm" onclick="admin.showAddProductModal()">+ Tambah Produk</button>
                 </div>
-            </div>
-
-            <!-- Kategori Section -->
-            <div class="kategori-section">
-                <h3 class="section-title">Kategori</h3>
-                <div class="filter-bar">
-                    <select id="filterKategoriLayanan" onchange="admin.filterKategoriByLayanan()">
-                        <option value="">Semua Layanan</option>
-                    </select>
-                </div>
-                <div class="kategori-list" id="kategoriList">
-                    <!-- Kategori items -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab Content: Produk -->
-        <div id="tab-produk" class="tab-content">
-            <div class="content-header">
-                <h2>Pengaturan Produk</h2>
-                <button class="btn btn-primary btn-sm" onclick="admin.showAddProductModal()">+ Tambah Produk</button>
-            </div>
-            <div class="filter-bar">
-                <select id="filterKategori" onchange="admin.filterProducts()">
-                    <option value="">Semua Kategori</option>
-                </select>
-                <input type="text" id="searchProduct" placeholder="Cari produk..." oninput="admin.filterProducts()">
-            </div>
-            <div class="produk-grid" id="produkGrid">
-                <!-- Produk items -->
-            </div>
-        </div>
-
-        <!-- Tab Content: Welcome Screen Editor -->
-        <div id="tab-welcome" class="tab-content">
-            <!-- Saved Data Status -->
-            <div class="saved-ws-card" id="savedWsCard">
-                <div class="saved-ws-header">
-                    <div class="saved-ws-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-                    </div>
-                    <div class="saved-ws-info">
-                        <h4>Data Tersimpan</h4>
-                        <p id="savedWsStatus">Memuat...</p>
-                    </div>
-                    <button class="btn btn-sm btn-outline" onclick="admin.refreshWelcomeData()">Refresh</button>
-                </div>
-                <div class="saved-ws-actions" id="savedWsActions">
-                    <!-- Actions will be loaded here -->
-                </div>
-            </div>
-
-            <div class="content-header">
-                <h2>Welcome Screen Editor</h2>
-                <div class="header-actions">
-                    <button class="btn btn-outline btn-sm" onclick="admin.backToWelcomeList()">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-                        Kembali ke Daftar
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="admin.previewWelcomeScreen()">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                        Lihat Preview
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="admin.openCatalog()">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-                        Lihat Live
-                    </button>
-                </div>
-            </div>
-            <div class="welcome-editor-container">
-                <!-- Settings Panel -->
-                <div class="welcome-settings">
-                    <div class="settings-section">
-                        <h3>Template</h3>
-                        <div class="template-grid">
-                            <button class="template-btn active" data-template="cover-dark" onclick="admin.selectTemplate('cover-dark')">
-                                <div class="template-preview template-dark"></div>
-                                <span>Gelap</span>
-                            </button>
-                            <button class="template-btn" data-template="cover-light" onclick="admin.selectTemplate('cover-light')">
-                                <div class="template-preview template-light"></div>
-                                <span>Terang</span>
-                            </button>
-                            <button class="template-btn" data-template="cover-split" onclick="admin.selectTemplate('cover-split')">
-                                <div class="template-preview template-split"></div>
-                                <span>Split</span>
-                            </button>
-                            <button class="template-btn" data-template="cover-numbered" onclick="admin.selectTemplate('cover-numbered')">
-                                <div class="template-preview template-numbered"></div>
-                                <span>Nomor</span>
-                            </button>
-                            <button class="template-btn" data-template="cover-minimal" onclick="admin.selectTemplate('cover-minimal')">
-                                <div class="template-preview template-minimal"></div>
-                                <span>Minimal</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>Warna / Theme</h3>
-                        <div class="theme-grid">
-                            <button class="theme-btn" data-theme="elegant-gold" onclick="admin.selectTheme('elegant-gold')">
-                                <div class="theme-swatch" style="background: linear-gradient(135deg, #5D4037, #C9A66B)"></div>
-                                <span>Gold</span>
-                            </button>
-                            <button class="theme-btn" data-theme="elegant-red" onclick="admin.selectTheme('elegant-red')">
-                                <div class="theme-swatch" style="background: linear-gradient(135deg, #8B0000, #CD5C5C)"></div>
-                                <span>Merah</span>
-                            </button>
-                            <button class="theme-btn" data-theme="elegant-cream" onclick="admin.selectTheme('elegant-cream')">
-                                <div class="theme-swatch" style="background: linear-gradient(135deg, #8B4513, #DEB887)"></div>
-                                <span>Cream</span>
-                            </button>
-                            <button class="theme-btn" data-theme="elegant-brown" onclick="admin.selectTheme('elegant-brown')">
-                                <div class="theme-swatch" style="background: linear-gradient(135deg, #3E2723, #8D6E63)"></div>
-                                <span>Coklat</span>
-                            </button>
-                            <button class="theme-btn" data-theme="ocean-blue" onclick="admin.selectTheme('ocean-blue')">
-                                <div class="theme-swatch" style="background: linear-gradient(135deg, #1E3A5F, #4A90A4)"></div>
-                                <span>Biru</span>
-                            </button>
-                            <button class="theme-btn" data-theme="forest-green" onclick="admin.selectTheme('forest-green')">
-                                <div class="theme-swatch" style="background: linear-gradient(135deg, #2D4739, #4CAF50)"></div>
-                                <span>Hijau</span>
-                            </button>
-                            <button class="theme-btn" data-theme="monochrome" onclick="admin.selectTheme('monochrome')">
-                                <div class="theme-swatch" style="background: linear-gradient(135deg, #212121, #9E9E9E)"></div>
-                                <span>Hitam</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>Font</h3>
-                        <select id="wsFont" class="form-input" onchange="admin.updateWelcomePreview()">
-                            <option value="Playfair Display">Playfair Display (Serif)</option>
-                            <option value="Inter">Inter (Sans-serif)</option>
-                            <option value="Poppins">Poppins</option>
-                            <option value="Montserrat">Montserrat</option>
-                            <option value="Lora">Lora</option>
-                            <option value="Merriweather">Merriweather</option>
-                        </select>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>Konten</h3>
-                        <div class="form-group">
-                            <label>Judul Utama</label>
-                            <input type="text" id="wsTitle" class="form-input" placeholder="Contoh: MOTIFKAIN" value="CATALOG" oninput="admin.updateWelcomePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Subtitle</label>
-                            <input type="text" id="wsSubtitle" class="form-input" placeholder="Contoh: Company Profile" value="Company Profile" oninput="admin.updateWelcomePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Deskripsi</label>
-                            <textarea id="wsDescription" class="form-input" rows="2" placeholder="Deskripsi singkat" oninput="admin.updateWelcomePreview()">Koleksi produk eksklusif kami</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Text Kiri / Tagline</label>
-                            <textarea id="wsLeftText" class="form-input" rows="2" placeholder="Text di sisi kiri" oninput="admin.updateWelcomePreview()">Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.</textarea>
-                        </div>
-                    </div>
-
-                    <div class="settings-section" id="splitSettings" style="display:none;">
-                        <h3>Pengaturan Split Layout</h3>
-                        <div class="form-group">
-                            <label>Lebar Bagian Kiri: <span id="splitLeftWidthValue">40</span>%</label>
-                            <input type="range" id="wsSplitLeftWidth" min="20" max="50" value="40" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>Logo</h3>
-                        <div class="logo-upload-area" id="wsLogoUpload" onclick="document.getElementById('wsLogoInput').click()">
-                            <div class="logo-placeholder" id="wsLogoPlaceholder">
-                                <span class="logo-icon">📷</span>
-                                <span>Klik untuk upload logo</span>
-                            </div>
-                            <img id="wsLogoPreview" style="display:none;">
-                        </div>
-                        <input type="file" id="wsLogoInput" accept="image/*" style="display:none" onchange="admin.handleWelcomeLogoUpload(this)">
-                        <button class="btn btn-outline btn-sm" onclick="admin.removeWelcomeLogo()" id="wsLogoRemoveBtn" style="display:none;margin-top:8px;">Hapus Logo</button>
-
-                        <div class="form-group" style="margin-top:12px;">
-                            <label>Ukuran Logo: <span id="logoSizeValue">60</span>px</label>
-                            <input type="range" id="wsLogoSize" min="20" max="150" value="60" style="width:100%;" oninput="admin.updateLogoSize()">
-                        </div>
-                        <div class="form-group">
-                            <label>Posisi X Logo: <span id="logoXValue">50</span>%</label>
-                            <input type="range" id="wsLogoX" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Posisi Y Logo: <span id="logoYValue">10</span>%</label>
-                            <input type="range" id="wsLogoY" min="0" max="80" value="10" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>Title</h3>
-                        <div class="form-group">
-                            <label>Ukuran Title: <span id="titleSizeValue">32</span>px</label>
-                            <input type="range" id="wsTitleSize" min="16" max="72" value="32" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Posisi X Title: <span id="titleXValue">50</span>%</label>
-                            <input type="range" id="wsTitleX" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Posisi Y Title: <span id="titleYValue">50</span>%</label>
-                            <input type="range" id="wsTitleY" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>Subtitle</h3>
-                        <div class="form-group">
-                            <label>Ukuran Subtitle: <span id="subtitleSizeValue">14</span>px</label>
-                            <input type="range" id="wsSubtitleSize" min="10" max="36" value="14" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Posisi X Subtitle: <span id="subtitleXValue">50</span>%</label>
-                            <input type="range" id="wsSubtitleX" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Posisi Y Subtitle: <span id="subtitleYValue">70</span>%</label>
-                            <input type="range" id="wsSubtitleY" min="0" max="100" value="70" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>Deskripsi</h3>
-                        <div class="form-group">
-                            <label>Ukuran Deskripsi: <span id="descriptionSizeValue">14</span>px</label>
-                            <input type="range" id="wsDescriptionSize" min="10" max="24" value="14" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Posisi X Deskripsi: <span id="descriptionXValue">50</span>%</label>
-                            <input type="range" id="wsDescriptionX" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Posisi Y Deskripsi: <span id="descriptionYValue">75</span>%</label>
-                            <input type="range" id="wsDescriptionY" min="0" max="100" value="75" style="width:100%;" oninput="admin.updateWelcomePreview()">
-                        </div>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>Background Image (Opsional)</h3>
-                        <div class="logo-upload-area" id="wsBgUpload" onclick="document.getElementById('wsBgInput').click()">
-                            <div class="logo-placeholder" id="wsBgPlaceholder">
-                                <span class="logo-icon">🖼️</span>
-                                <span>Klik untuk upload background</span>
-                            </div>
-                            <img id="wsBgPreview" style="display:none;">
-                        </div>
-                        <input type="file" id="wsBgInput" accept="image/*" style="display:none" onchange="admin.handleWelcomeBgUpload(this)">
-                        <button class="btn btn-outline btn-sm" onclick="admin.removeWelcomeBg()" id="wsBgRemoveBtn" style="display:none;margin-top:8px;">Hapus Background</button>
-                        <div class="form-group" style="margin-top:12px;">
-                            <label>Opacity Background: <span id="bgOpacityValue">50</span>%</label>
-                            <input type="range" id="wsBgOpacity" min="10" max="100" value="50" style="width:100%;" oninput="admin.updateBgOpacity()">
-                        </div>
-                        <div class="form-group">
-                            <label>Opacity Panel Bawah: <span id="bottomPanelOpacityValue">95</span>%</label>
-                            <input type="range" id="wsBottomPanelOpacity" min="30" max="100" value="95" style="width:100%;" oninput="admin.updateBottomPanelOpacity()">
-                        </div>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>Tombol "Lihat Katalog"</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Warna Background</label>
-                                <input type="color" id="wsBtnBgColor" value="#1B5E20" style="width:50px;height:30px;border:none;cursor:pointer;" oninput="admin.updateBtnStyle()">
-                            </div>
-                            <div class="form-group">
-                                <label>Warna Text</label>
-                                <input type="color" id="wsBtnTextColor" value="#FFFFFF" style="width:50px;height:30px;border:none;cursor:pointer;" oninput="admin.updateBtnStyle()">
-                            </div>
-                            <div class="form-group">
-                                <label>Ukuran Font</label>
-                                <input type="range" id="wsBtnFontSize" min="10" max="20" value="14" style="width:80px;" oninput="admin.updateBtnStyle()">
-                                <span id="btnFontSizeValue">14</span>px
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>X: <span id="btnXValue">50</span>%</label>
-                                <input type="range" id="wsBtnX" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateBtnStyle()">
-                            </div>
-                            <div class="form-group">
-                                <label>Y: <span id="btnYValue">90</span>%</label>
-                                <input type="range" id="wsBtnY" min="50" max="95" value="90" style="width:100%;" oninput="admin.updateBtnStyle()">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="settings-section">
-                        <button class="btn btn-primary" onclick="admin.saveWelcomeSettings()">Simpan Welcome Screen</button>
-                    </div>
-                </div>
-
-                <!-- Preview Panel -->
-                <div class="welcome-preview-panel">
-                    <h3>Preview</h3>
-                    <div class="preview-frame">
-                        <div class="preview-phone">
-                            <div id="wsPreviewArea" class="ws-preview-content">
-                                <!-- Preview will be rendered here -->
-                            </div>
-                        </div>
-                    </div>
+                <div class="products-grid" id="productsGrid">
+                    <!-- Loaded from PocketBase -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Tambah/Edit Layanan -->
-    <div id="layananModal" class="modal">
+    <!-- MODAL: ADD/EDIT PRODUCT -->
+    <div id="productModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="layananModalTitle">Tambah Layanan</h3>
-                <button class="modal-close" onclick="admin.closeModal('layananModal')">&times;</button>
+                <h3 id="productModalTitle">Tambah Produk</h3>
+                <button class="modal-close" onclick="admin.closeModal('productModal')">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Nama Layanan</label>
-                    <input type="text" id="layananName" placeholder="Contoh: Desain Motif">
+                    <label>Nama Produk</label>
+                    <input type="text" id="productName" class="form-input" placeholder="Contoh: Motif Parang Klasik">
                 </div>
                 <div class="form-group">
-                    <label>Icon (emoji)</label>
-                    <input type="text" id="layananIcon" placeholder="Contoh: 🎨">
-                    <small>Gunakan emoji sebagai icon layanan</small>
+                    <label>Layanan</label>
+                    <select id="productLayanan" class="form-input">
+                        <option value="">Pilih Layanan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select id="productKategori" class="form-input">
+                        <option value="">Pilih Kategori</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Harga</label>
+                    <input type="number" id="productHarga" class="form-input" placeholder="Contoh: 150000">
+                </div>
+                <div class="form-group">
+                    <label>Gambar Produk (bisa lebih dari 1)</label>
+                    <div class="image-upload-area" onclick="document.getElementById('productImagesInput').click()">
+                        <div class="icon">📷</div>
+                        <p>Klik untuk upload gambar</p>
+                    </div>
+                    <input type="file" id="productImagesInput" accept="image/*" multiple style="display:none" onchange="admin.handleImageUpload(this)">
+                    <div class="uploaded-images" id="uploadedImagesList"></div>
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="productDeskripsi" class="form-input" rows="3" placeholder="Deskripsi produk..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp (untuk kontak)</label>
+                    <input type="text" id="productWhatsapp" class="form-input" placeholder="Contoh: 6281234567890">
+                    <small>Nomor WhatsApp tanpa tanda + atau spasi</small>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-outline" onclick="admin.closeModal('layananModal')">Batal</button>
-                <button class="btn btn-primary" onclick="admin.saveLayanan()">Simpan</button>
+                <button class="btn btn-outline" onclick="admin.closeModal('productModal')">Batal</button>
+                <button class="btn btn-danger" id="deleteProductBtn" onclick="admin.deleteProduct()" style="display:none;">Hapus</button>
+                <button class="btn btn-primary" onclick="admin.saveProduct()">Simpan</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Tambah/Edit Kategori -->
+    <!-- MODAL: ADD/EDIT KATEGORI -->
     <div id="kategoriModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -435,24 +494,14 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Layanan</label>
-                    <select id="kategoriLayanan" class="form-input">
-                        <option value="">Pilih Layanan (opsional)</option>
-                    </select>
-                    <small>Kategori akan muncul di dalam layanan yang dipilih</small>
-                </div>
-                <div class="form-group">
                     <label>Nama Kategori</label>
-                    <input type="text" id="kategoriName" placeholder="Contoh: Panel Atasan Wanita">
+                    <input type="text" id="kategoriNameInput" class="form-input" placeholder="Contoh: Batik">
                 </div>
                 <div class="form-group">
-                    <label>Slug (ID)</label>
-                    <input type="text" id="kategoriSlug" placeholder="contoh: panel-atasan-wanita">
-                    <small>ID unik untuk kategori (tanpa spasi)</small>
-                </div>
-                <div class="form-group">
-                    <label>Urutan</label>
-                    <input type="number" id="kategoriOrder" value="0">
+                    <label>Layanan</label>
+                    <select id="kategoriLayananSelect" class="form-input">
+                        <option value="">Pilih Layanan</option>
+                    </select>
                 </div>
             </div>
             <div class="modal-footer">
@@ -462,135 +511,38 @@
         </div>
     </div>
 
-    <!-- Modal: Tambah/Edit Produk -->
-    <div id="productModal" class="modal">
-        <div class="modal-content modal-lg">
-            <div class="modal-header">
-                <h3 id="productModalTitle">Tambah Produk</h3>
-                <button class="modal-close" onclick="admin.closeModal('productModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nama Produk</label>
-                        <input type="text" id="productName" placeholder="Nama produk">
-                    </div>
-                    <div class="form-group">
-                        <label>Kategori</label>
-                        <select id="productKategori">
-                            <option value="">Pilih Kategori</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Subkategori</label>
-                        <input type="text" id="productSubkategori" placeholder="Contoh: Batik, Floral, Geometris">
-                    </div>
-                    <div class="form-group">
-                        <label>Warna</label>
-                        <input type="text" id="productWarna" placeholder="Contoh: Merah, Biru, Hijau">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Deskripsi</label>
-                    <textarea id="productDeskripsi" rows="3" placeholder="Deskripsi produk"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Gambar Produk</label>
-                    <div class="product-images-container" id="productImagesContainer">
-                        <!-- Images will be shown here -->
-                    </div>
-                    <div class="image-add-btn" onclick="document.getElementById('productImageInput').click()">
-                        <input type="file" id="productImageInput" accept="image/*" multiple style="display:none" onchange="admin.handleProductImageUpload(this)">
-                        <div class="image-add-area">
-                            <span class="upload-icon">+</span>
-                            <span>Tambah Gambar</span>
-                        </div>
-                    </div>
-                    <small style="color:var(--text-light);font-size:0.75rem;margin-top:4px;display:block;">Klik untuk menambahkan gambar (bisa beberapa sekaligus)</small>
-                </div>
-                <!-- Image Detail Modal -->
-                <div class="image-detail-modal" id="imageDetailModal">
-                    <div class="image-detail-content">
-                        <div class="modal-header">
-                            <h4>Detail Gambar</h4>
-                            <button class="modal-close" onclick="admin.closeImageDetail()">&times;</button>
-                        </div>
-                        <div class="image-detail-body">
-                            <img id="imageDetailPreview" src="" alt="">
-                            <div class="form-group">
-                                <label>Warna</label>
-                                <input type="text" id="imageWarna" placeholder="Contoh: Merah">
-                            </div>
-                            <div class="form-group">
-                                <label>Bagian</label>
-                                <select id="imageBagian">
-                                    <option value="">Pilih Bagian</option>
-                                    <option value="muka">Muka (Depan)</option>
-                                    <option value="samping">Samping</option>
-                                    <option value="belakang">Belakang</option>
-                                    <option value="bentangan">Bentangan Kain</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Deskripsi</label>
-                                <textarea id="imageDeskripsi" rows="2" placeholder="Deskripsi gambar ini"></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-outline" onclick="admin.closeImageDetail()">Batal</button>
-                            <button class="btn btn-primary" onclick="admin.saveImageDetail()">Simpan</button>
-                            <button class="btn btn-danger" onclick="admin.deleteCurrentImage()">Hapus</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="admin.closeModal('productModal')">Batal</button>
-                <button class="btn btn-primary" onclick="admin.saveProduct()">Simpan</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Tambah/Edit User -->
-    <div id="userModal" class="modal">
+    <!-- MODAL: EDIT IMAGE DETAIL -->
+    <div id="imageDetailModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="userModalTitle">Tambah User</h3>
-                <button class="modal-close" onclick="admin.closeModal('userModal')">&times;</button>
+                <h3>Detail Gambar</h3>
+                <button class="modal-close" onclick="admin.closeImageDetailModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Nama</label>
-                    <input type="text" id="userName" placeholder="Nama lengkap">
+                    <label>Preview</label>
+                    <img id="imageDetailPreview" style="width:100%;border-radius:8px;">
                 </div>
                 <div class="form-group">
-                    <label>Role</label>
-                    <select id="userRole">
-                        <option value="">Pilih Role</option>
-                        <option value="designer">Desainer</option>
-                        <option value="pemasaran">Pemasaran</option>
-                    </select>
+                    <label>Warna</label>
+                    <input type="text" id="imageWarna" class="form-input" placeholder="Contoh: Merah">
                 </div>
                 <div class="form-group">
-                    <label>WhatsApp</label>
-                    <input type="text" id="userWhatsapp" placeholder="Contoh: 6281234567890">
-                    <small>Nomor WhatsApp tanpa tanda + atau spasi</small>
+                    <label>Deskripsi Gambar</label>
+                    <textarea id="imageDeskripsi" class="form-input" rows="2" placeholder="Deskripsi untuk gambar ini..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-outline" onclick="admin.closeModal('userModal')">Batal</button>
-                <button class="btn btn-primary" onclick="admin.saveUser()">Simpan</button>
+                <button class="btn btn-danger" onclick="admin.deleteImage()">Hapus Gambar</button>
+                <button class="btn btn-primary" onclick="admin.saveImageDetail()">Simpan</button>
             </div>
         </div>
     </div>
 
-    <!-- Notification -->
+    <!-- NOTIFICATION -->
     <div id="notification" class="notification"></div>
 
     <script src="config.js"></script>
-    <script src="assets/js/templates.js"></script>
     <script src="assets/js/admin.js"></script>
 </body>
 </html>
