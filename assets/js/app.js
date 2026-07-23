@@ -53,9 +53,8 @@ const motifkainKategori = ['Semua', 'Desain Motif', 'Printing Kain', 'Pakaian Ja
 const motifkainDaerah = ['Semua', 'Jakarta', 'Solo', 'Bandung', 'Yogyakarta', 'Surabaya'];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    renderHeader();
+    renderWelcomeScreen();
     await loadProducts();
-    renderProducts();
 });
 
 function renderHeader() {
