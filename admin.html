@@ -330,13 +330,59 @@
             }
             .modal-content { margin: 8px; }
         }
+
+        /* === WARNA / GAMBAR SECTION === */
+        .form-section-title {
+            font-size: 13px; font-weight: 600;
+            color: var(--primary); margin-bottom: 12px;
+            padding-bottom: 8px; border-bottom: 1px solid var(--divider);
+        }
+        .form-hint {
+            font-size: 11px; color: var(--text-secondary);
+            text-align: center; padding: 12px;
+        }
+        .warna-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
+        .warna-item {
+            background: var(--background); border: 1px solid var(--divider);
+            border-radius: 10px; padding: 12px;
+        }
+        .warna-item-header {
+            display: flex; gap: 8px; align-items: center;
+            margin-bottom: 10px;
+        }
+        .warna-name-input { font-size: 13px; padding: 10px 12px; }
+        .gambar-list {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            margin-bottom: 8px;
+        }
+        .gambar-thumb {
+            position: relative; width: 64px; height: 64px;
+            border-radius: 6px; overflow: hidden;
+            border: 1px solid var(--divider); cursor: pointer;
+        }
+        .gambar-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .gambar-thumb .gambar-delete {
+            position: absolute; top: 0; right: 0;
+            background: var(--danger); color: white;
+            width: 18px; height: 18px; border: none;
+            border-radius: 0 0 0 6px; cursor: pointer;
+            font-size: 12px; line-height: 18px; text-align: center;
+        }
+        .image-upload-area-sm {
+            border: 1px dashed var(--divider); border-radius: 6px;
+            padding: 8px; text-align: center; cursor: pointer;
+            font-size: 12px; color: var(--text-secondary);
+        }
+        .image-upload-area-sm:hover { border-color: var(--primary); color: var(--primary); }
     </style>
 </head>
 <body>
     <!-- LOGIN -->
     <div id="loginSection" class="login-section">
         <div class="login-card">
-            <img src="assets/images/logo-motifkain.png" alt="MotifKain" class="login-logo">
+            <img src="assets/images/logo-motifkain.svg" alt="MotifKain" class="login-logo">
             <h1>Dashboard Admin</h1>
             <p>Masuk dengan akun PocketBase</p>
             <form id="loginForm">
@@ -352,7 +398,7 @@
     <div id="dashboardSection" class="dashboard-section">
         <header class="dashboard-header">
             <div class="header-left">
-                <img src="assets/images/logo-motifkain.png" alt="Logo" class="header-logo">
+                <img src="assets/images/logo-motifkain.svg" alt="Logo" class="header-logo">
             </div>
             <div class="header-right">
                 <button class="btn btn-outline btn-sm" onclick="admin.openCatalog()">Lihat Katalog</button>
@@ -410,14 +456,16 @@
 
     <!-- MODAL: ADD/EDIT PRODUCT -->
     <div id="productModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 560px;">
             <div class="modal-header">
                 <h3 id="productModalTitle">Tambah Produk</h3>
                 <button class="modal-close" onclick="admin.closeModal('productModal')">&times;</button>
             </div>
             <div class="modal-body">
+                <!-- Info Produk -->
+                <div class="form-section-title">Info Produk</div>
                 <div class="form-group">
-                    <label>Nama Produk</label>
+                    <label>Nama Produk *</label>
                     <input type="text" id="productName" class="form-input" placeholder="Contoh: Motif Parang Klasik">
                 </div>
                 <div class="form-group">
@@ -430,43 +478,66 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Kategori</label>
-                    <input type="text" id="productKategori" class="form-input" placeholder="Contoh: Batik, Tenun, dll">
-                </div>
-                <div class="form-group">
-                    <label>Sub Kategori</label>
-                    <input type="text" id="productSubkategori" class="form-input" placeholder="Contoh: Motif Bunga, Geometris">
-                </div>
-                <div class="form-group">
-                    <label>Warna</label>
-                    <input type="text" id="productWarna" class="form-input" placeholder="Contoh: Merah, Biru, Hijau">
-                </div>
-                <div class="form-group">
                     <label>Harga</label>
                     <input type="number" id="productHarga" class="form-input" placeholder="Contoh: 150000">
-                </div>
-                <div class="form-group">
-                    <label>Gambar (bisa lebih dari 1)</label>
-                    <div class="image-upload-area" onclick="document.getElementById('productImagesInput').click()">
-                        <div class="icon">📷</div>
-                        <p>Klik untuk upload</p>
-                    </div>
-                    <input type="file" id="productImagesInput" accept="image/*" multiple style="display:none" onchange="admin.handleProductImageUpload(this)">
-                    <div class="uploaded-images" id="uploadedImagesList"></div>
                 </div>
                 <div class="form-group">
                     <label>Deskripsi</label>
                     <textarea id="productDeskripsi" class="form-input" rows="2" placeholder="Deskripsi produk..."></textarea>
                 </div>
-                <div class="form-group">
-                    <label>WhatsApp</label>
-                    <input type="text" id="productWhatsapp" class="form-input" placeholder="6281234567890">
+
+                <!-- Warna Section -->
+                <div class="form-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span>Warna</span>
+                    <button class="btn btn-outline btn-sm" onclick="admin.addWarnaItem()">+ Tambah Warna</button>
                 </div>
+                <div id="warnaList" class="warna-list"></div>
+                <p id="warnaEmptyHint" class="form-hint">Belum ada warna. Klik "+ Tambah Warna" untuk menambahkan.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="admin.closeModal('productModal')">Batal</button>
                 <button class="btn btn-danger" id="deleteProductBtn" onclick="admin.deleteProduct()" style="display:none;">Hapus</button>
                 <button class="btn btn-primary" onclick="admin.saveProduct()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEMPLATE: Warna Item (hidden, cloned by JS) -->
+    <template id="warnaItemTemplate">
+        <div class="warna-item" data-warna-id="">
+            <div class="warna-item-header">
+                <input type="text" class="form-input warna-name-input" placeholder="Nama Warna (cth: Merah, Biru)" style="flex:1;margin-bottom:0;">
+                <button class="btn btn-danger btn-sm" onclick="admin.removeWarnaItem(this)" title="Hapus Warna">&times;</button>
+            </div>
+            <div class="gambar-list"></div>
+            <div class="image-upload-area-sm" onclick="admin.triggerImageUpload(this)">
+                <span>+ Tambah Gambar</span>
+            </div>
+            <input type="file" class="warna-image-input" accept="image/*" multiple style="display:none" onchange="admin.handleWarnaImageUpload(this, this.closest('.warna-item'))">
+        </div>
+    </template>
+
+    <!-- MODAL: Image Detail for Warna -->
+    <div id="imageDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detail Gambar</h3>
+                <button class="modal-close" onclick="admin.closeImageDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Preview</label>
+                    <img id="imageDetailPreview" style="width:100%;border-radius:8px;">
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi Gambar</label>
+                    <textarea id="imageDeskripsi" class="form-input" rows="2" placeholder="Deskripsi untuk gambar ini..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="admin.closeImageDetailModal()">Batal</button>
+                <button class="btn btn-danger" onclick="admin.deleteCurrentImage()">Hapus</button>
+                <button class="btn btn-primary" onclick="admin.saveImageDetail()">Simpan</button>
             </div>
         </div>
     </div>
@@ -505,34 +576,6 @@
                 <button class="btn btn-outline" onclick="admin.closeModal('portfolioModal')">Batal</button>
                 <button class="btn btn-danger" id="deletePortfolioBtn" onclick="admin.deletePortfolio()" style="display:none;">Hapus</button>
                 <button class="btn btn-primary" onclick="admin.savePortfolio()">Simpan</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: IMAGE DETAIL -->
-    <div id="imageDetailModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Detail Gambar</h3>
-                <button class="modal-close" onclick="admin.closeImageDetailModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Preview</label>
-                    <img id="imageDetailPreview" style="width:100%;border-radius:8px;">
-                </div>
-                <div class="form-group">
-                    <label>Warna</label>
-                    <input type="text" id="imageWarna" class="form-input" placeholder="Contoh: Merah">
-                </div>
-                <div class="form-group">
-                    <label>Deskripsi Gambar</label>
-                    <textarea id="imageDeskripsi" class="form-input" rows="2"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-danger" onclick="admin.deleteCurrentImage()">Hapus</button>
-                <button class="btn btn-primary" onclick="admin.saveImageDetail()">Simpan</button>
             </div>
         </div>
     </div>

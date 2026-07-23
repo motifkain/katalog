@@ -1,5 +1,6 @@
 /**
  * MOTIFKAIN ADMIN DASHBOARD
+ * Struktur: Produk → Warna → Gambar
  */
 
 class AdminDashboard {
@@ -8,11 +9,17 @@ class AdminDashboard {
         this.portfolio = [];
         this.filteredProduk = [];
         this.filteredPortfolio = [];
-        this.editingProductId = null;
+
+        // State untuk produk editing
+        this.editingProdukId = null;
+        this.warnaItems = []; // Array of { id: null, nama: '', images: [{id: null, file: null, url: '', deskripsi: ''}] }
+        this.editingImageWarnaIndex = null;
+        this.editingImageIndex = null;
+
+        // State untuk portfolio
         this.editingPortfolioId = null;
-        this.productImages = [];
         this.portfolioImages = [];
-        this.currentImageContext = 'product';
+
         this.pocketbaseToken = '';
         this.pocketbaseUrl = '';
         this.init();
@@ -90,7 +97,6 @@ class AdminDashboard {
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.toggle('active', content.id === 'tab-' + tabName);
         });
-        // Update search filter
         document.getElementById('searchFilter').value = tabName;
         this.doSearch();
     }
@@ -105,9 +111,6 @@ class AdminDashboard {
                 return (
                     (p.nama && p.nama.toLowerCase().includes(query)) ||
                     (p.layanan && p.layanan.toLowerCase().includes(query)) ||
-                    (p.kategori && p.kategori.toLowerCase().includes(query)) ||
-                    (p.subkategori && p.subkategori.toLowerCase().includes(query)) ||
-                    (p.warna && p.warna.toLowerCase().includes(query)) ||
                     (p.deskripsi && p.deskripsi.toLowerCase().includes(query))
                 );
             });
@@ -137,8 +140,25 @@ class AdminDashboard {
     // ========== PRODUK ==========
     async loadProduk() {
         try {
-            const res = await this.fetchAPI('/api/collections/produk/records?per-page=500&sort=-created');
+            // Load produk + expand warna + expand gambar
+            const res = await this.fetchAPI(
+                '/api/collections/produk/records?per-page=500&sort=-created&expand=warna'
+            );
             this.produk = res.items || [];
+
+            // Load all warna with their gambar
+            for (const p of this.produk) {
+                if (p.expand && p.expand.warna) {
+                    const warnaIds = Array.isArray(p.expand.warna)
+                        ? p.expand.warna.map(w => w.id)
+                        : [p.expand.warna.id];
+                    p.warnaList = p.expand.warna;
+                } else {
+                    // Try to load warna separately
+                    p.warnaList = [];
+                }
+            }
+
             this.filteredProduk = [...this.produk];
             this.renderProdukGrid();
         } catch (e) {
@@ -166,13 +186,27 @@ class AdminDashboard {
         }
 
         container.innerHTML = this.filteredProduk.map(p => {
-            const imgUrl = p.image ? `${this.pocketbaseUrl}/api/files/produk/${p.id}/${p.image}` : '';
-            const imgCount = p.images?.length || 0;
+            // Get first image from first warna
+            let imgUrl = '';
+            let totalImages = 0;
+            if (p.warnaList && p.warnaList.length > 0) {
+                for (const warna of p.warnaList) {
+                    if (warna.gambar) {
+                        imgUrl = `${this.pocketbaseUrl}/api/files/warna/${warna.id}/${warna.gambar}`;
+                        break;
+                    }
+                }
+                for (const warna of p.warnaList) {
+                    totalImages += (warna.gambar ? 1 : 0) + (warna.images?.length || 0);
+                }
+            }
+            const warnaCount = p.warnaList?.length || 0;
+
             return `
                 <div class="product-card" onclick="admin.editProduct('${p.id}')">
                     <div class="product-img">
                         ${imgUrl ? `<img src="${imgUrl}" alt="${p.nama}">` : '📷'}
-                        ${imgCount > 0 ? `<span class="product-img-count">+${imgCount}</span>` : ''}
+                        ${totalImages > 0 ? `<span class="product-img-count">${warnaCount} warna</span>` : ''}
                     </div>
                     <div class="product-info">
                         <h4>${p.nama || ''}</h4>
@@ -184,111 +218,176 @@ class AdminDashboard {
         }).join('');
     }
 
+    // ===== PRODUK MODAL =====
     showAddProductModal() {
-        this.editingProductId = null;
-        this.productImages = [];
+        this.editingProdukId = null;
+        this.warnaItems = [];
         document.getElementById('productModalTitle').textContent = 'Tambah Produk';
         document.getElementById('productName').value = '';
         document.getElementById('productLayanan').value = 'Jasa Desain';
-        document.getElementById('productKategori').value = '';
-        document.getElementById('productSubkategori').value = '';
-        document.getElementById('productWarna').value = '';
         document.getElementById('productHarga').value = '';
         document.getElementById('productDeskripsi').value = '';
-        document.getElementById('productWhatsapp').value = '';
-        document.getElementById('uploadedImagesList').innerHTML = '';
         document.getElementById('deleteProductBtn').style.display = 'none';
+        document.getElementById('warnaList').innerHTML = '';
+        document.getElementById('warnaEmptyHint').style.display = 'block';
         document.getElementById('productModal').classList.add('show');
     }
 
     async editProduct(id) {
-        const product = this.produk.find(p => p.id === id);
-        if (!product) return;
+        const produk = this.produk.find(p => p.id === id);
+        if (!produk) return;
 
-        this.editingProductId = id;
+        this.editingProdukId = id;
         document.getElementById('productModalTitle').textContent = 'Edit Produk';
-        document.getElementById('productName').value = product.nama || '';
-        document.getElementById('productLayanan').value = product.layanan || 'Jasa Desain';
-        document.getElementById('productKategori').value = product.kategori || '';
-        document.getElementById('productSubkategori').value = product.subkategori || '';
-        document.getElementById('productWarna').value = product.warna || '';
-        document.getElementById('productHarga').value = product.harga || '';
-        document.getElementById('productDeskripsi').value = product.deskripsi || '';
-        document.getElementById('productWhatsapp').value = product.nowa || '';
+        document.getElementById('productName').value = produk.nama || '';
+        document.getElementById('productLayanan').value = produk.layanan || 'Jasa Desain';
+        document.getElementById('productHarga').value = produk.harga || '';
+        document.getElementById('productDeskripsi').value = produk.deskripsi || '';
         document.getElementById('deleteProductBtn').style.display = 'block';
 
-        this.productImages = [];
-        if (product.image) {
-            this.productImages.push({
-                url: `${this.pocketbaseUrl}/api/files/produk/${id}/${product.image}`,
-                warna: product.warna || '',
-                deskripsi: product.deskripsi || ''
-            });
-        }
-        if (product.images && product.images.length) {
-            for (const img of product.images) {
-                this.productImages.push({
-                    url: `${this.pocketbaseUrl}/api/files/produk/${id}/${img}`,
-                    warna: '',
-                    deskripsi: ''
-                });
+        // Load warna with gambar
+        this.warnaItems = [];
+        if (produk.warnaList && produk.warnaList.length > 0) {
+            for (const warna of produk.warnaList) {
+                const warnaData = {
+                    id: warna.id,
+                    nama: warna.nama || '',
+                    images: []
+                };
+
+                // Load gambar for this warna
+                try {
+                    const gambarRes = await this.fetchAPI(
+                        `/api/collections/gambar/records?filter=warna="${warna.id}"&sort=created`
+                    );
+                    if (gambarRes.items) {
+                        for (const img of gambarRes.items) {
+                            warnaData.images.push({
+                                id: img.id,
+                                file: null,
+                                url: `${this.pocketbaseUrl}/api/files/gambar/${img.id}/${img.gambar}`,
+                                deskripsi: img.deskripsi || ''
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error loading gambar:', e);
+                }
+
+                this.warnaItems.push(warnaData);
             }
         }
-        this.renderUploadedImages('product');
+
+        this.renderWarnaList();
         document.getElementById('productModal').classList.add('show');
     }
 
-    handleProductImageUpload(input) {
-        this.currentImageContext = 'product';
-        this.handleImageUpload(input);
+    // ===== WARNA MANAGEMENT =====
+    addWarnaItem() {
+        this.warnaItems.push({
+            id: null,
+            nama: '',
+            images: []
+        });
+        this.renderWarnaList();
     }
 
-    handleImageUpload(input) {
+    removeWarnaItem(btn) {
+        const item = btn.closest('.warna-item');
+        const index = Array.from(document.querySelectorAll('.warna-item')).indexOf(item);
+        if (index > -1) {
+            this.warnaItems.splice(index, 1);
+            this.renderWarnaList();
+        }
+    }
+
+    renderWarnaList() {
+        const container = document.getElementById('warnaList');
+        const hint = document.getElementById('warnaEmptyHint');
+
+        if (this.warnaItems.length === 0) {
+            container.innerHTML = '';
+            hint.style.display = 'block';
+            return;
+        }
+
+        hint.style.display = 'none';
+        container.innerHTML = this.warnaItems.map((warna, warnaIndex) => `
+            <div class="warna-item" data-warna-id="${warna.id || ''}">
+                <div class="warna-item-header">
+                    <input type="text" class="form-input warna-name-input"
+                           placeholder="Nama Warna (cth: Merah Maroon)"
+                           value="${warna.nama}"
+                           onchange="admin.updateWarnaName(${warnaIndex}, this.value)"
+                           style="flex:1;margin-bottom:0;">
+                    <button class="btn btn-danger btn-sm"
+                            onclick="admin.removeWarnaItem(this)"
+                            title="Hapus Warna">&times;</button>
+                </div>
+                <div class="gambar-list">
+                    ${warna.images.map((img, imgIndex) => `
+                        <div class="gambar-thumb"
+                             onclick="admin.showImageDetail(${warnaIndex}, ${imgIndex})">
+                            <img src="${img.url}" alt="Gambar">
+                            ${img.file ? '<span style="position:absolute;top:0;left:0;background:#6B8E23;color:white;font-size:8px;padding:1px 4px;">baru</span>' : ''}
+                            <button class="gambar-delete"
+                                    onclick="event.stopPropagation(); admin.removeGambar(${warnaIndex}, ${imgIndex})">&times;</button>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="image-upload-area-sm"
+                     onclick="admin.triggerImageUpload(this, ${warnaIndex})">
+                    <span>+ Tambah Gambar</span>
+                </div>
+                <input type="file" class="warna-image-input-${warnaIndex}"
+                       accept="image/*" multiple
+                       style="display:none"
+                       onchange="admin.handleWarnaImageUpload(this, ${warnaIndex})">
+            </div>
+        `).join('');
+    }
+
+    updateWarnaName(index, value) {
+        if (this.warnaItems[index]) {
+            this.warnaItems[index].nama = value;
+        }
+    }
+
+    triggerImageUpload(el, warnaIndex) {
+        const input = el.parentElement.querySelector(`input[type="file"]`);
+        if (input) input.click();
+    }
+
+    handleWarnaImageUpload(input, warnaIndex) {
         const files = Array.from(input.files);
         files.forEach(file => {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const images = this.currentImageContext === 'product' ? this.productImages : this.portfolioImages;
-                images.push({ file: file, url: e.target.result, warna: '', deskripsi: '' });
-                this.renderUploadedImages(this.currentImageContext);
+                this.warnaItems[warnaIndex].images.push({
+                    id: null,
+                    file: file,
+                    url: e.target.result,
+                    deskripsi: ''
+                });
+                this.renderWarnaList();
             };
             reader.readAsDataURL(file);
         });
         input.value = '';
     }
 
-    renderUploadedImages(context) {
-        const containerId = context === 'product' ? 'uploadedImagesList' : 'portfolioImagesList';
-        const container = document.getElementById(containerId);
-        const images = context === 'product' ? this.productImages : this.portfolioImages;
-
-        container.innerHTML = images.map((img, index) => `
-            <div class="uploaded-img">
-                <img src="${img.url}" alt="Image ${index + 1}">
-                <button class="delete-btn" onclick="admin.removeImage(${index}, '${context}')">&times;</button>
-                <button class="edit-btn" onclick="admin.showImageDetail(${index}, '${context}')">✎</button>
-            </div>
-        `).join('');
+    removeGambar(warnaIndex, imgIndex) {
+        this.warnaItems[warnaIndex].images.splice(imgIndex, 1);
+        this.renderWarnaList();
     }
 
-    removeImage(index, context) {
-        if (context === 'product') {
-            this.productImages.splice(index, 1);
-            this.renderUploadedImages('product');
-        } else {
-            this.portfolioImages.splice(index, 1);
-            this.renderUploadedImages('portfolio');
-        }
-    }
-
-    showImageDetail(index, context) {
-        this.currentImageContext = context;
-        this.editingImageIndex = index;
-        const images = context === 'product' ? this.productImages : this.portfolioImages;
-        const img = images[index];
+    // ===== IMAGE DETAIL MODAL =====
+    showImageDetail(warnaIndex, imgIndex) {
+        this.editingImageWarnaIndex = warnaIndex;
+        this.editingImageIndex = imgIndex;
+        const img = this.warnaItems[warnaIndex].images[imgIndex];
 
         document.getElementById('imageDetailPreview').src = img.url;
-        document.getElementById('imageWarna').value = img.warna || '';
         document.getElementById('imageDeskripsi').value = img.deskripsi || '';
         document.getElementById('imageDetailModal').classList.add('show');
     }
@@ -298,29 +397,24 @@ class AdminDashboard {
     }
 
     saveImageDetail() {
-        const images = this.currentImageContext === 'product' ? this.productImages : this.portfolioImages;
-        images[this.editingImageIndex].warna = document.getElementById('imageWarna').value;
-        images[this.editingImageIndex].deskripsi = document.getElementById('imageDeskripsi').value;
+        const deskripsi = document.getElementById('imageDeskripsi').value;
+        this.warnaItems[this.editingImageWarnaIndex].images[this.editingImageIndex].deskripsi = deskripsi;
         this.closeImageDetailModal();
-        this.showNotification('Detail gambar disimpan', 'success');
+        this.showNotification('Deskripsi gambar disimpan', 'success');
     }
 
     deleteCurrentImage() {
-        const images = this.currentImageContext === 'product' ? this.productImages : this.portfolioImages;
-        images.splice(this.editingImageIndex, 1);
-        this.renderUploadedImages(this.currentImageContext);
+        this.warnaItems[this.editingImageWarnaIndex].images.splice(this.editingImageIndex, 1);
+        this.renderWarnaList();
         this.closeImageDetailModal();
     }
 
+    // ===== SAVE PRODUK =====
     async saveProduct() {
         const nama = document.getElementById('productName').value.trim();
         const layanan = document.getElementById('productLayanan').value;
-        const kategori = document.getElementById('productKategori').value.trim();
-        const subkategori = document.getElementById('productSubkategori').value.trim();
-        const warna = document.getElementById('productWarna').value.trim();
         const harga = document.getElementById('productHarga').value;
         const deskripsi = document.getElementById('productDeskripsi').value;
-        const nowa = document.getElementById('productWhatsapp').value;
 
         if (!nama) {
             this.showNotification('Nama produk wajib diisi', 'error');
@@ -328,58 +422,171 @@ class AdminDashboard {
         }
 
         try {
-            const formData = new FormData();
-            formData.append('nama', nama);
-            formData.append('layanan', layanan);
-            formData.append('kategori', kategori);
-            formData.append('subkategori', subkategori);
-            formData.append('warna', warna);
-            formData.append('harga', harga || 0);
-            formData.append('deskripsi', deskripsi);
-            formData.append('nowa', nowa);
+            // 1. Save/update produk
+            const formDataProduk = new FormData();
+            formDataProduk.append('nama', nama);
+            formDataProduk.append('layanan', layanan);
+            formDataProduk.append('harga', harga || 0);
+            formDataProduk.append('deskripsi', deskripsi);
 
-            this.productImages.forEach((img, index) => {
-                if (img.file) {
-                    if (index === 0) formData.append('image', img.file);
-                    else formData.append('images', img.file);
-                }
-            });
-
+            let produkId = this.editingProdukId;
             let method = 'POST';
             let url = '/api/collections/produk/records';
-            if (this.editingProductId) {
+
+            if (produkId) {
                 method = 'PATCH';
-                url += '/' + this.editingProductId;
+                url += '/' + produkId;
             }
 
-            const res = await fetch(this.pocketbaseUrl + url, {
+            const produkRes = await fetch(this.pocketbaseUrl + url, {
                 method: method,
                 headers: { 'Authorization': 'Admin ' + this.pocketbaseToken },
-                body: formData
+                body: formDataProduk
             });
 
-            if (res.ok) {
-                this.closeModal('productModal');
-                await this.loadProduk();
-                this.showNotification('Produk disimpan', 'success');
-            } else {
-                throw new Error('Save failed');
+            if (!produkRes.ok) throw new Error('Gagal menyimpan produk');
+
+            if (!produkId) {
+                const produkData = await produkRes.json();
+                produkId = produkData.id;
             }
+
+            // 2. Get existing warna IDs for this produk (to track deletions)
+            const existingWarnaRes = await this.fetchAPI(
+                `/api/collections/warna/records?filter=produk="${produkId}"`
+            );
+            const existingWarnaIds = (existingWarnaRes.items || []).map(w => w.id);
+
+            // 3. Process each warna
+            const newWarnaIds = [];
+            for (const warna of this.warnaItems) {
+                // Skip empty warna
+                if (!warna.nama.trim() && warna.images.length === 0) continue;
+
+                const formDataWarna = new FormData();
+                formDataWarna.append('nama', warna.nama);
+                formDataWarna.append('produk', produkId);
+
+                let warnaId = warna.id;
+                let warnaMethod = 'POST';
+                let warnaUrl = '/api/collections/warna/records';
+
+                if (warnaId) {
+                    warnaMethod = 'PATCH';
+                    warnaUrl += '/' + warnaId;
+                    newWarnaIds.push(warnaId);
+                }
+
+                const warnaRes = await fetch(this.pocketbaseUrl + warnaUrl, {
+                    method: warnaMethod,
+                    headers: { 'Authorization': 'Admin ' + this.pocketbaseToken },
+                    body: formDataWarna
+                });
+
+                if (!warnaRes.ok) throw new Error('Gagal menyimpan warna');
+
+                if (!warnaId) {
+                    const warnaData = await warnaRes.json();
+                    warnaId = warnaData.id;
+                    newWarnaIds.push(warnaId);
+                }
+
+                // 4. Process gambar for this warna
+                const existingGambarRes = await this.fetchAPI(
+                    `/api/collections/gambar/records?filter=warna="${warnaId}"`
+                );
+                const existingGambarIds = (existingGambarRes.items || []).map(g => g.id);
+                const newGambarIds = [];
+
+                for (const img of warna.images) {
+                    // Only upload new images (no id)
+                    if (img.file) {
+                        const formDataGambar = new FormData();
+                        formDataGambar.append('gambar', img.file);
+                        formDataGambar.append('deskripsi', img.deskripsi || '');
+                        formDataGambar.append('warna', warnaId);
+
+                        const gambarRes = await fetch(this.pocketbaseUrl + '/api/collections/gambar/records', {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Admin ' + this.pocketbaseToken },
+                            body: formDataGambar
+                        });
+
+                        if (!gambarRes.ok) throw new Error('Gagal menyimpan gambar');
+                        const gambarData = await gambarRes.json();
+                        newGambarIds.push(gambarData.id);
+                    } else if (img.id) {
+                        // Update deskripsi for existing image
+                        newGambarIds.push(img.id);
+                        if (img.deskripsi !== undefined) {
+                            await this.fetchAPI(`/api/collections/gambar/records/${img.id}`, 'PATCH', {
+                                deskripsi: img.deskripsi
+                            });
+                        }
+                    }
+                }
+
+                // Delete removed gambar
+                for (const oldGambarId of existingGambarIds) {
+                    if (!newGambarIds.includes(oldGambarId)) {
+                        await this.fetchAPI(`/api/collections/gambar/records/${oldGambarId}`, 'DELETE');
+                    }
+                }
+            }
+
+            // Delete removed warna
+            for (const oldWarnaId of existingWarnaIds) {
+                if (!newWarnaIds.includes(oldWarnaId)) {
+                    // Delete all gambar in this warna first
+                    const oldGambarRes = await this.fetchAPI(
+                        `/api/collections/gambar/records?filter=warna="${oldWarnaId}"`
+                    );
+                    for (const g of (oldGambarRes.items || [])) {
+                        await this.fetchAPI(`/api/collections/gambar/records/${g.id}`, 'DELETE');
+                    }
+                    // Delete warna
+                    await this.fetchAPI(`/api/collections/warna/records/${oldWarnaId}`, 'DELETE');
+                }
+            }
+
+            this.closeModal('productModal');
+            await this.loadProduk();
+            this.showNotification('Produk disimpan', 'success');
+
         } catch (e) {
-            this.showNotification('Gagal menyimpan produk', 'error');
+            console.error('Error saving produk:', e);
+            this.showNotification('Gagal menyimpan produk: ' + e.message, 'error');
         }
     }
 
     async deleteProduct() {
-        if (!this.editingProductId) return;
-        if (!confirm('Hapus produk ini?')) return;
+        if (!this.editingProdukId) return;
+        if (!confirm('Hapus produk ini beserta semua warnanya?')) return;
 
         try {
-            await this.fetchAPI(`/api/collections/produk/records/${this.editingProductId}`, 'DELETE');
+            // Delete all warna and their gambar
+            const warnaRes = await this.fetchAPI(
+                `/api/collections/warna/records?filter=produk="${this.editingProdukId}"`
+            );
+
+            for (const warna of (warnaRes.items || [])) {
+                const gambarRes = await this.fetchAPI(
+                    `/api/collections/gambar/records?filter=warna="${warna.id}"`
+                );
+                for (const g of (gambarRes.items || [])) {
+                    await this.fetchAPI(`/api/collections/gambar/records/${g.id}`, 'DELETE');
+                }
+                await this.fetchAPI(`/api/collections/warna/records/${warna.id}`, 'DELETE');
+            }
+
+            // Delete produk
+            await this.fetchAPI(`/api/collections/produk/records/${this.editingProdukId}`, 'DELETE');
+
             this.closeModal('productModal');
             await this.loadProduk();
             this.showNotification('Produk dihapus', 'success');
         } catch (e) {
+            console.error('Error deleting produk:', e);
             this.showNotification('Gagal menghapus produk', 'error');
         }
     }
@@ -436,7 +643,6 @@ class AdminDashboard {
     showAddPortfolioModal() {
         this.editingPortfolioId = null;
         this.portfolioImages = [];
-        this.currentImageContext = 'portfolio';
         document.getElementById('portfolioModalTitle').textContent = 'Tambah Portfolio';
         document.getElementById('portfolioJudul').value = '';
         document.getElementById('portfolioKategori').value = '';
@@ -446,12 +652,11 @@ class AdminDashboard {
         document.getElementById('portfolioModal').classList.add('show');
     }
 
-    async editPortfolio(id) {
+    editPortfolio(id) {
         const portfolio = this.portfolio.find(p => p.id === id);
         if (!portfolio) return;
 
         this.editingPortfolioId = id;
-        this.currentImageContext = 'portfolio';
         document.getElementById('portfolioModalTitle').textContent = 'Edit Portfolio';
         document.getElementById('portfolioJudul').value = portfolio.judul || '';
         document.getElementById('portfolioKategori').value = portfolio.kategori || '';
@@ -461,27 +666,57 @@ class AdminDashboard {
         this.portfolioImages = [];
         if (portfolio.image) {
             this.portfolioImages.push({
+                id: null,
+                file: null,
                 url: `${this.pocketbaseUrl}/api/files/portfolio/${id}/${portfolio.image}`,
-                warna: '',
                 deskripsi: ''
             });
         }
         if (portfolio.images && portfolio.images.length) {
             for (const img of portfolio.images) {
                 this.portfolioImages.push({
+                    id: null,
+                    file: null,
                     url: `${this.pocketbaseUrl}/api/files/portfolio/${id}/${img}`,
-                    warna: '',
                     deskripsi: ''
                 });
             }
         }
-        this.renderUploadedImages('portfolio');
+        this.renderPortfolioImages();
         document.getElementById('portfolioModal').classList.add('show');
     }
 
+    renderPortfolioImages() {
+        const container = document.getElementById('portfolioImagesList');
+        container.innerHTML = this.portfolioImages.map((img, index) => `
+            <div class="uploaded-img">
+                <img src="${img.url}" alt="Image ${index + 1}">
+                <button class="delete-btn" onclick="admin.removePortfolioImage(${index})">&times;</button>
+            </div>
+        `).join('');
+    }
+
+    removePortfolioImage(index) {
+        this.portfolioImages.splice(index, 1);
+        this.renderPortfolioImages();
+    }
+
     handlePortfolioImageUpload(input) {
-        this.currentImageContext = 'portfolio';
-        this.handleImageUpload(input);
+        const files = Array.from(input.files);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.portfolioImages.push({
+                    id: null,
+                    file: file,
+                    url: e.target.result,
+                    deskripsi: ''
+                });
+                this.renderPortfolioImages();
+            };
+            reader.readAsDataURL(file);
+        });
+        input.value = '';
     }
 
     async savePortfolio() {
@@ -500,6 +735,7 @@ class AdminDashboard {
             formData.append('kategori', kategori);
             formData.append('deskripsi', deskripsi);
 
+            // Append new images
             this.portfolioImages.forEach((img, index) => {
                 if (img.file) {
                     if (index === 0) formData.append('image', img.file);
@@ -528,6 +764,7 @@ class AdminDashboard {
                 throw new Error('Save failed');
             }
         } catch (e) {
+            console.error('Error saving portfolio:', e);
             this.showNotification('Gagal menyimpan portfolio', 'error');
         }
     }
@@ -542,6 +779,7 @@ class AdminDashboard {
             await this.loadPortfolio();
             this.showNotification('Portfolio dihapus', 'success');
         } catch (e) {
+            console.error('Error deleting portfolio:', e);
             this.showNotification('Gagal menghapus portfolio', 'error');
         }
     }
@@ -577,7 +815,7 @@ class AdminDashboard {
     formatRupiah(n) {
         if (n >= 1000000) return 'Rp ' + (n/1000000).toFixed(1) + 'Jt';
         if (n >= 1000) return 'Rp ' + Math.round(n/1000) + 'Rb';
-        return 'Rp ' + n.toLocaleString('id-ID');
+        return 'Rp ' + (n || 0).toLocaleString('id-ID');
     }
 }
 

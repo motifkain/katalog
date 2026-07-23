@@ -35,7 +35,7 @@ window.MOTIFKAIN_CONFIG = {
 // Default Welcome Screen Settings (bisa diedit dari admin)
 window.WELCOME_SETTINGS = {
     // Left side - Logo area
-    logoUrl: 'assets/images/logo-motifkain.png',
+    logoUrl: 'assets/images/logo-motifkain.svg',
     leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
 
     // Right side - Text area

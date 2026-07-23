@@ -45,8 +45,8 @@ input { font-family: inherit; }
 }
 .back-btn:hover { background: rgba(255,255,255,0.1); }
 .back-btn svg { width: 28px; height: 28px; }
-.katalog-top h1 {
-    font-size: 20px; font-weight: 700; color: white; font-family: 'Playfair Display', serif;
+.header-logo {
+    height: 36px; width: auto;
 }
 
 /* === FILTER SECTION === */
@@ -190,3 +190,34 @@ input { font-family: inherit; }
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
 }
 .wa-btn:hover { background: #20BD5A; }
+
+/* === WARNA SELECTOR === */
+.warna-selector {
+    display: flex; gap: 8px; padding: 12px 16px;
+    overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+    background: white; border-bottom: 1px solid #D4C4B0;
+}
+.warna-selector::-webkit-scrollbar { display: none; }
+.warna-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border: 1px solid #D4C4B0;
+    border-radius: 20px; background: white; color: #3E2723;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    white-space: nowrap; transition: all 0.2s;
+}
+.warna-chip:hover { border-color: #8B5A2B; }
+.warna-chip.active {
+    background: #8B5A2B; border-color: #8B5A2B; color: white;
+}
+.warna-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.2);
+}
+
+/* === TYPE BADGE === */
+.type-badge {
+    position: absolute; top: 8px; left: 8px;
+    background: #CD853F; color: white;
+    padding: 4px 8px; border-radius: 6px;
+    font-size: 10px; font-weight: 600;
+}
