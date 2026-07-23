@@ -10,7 +10,7 @@ window.MOTIFKAIN_CONFIG = {
     layananCollection: 'layanan',
 
     // Collection untuk welcome screen settings
-    welcomeCollection: 'welcome_settings',
+    welcomeCollection: 'welcome_setting',
 
     // Collection untuk kategori
     kategoriCollection: 'kategori',

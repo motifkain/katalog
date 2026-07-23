@@ -91,7 +91,13 @@ class AdminDashboard {
     }
 
     openCatalog() {
-        window.open('index.html', '_self');
+        // Buka katalog di tab baru, atau refresh jika sudah ada
+        if (!this.katalogWindow || this.katalogWindow.closed) {
+            this.katalogWindow = window.open('https://katalog.motifkain.com', '_blank');
+        } else {
+            this.katalogWindow.location.reload();
+            this.katalogWindow.focus();
+        }
     }
 
     previewWelcomeScreen() {
