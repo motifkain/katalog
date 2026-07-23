@@ -16,9 +16,6 @@ class AdminDashboard {
         this.currentKategori = null;
         this.currentProduk = null;
         this.currentUser = null;
-        this.productImages = []; // Array untuk gambar produk dengan metadata
-        this.currentImageIndex = null;
-        this.themes = window.ColorThemes || {};
         this.pocketbaseToken = '';
         this.pocketbaseUrl = '';
         this.init();
@@ -121,15 +118,14 @@ class AdminDashboard {
     previewWelcomeScreen() {
         // Ambil data terbaru dari form
         const ws = {
-            template: document.querySelector('.template-btn.active')?.dataset.template || 'cover-split',
-            colorTheme: document.querySelector('.theme-btn.active')?.dataset.theme || 'elegant-cream',
+            template: document.querySelector('.template-btn.active')?.dataset.template || 'cover-dark',
+            colorTheme: document.querySelector('.theme-btn.active')?.dataset.theme || 'elegant-gold',
             fontFamily: document.getElementById('wsFont').value || 'Playfair Display',
             title: document.getElementById('wsTitle').value || 'CATALOG',
             subtitle: document.getElementById('wsSubtitle').value || 'Company Profile',
             description: document.getElementById('wsDescription').value || 'Koleksi produk eksklusif kami',
             leftText: document.getElementById('wsLeftText').value || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
             backgroundOpacity: parseInt(document.getElementById('wsBgOpacity').value) || 50,
-            bottomPanelOpacity: parseInt(document.getElementById('wsBottomPanelOpacity').value) || 95,
             logoSize: parseInt(document.getElementById('wsLogoSize').value) || 60,
             logoX: parseInt(document.getElementById('wsLogoX').value) || 50,
             logoY: parseInt(document.getElementById('wsLogoY').value) || 10,
@@ -303,19 +299,14 @@ class AdminDashboard {
         const ws = this.allWelcomeScreens.find(w => w.id === id);
         if (!ws) return;
 
-        this.welcomeSettings = { ...ws };
+        this.welcomeSettings = ws;
         this.welcomeLogoData = null;
         this.welcomeBgData = null;
-
-        // Set current template and theme
-        this.welcomeSettings.template = ws.template || 'cover-dark';
-        this.welcomeSettings.colorTheme = ws.colorTheme || 'elegant-gold';
 
         this.switchTab('welcome');
 
         setTimeout(() => {
             this.renderWelcomeSettings();
-            this.updateWelcomePreview();
             document.querySelector('.welcome-settings')?.scrollIntoView({ behavior: 'smooth' });
             this.showNotification('Welcome screen loaded. Edit dan simpan.', 'success');
         }, 100);
@@ -724,12 +715,6 @@ class AdminDashboard {
             document.getElementById('bgOpacityValue').textContent = ws.backgroundOpacity;
         }
 
-        // Load bottom panel opacity
-        if (ws.bottomPanelOpacity) {
-            document.getElementById('wsBottomPanelOpacity').value = ws.bottomPanelOpacity;
-            document.getElementById('bottomPanelOpacityValue').textContent = ws.bottomPanelOpacity;
-        }
-
         // Load position values
         if (ws.logoSize) {
             document.getElementById('wsLogoSize').value = ws.logoSize;
@@ -781,12 +766,6 @@ class AdminDashboard {
         this.updateWelcomePreview();
     }
 
-    getThemeColors(themeId) {
-        return this.themes.themes[themeId] || this.themes.themes['elegant-gold'] || {
-            primary: '#5D4037', bgDark: '#1a2a3a', accent: '#C9A66B', textDark: '#1a1a1a', textMuted: '#A1887F'
-        };
-    }
-
     selectTheme(themeId) {
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.theme === themeId);
@@ -806,7 +785,6 @@ class AdminDashboard {
         ws.leftText = document.getElementById('wsLeftText').value;
         ws.fontFamily = document.getElementById('wsFont').value;
         ws.backgroundOpacity = parseInt(document.getElementById('wsBgOpacity').value) || 50;
-        ws.bottomPanelOpacity = parseInt(document.getElementById('wsBottomPanelOpacity').value) || 95;
         ws.logoSize = parseInt(document.getElementById('wsLogoSize').value) || 60;
         ws.logoX = parseInt(document.getElementById('wsLogoX').value) || 50;
         ws.logoY = parseInt(document.getElementById('wsLogoY').value) || 10;
@@ -880,21 +858,13 @@ class AdminDashboard {
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            const bgData = e.target.result;
-
-            // Update preview image
-            document.getElementById('wsBgPreview').src = bgData;
+            this.welcomeBgData = e.target.result;
+            document.getElementById('wsBgPreview').src = e.target.result;
             document.getElementById('wsBgPreview').style.display = 'block';
             document.getElementById('wsBgPlaceholder').style.display = 'none';
             document.getElementById('wsBgRemoveBtn').style.display = 'inline-block';
-
-            // Store in welcomeSettings for preview
-            if (!this.welcomeSettings) this.welcomeSettings = {};
-            this.welcomeSettings.backgroundImage = bgData;  // base64 data URL
-            this.welcomeSettings.backgroundImageUrl = bgData;
-            this.welcomeBgData = bgData;
-
-            // Update preview
+            this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
             this.updateWelcomePreview();
         };
         reader.readAsDataURL(file);
@@ -902,14 +872,12 @@ class AdminDashboard {
 
     removeWelcomeBg() {
         this.welcomeBgData = null;
-        if (this.welcomeSettings) {
-            this.welcomeSettings.backgroundImage = null;
-            this.welcomeSettings.backgroundImageUrl = null;
-        }
         document.getElementById('wsBgPreview').style.display = 'none';
         document.getElementById('wsBgPlaceholder').style.display = 'flex';
         document.getElementById('wsBgRemoveBtn').style.display = 'none';
         document.getElementById('wsBgInput').value = '';
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.backgroundImage = null;
         this.updateWelcomePreview();
     }
 
@@ -921,53 +889,80 @@ class AdminDashboard {
         this.updateWelcomePreview();
     }
 
-    updateBottomPanelOpacity() {
-        const val = document.getElementById('wsBottomPanelOpacity').value;
-        document.getElementById('bottomPanelOpacityValue').textContent = val;
-        if (!this.welcomeSettings) this.welcomeSettings = {};
-        this.welcomeSettings.bottomPanelOpacity = parseInt(val);
-        this.updateWelcomePreview();
-    }
-
     // Logo handlers
-    handleWelcomeLogoUpload(input) {
-        const file = input.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const logoData = e.target.result;
-
-            // Update preview image
-            document.getElementById('wsLogoPreview').src = logoData;
-            document.getElementById('wsLogoPreview').style.display = 'block';
-            document.getElementById('wsLogoPlaceholder').style.display = 'none';
-            document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
-
-            // Store in welcomeSettings for preview
-            if (!this.welcomeSettings) this.welcomeSettings = {};
-            this.welcomeSettings.logo = logoData;  // base64 data URL
-            this.welcomeSettings.logoUrl = logoData;
-            this.welcomeLogoData = logoData;
-
-            // Update preview
-            this.updateWelcomePreview();
-        };
-        reader.readAsDataURL(file);
-    }
-
-    removeWelcomeLogo() {
-        this.welcomeLogoData = null;
-        if (this.welcomeSettings) {
-            this.welcomeSettings.logo = null;
-            this.welcomeSettings.logoUrl = null;
-        }
-        document.getElementById('wsLogoPreview').style.display = 'none';
-        document.getElementById('wsLogoPlaceholder').style.display = 'flex';
-        document.getElementById('wsLogoRemoveBtn').style.display = 'none';
-        document.getElementById('wsLogoInput').value = '';
+    updateLogoSize() {
+        const val = document.getElementById('wsLogoSize').value;
+        document.getElementById('logoSizeValue').textContent = val;
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.logoSize = parseInt(val);
         this.updateWelcomePreview();
     }
+
+    setLogoPosition(position) {
+        document.querySelectorAll('.pos-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.position === position);
+        });
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.logoPosition = position;
+        this.updateWelcomePreview();
+    }
+
+    getThemeColors(themeId) {
+        const themes = {
+            'elegant-gold': {
+                primary: '#5D4037',
+                secondary: '#8D6E63',
+                accent: '#C9A66B',
+                accentAlt: '#008B8B',
+                textDark: '#1a1a1a',
+                textLight: '#6D4C41',
+                textMuted: '#A1887F',
+                bgLight: '#FFF8F0',
+                bgDark: '#1a2a3a',
+                bgCard: '#FFFFFF'
+            },
+            'ocean-blue': {
+                primary: '#1E3A5F',
+                secondary: '#4A90A4',
+                accent: '#E8F4F8',
+                accentAlt: '#26C6DA',
+                textDark: '#0D2137',
+                textLight: '#3D5A73',
+                textMuted: '#6B8BA4',
+                bgLight: '#F0F8FF',
+                bgDark: '#0D2137',
+                bgCard: '#FFFFFF'
+            },
+            'forest-green': {
+                primary: '#2D4739',
+                secondary: '#4CAF50',
+                accent: '#A5D6A7',
+                accentAlt: '#8BC34A',
+                textDark: '#1B3324',
+                textLight: '#3D5C4A',
+                textMuted: '#6B8B7A',
+                bgLight: '#F1F8E9',
+                bgDark: '#1B3324',
+                bgCard: '#FFFFFF'
+            },
+            'monochrome': {
+                primary: '#212121',
+                secondary: '#616161',
+                accent: '#BDBDBD',
+                accentAlt: '#9E9E9E',
+                textDark: '#000000',
+                textLight: '#424242',
+                textMuted: '#757575',
+                bgLight: '#FAFAFA',
+                bgDark: '#000000',
+                bgCard: '#FFFFFF'
+            }
+        };
+        return themes[themeId] || themes['elegant-gold'];
+    }
+
+    renderPreviewDark(ws, theme) {
+        // Use URL from PocketBase or from upload (base64)
         const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
         let bgStyle;
         if (bgUrl) {
@@ -1168,15 +1163,14 @@ class AdminDashboard {
 
         // Get form values
         const data = {
-            template: this.welcomeSettings?.template || 'cover-split',
-            colorTheme: this.welcomeSettings?.colorTheme || 'elegant-cream',
+            template: this.welcomeSettings?.template || 'cover-dark',
+            colorTheme: this.welcomeSettings?.colorTheme || 'elegant-gold',
             fontFamily: document.getElementById('wsFont').value,
             title: document.getElementById('wsTitle').value,
             subtitle: document.getElementById('wsSubtitle').value,
             description: document.getElementById('wsDescription').value,
             leftText: document.getElementById('wsLeftText').value,
             backgroundOpacity: parseInt(document.getElementById('wsBgOpacity').value) || 50,
-            bottomPanelOpacity: parseInt(document.getElementById('wsBottomPanelOpacity').value) || 95,
             logoSize: parseInt(document.getElementById('wsLogoSize').value) || 60,
             logoX: parseInt(document.getElementById('wsLogoX').value) || 50,
             logoY: parseInt(document.getElementById('wsLogoY').value) || 10,
@@ -1279,18 +1273,16 @@ class AdminDashboard {
         var html = '';
         for (var i = 0; i < filtered.length; i++) {
             var k = filtered[i];
-            var kategoriName = k.name || k.nama || '-';
-            var kategoriSlug = k.slug || k.id || '';
             var layananName = '';
             if (k.layanan || k.layanan_id) {
                 var layanan = this.layanan.find(function(l) { return l.id === (k.layanan || k.layanan_id); });
-                if (layanan) layananName = '<span class="kategori-layanan-badge">' + (layanan.name || '-') + '</span>';
+                if (layanan) layananName = '<span class="kategori-layanan-badge">' + layanan.name + '</span>';
             }
             html += '<div class="kategori-item">';
-            html += '<div class="kategori-icon">' + (kategoriName.charAt ? kategoriName.charAt(0).toUpperCase() : '?') + '</div>';
+            html += '<div class="kategori-icon">' + (k.name.charAt ? k.name.charAt(0).toUpperCase() : '?') + '</div>';
             html += '<div class="kategori-info">';
-            html += '<div class="kategori-name">' + kategoriName + '</div>';
-            if (kategoriSlug) html += '<div class="kategori-slug">' + kategoriSlug + '</div>';
+            html += '<div class="kategori-name">' + k.name + '</div>';
+            html += '<div class="kategori-slug">' + k.slug + '</div>';
             if (layananName) html += '<div>' + layananName + '</div>';
             html += '</div>';
             html += '<div class="kategori-actions">';
@@ -1316,7 +1308,6 @@ class AdminDashboard {
     }
 
     setupTabs() {
-        var self = this;
         var tabs = document.querySelectorAll('.tab-btn');
         for (var i = 0; i < tabs.length; i++) {
             tabs[i].addEventListener('click', (function(tab) {
@@ -1327,11 +1318,6 @@ class AdminDashboard {
                 for (var k = 0; k < contents.length; k++) contents[k].classList.remove('active');
                 var target = document.getElementById('tab-' + tabName);
                 if (target) target.classList.add('active');
-
-                // Refresh dropdowns when switching to produk tab
-                if (tabName === 'produk') {
-                    self.populateKategoriDropdown();
-                }
             }).bind(null, tabs[i]));
         }
     }
@@ -1364,13 +1350,11 @@ class AdminDashboard {
         var html = '';
         for (var i = 0; i < this.kategori.length; i++) {
             var k = this.kategori[i];
-            var kategoriName = k.name || k.nama || '-';
-            var kategoriSlug = k.slug || k.id || '';
             html += '<div class="kategori-item">';
-            html += '<div class="kategori-icon">' + (kategoriName.charAt ? kategoriName.charAt(0).toUpperCase() : '?') + '</div>';
+            html += '<div class="kategori-icon">' + (k.name.charAt ? k.name.charAt(0).toUpperCase() : '?') + '</div>';
             html += '<div class="kategori-info">';
-            html += '<div class="kategori-name">' + kategoriName + '</div>';
-            if (kategoriSlug) html += '<div class="kategori-slug">' + kategoriSlug + '</div>';
+            html += '<div class="kategori-name">' + k.name + '</div>';
+            html += '<div class="kategori-slug">' + k.slug + '</div>';
             html += '</div>';
             html += '<div class="kategori-actions">';
             html += '<button class="btn btn-sm" onclick="admin.editKategori(\'' + k.id + '\')">Edit</button> ';
@@ -1528,9 +1512,7 @@ class AdminDashboard {
             var html = '<option value="">Semua Kategori</option>';
             for (var i = 0; i < this.kategori.length; i++) {
                 var k = this.kategori[i];
-                var val = k.slug || k.name || k.nama || k.id;
-                var label = k.name || k.nama || '-';
-                html += '<option value="' + val + '">' + label + '</option>';
+                html += '<option value="' + k.slug + '">' + k.name + '</option>';
             }
             sel.innerHTML = html;
             sel.value = cur;
@@ -1539,17 +1521,16 @@ class AdminDashboard {
 
     showAddProductModal() {
         this.currentProduk = null;
-        this.productImages = []; // Reset images array
         document.getElementById('productModalTitle').textContent = 'Tambah Produk';
         var fields = ['productName', 'productKategori', 'productSubkategori', 'productDeskripsi', 'productWarna'];
         for (var i = 0; i < fields.length; i++) {
             var f = document.getElementById(fields[i]);
             if (f) f.value = '';
         }
-        // Render empty images container
-        this.renderProductImages();
-        // Refresh kategori dropdown
-        this.populateKategoriDropdown();
+        var upload = document.getElementById('productImageUpload');
+        var preview = document.getElementById('productImagePreview');
+        if (upload) upload.classList.remove('has-image');
+        if (preview) { preview.src = ''; preview.style.display = 'none'; }
         document.getElementById('productModal').classList.add('active');
     }
 
@@ -1561,8 +1542,6 @@ class AdminDashboard {
         if (!p) return;
 
         this.currentProduk = p;
-        // Load existing images with metadata
-        this.productImages = this.loadProductImages(p);
         document.getElementById('productModalTitle').textContent = 'Edit Produk';
         document.getElementById('productName').value = p.nama || '';
         document.getElementById('productKategori').value = p.kategori || '';
@@ -1570,157 +1549,106 @@ class AdminDashboard {
         document.getElementById('productDeskripsi').value = p.deskripsi || '';
         document.getElementById('productWarna').value = p.warna || '';
 
-        this.renderProductImages();
-        this.populateKategoriDropdown();
+        // Handle multiple images
+        this.renderProductImages(p);
 
         document.getElementById('productModal').classList.add('active');
     }
 
-    // Load product images from PocketBase format
-    loadProductImages(product) {
-        var images = product.image || product.foto || [];
-        if (!Array.isArray(images)) images = images ? [images] : [];
-        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
-        var baseUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + product.id + '/';
-
-        return images.map(function(img, index) {
-            // Check if it's already an object (from metadata) or just a string
-            if (typeof img === 'object' && img !== null) {
-                return {
-                    id: Date.now() + '_' + index,
-                    url: baseUrl + img.name,
-                    warna: img.warna || '',
-                    bagian: img.bagian || '',
-                    deskripsi: img.deskripsi || '',
-                    isNew: false
-                };
-            } else {
-                return {
-                    id: Date.now() + '_' + index,
-                    url: baseUrl + img,
-                    warna: '',
-                    bagian: '',
-                    deskripsi: '',
-                    isNew: false
-                };
-            }
-        });
-    }
-
-    // Render product images grid
-    renderProductImages() {
-        var container = document.getElementById('productImagesContainer');
+    renderProductImages(product) {
+        var container = document.getElementById('productImageList');
         if (!container) return;
 
-        if (!this.productImages || this.productImages.length === 0) {
-            container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Belum ada gambar. Klik "Tambah Gambar" di bawah.</p>';
+        var images = product.image || product.foto || [];
+        if (!Array.isArray(images)) images = images ? [images] : [];
+
+        if (images.length === 0) {
+            container.innerHTML = '';
             return;
         }
 
-        var bagianLabels = { 'muka': 'Muka', 'samping': 'Samping', 'belakang': 'Belakang', 'bentangan': 'Bentangan' };
+        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
         var html = '';
-        for (var i = 0; i < this.productImages.length; i++) {
-            var img = this.productImages[i];
-            var label = img.bagian ? (bagianLabels[img.bagian] || img.bagian) : '';
-            var warna = img.warna || '';
-
-            html += '<div class="product-image-card" onclick="admin.openImageDetail(' + i + ')">';
-            html += '<img src="' + img.url + '" alt="Gambar ' + (i + 1) + '">';
-            if (label || warna) {
-                html += '<div class="image-overlay">' + (warna ? warna : label) + '</div>';
-            }
-            if (label) {
-                html += '<div class="image-badge">' + label + '</div>';
-            }
+        for (var i = 0; i < images.length; i++) {
+            var imgUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + product.id + '/' + images[i];
+            html += '<div class="product-image-item" data-index="' + i + '">';
+            html += '<img src="' + imgUrl + '" alt="Image ' + (i + 1) + '">';
+            html += '<button class="remove-image-btn" onclick="admin.removeProductImage(' + i + ')">&times;</button>';
             html += '</div>';
         }
         container.innerHTML = html;
     }
 
-    // Handle image upload
-    handleProductImageUpload(input) {
+    removeProductImage(index) {
+        if (!this.currentProduk) return;
+        var images = this.currentProduk.image || [];
+        if (!Array.isArray(images)) images = images ? [images] : [];
+        images.splice(index, 1);
+        this.currentProduk.image = images;
+        this.renderProductImages(this.currentProduk);
+    }
+
+    async handleMultiImageUpload(input) {
         var files = input.files;
         if (!files || files.length === 0) return;
 
-        if (!this.productImages) this.productImages = [];
-        var self = this;
+        var container = document.getElementById('productImageList');
+        if (!this.currentProduk) this.currentProduk = {};
+        if (!this.currentProduk.image) this.currentProduk.image = [];
+
+        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
+        var html = container.innerHTML;
 
         for (var i = 0; i < files.length; i++) {
-            var file = files[i];
             var reader = new FileReader();
-            var index = this.productImages.length;
+            var file = files[i];
+            var index = this.currentProduk.image.length;
+            var self = this;
 
             reader.onload = (function(f, idx) {
                 return function(e) {
-                    self.productImages.push({
-                        id: Date.now() + '_' + idx,
-                        url: e.target.result,
-                        warna: '',
-                        bagian: '',
-                        deskripsi: '',
-                        isNew: true,
-                        file: f
-                    });
-                    self.renderProductImages();
+                    var imgUrl = e.target.result;
+                    var newHtml = '<div class="product-image-item" data-index="' + idx + '">';
+                    newHtml += '<img src="' + imgUrl + '" alt="Image">';
+                    newHtml += '<button class="remove-image-btn" onclick="admin.removeProductImage(' + idx + ')">&times;</button>';
+                    newHtml += '</div>';
+                    container.innerHTML += newHtml;
+                    // Store as base64 for upload
+                    if (!self.currentProduk._newImages) self.currentProduk._newImages = [];
+                    self.currentProduk._newImages.push(f);
                 };
             })(file, index);
 
+            this.currentProduk.image.push('_pending_' + index);
             reader.readAsDataURL(file);
         }
 
         input.value = '';
     }
 
-    // Open image detail modal
-    openImageDetail(index) {
-        this.currentImageIndex = index;
-        var img = this.productImages[index];
-        if (!img) return;
-
-        document.getElementById('imageDetailPreview').src = img.url;
-        document.getElementById('imageWarna').value = img.warna || '';
-        document.getElementById('imageBagian').value = img.bagian || '';
-        document.getElementById('imageDeskripsi').value = img.deskripsi || '';
-        document.getElementById('imageDetailModal').classList.add('show');
+    handleImageUpload(input) {
+        var file = input.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        var preview = document.getElementById('productImagePreview');
+        var upload = document.getElementById('productImageUpload');
+        var self = this;
+        reader.onload = function(e) {
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                if (upload) upload.classList.add('has-image');
+            }
+        };
+        reader.readAsDataURL(file);
     }
 
-    // Save image detail
-    saveImageDetail() {
-        var index = this.currentImageIndex;
-        if (index === null || index === undefined) return;
-
-        this.productImages[index].warna = document.getElementById('imageWarna').value.trim();
-        this.productImages[index].bagian = document.getElementById('imageBagian').value;
-        this.productImages[index].deskripsi = document.getElementById('imageDeskripsi').value.trim();
-
-        this.closeImageDetail();
-        this.renderProductImages();
-    }
-
-    // Close image detail
-    closeImageDetail() {
-        document.getElementById('imageDetailModal').classList.remove('show');
-        this.currentImageIndex = null;
-        this.themes = window.ColorThemes || {};
-    }
-
-    // Delete current image
-    deleteCurrentImage() {
-        var index = this.currentImageIndex;
-        if (index === null || index === undefined) return;
-
-        if (!confirm('Hapus gambar ini?')) return;
-
-        this.productImages.splice(index, 1);
-        this.closeImageDetail();
-        this.renderProductImages();
-    }
-
-    async saveProduct() {
+    async saveProduk() {
         var nama = document.getElementById('productName').value.trim();
         var kategori = document.getElementById('productKategori').value;
         var subkategori = document.getElementById('productSubkategori').value.trim();
         var deskripsi = document.getElementById('productDeskripsi').value.trim();
+        var warna = document.getElementById('productWarna').value.trim();
 
         if (!nama) {
             this.showNotification('Nama produk wajib diisi!', 'error');
@@ -1732,14 +1660,13 @@ class AdminDashboard {
         if (kategori) formData.append('kategori', kategori);
         if (subkategori) formData.append('subkategori', subkategori);
         if (deskripsi) formData.append('deskripsi', deskripsi);
+        if (warna) formData.append('warna', warna);
 
-        // Handle images - upload new ones as files
-        if (this.productImages) {
-            for (var i = 0; i < this.productImages.length; i++) {
-                var img = this.productImages[i];
-                if (img.isNew && img.file) {
-                    formData.append('image', img.file, 'image_' + i + '.jpg');
-                }
+        // Handle multiple images
+        if (this.currentProduk && this.currentProduk._newImages) {
+            for (var i = 0; i < this.currentProduk._newImages.length; i++) {
+                var blob = this.dataURLtoBlob(this.currentProduk._newImages[i]);
+                formData.append('image', blob, 'image_' + i + '.jpg');
             }
         }
 
