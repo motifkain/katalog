@@ -106,6 +106,9 @@ async function loadWelcomeSettings() {
                 subtitleSize: activeWs.subtitleSize || 14,
                 subtitleX: activeWs.subtitleX || 50,
                 subtitleY: activeWs.subtitleY || 70,
+                descriptionSize: activeWs.descriptionSize || 14,
+                descriptionX: activeWs.descriptionX || 50,
+                descriptionY: activeWs.descriptionY || 75,
                 leftText: activeWs.leftText || activeWs.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
                 title: activeWs.title || 'CATALOG',
                 subtitle: activeWs.subtitle || 'Company Profile',
@@ -293,8 +296,10 @@ function getSubtitleStyleWelcome(ws) {
 }
 
 function getDescriptionStyleWelcome(ws) {
-    const size = ws.descriptionSize || 14;
-    return `font-size:${size}px;line-height:1.6;`;
+    const x = ws.descriptionX ?? 50;
+    const y = ws.descriptionY ?? 75;
+    const size = ws.descriptionSize ?? 14;
+    return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;line-height:1.6;`;
 }
 
 function getTaglineStyleWelcome(ws) {
@@ -333,11 +338,11 @@ function renderWelcomeDark(ws, theme) {
         <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
         ${logoHtml}
         <div style="${titleStyle}">
-            <h1 style="font-family:'${ws.fontFamily}',serif;margin-bottom:10px;letter-spacing:0.05em;">${ws.title}</h1>
-            <p style="color:${theme.accent};letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:${ws.titleSize || 32}px;margin-bottom:10px;letter-spacing:0.05em;">${ws.title}</h1>
+            <p style="color:${theme.accent};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
             <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${theme.accent},transparent);margin:0 auto;"></div>
         </div>
-        ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:rgba(255,255,255,0.7);">${ws.description}</div>` : ''}
+        ${ws.description ? `<div style="${descStyle}color:rgba(255,255,255,0.7);">${ws.description}</div>` : ''}
         ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
         <button class="welcome-btn" onclick="openKatalog()" style="${btnStyle}">Lihat Katalog</button>
     </div>`;
@@ -364,11 +369,11 @@ function renderWelcomeLight(ws, theme) {
         <div style="position:absolute;top:5%;right:5%;width:30px;height:30px;border-top:2px solid ${theme.accentAlt};border-right:2px solid ${theme.accentAlt};opacity:0.3;"></div>
         ${logoHtml}
         <div style="${titleStyle}">
-            <h1 style="font-family:'${ws.fontFamily}',serif;margin-bottom:10px;">${ws.title}</h1>
-            <p style="color:${theme.accentAlt};letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:${ws.titleSize || 32}px;margin-bottom:10px;">${ws.title}</h1>
+            <p style="color:${theme.accentAlt};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
             <div style="width:50px;height:2px;background:${theme.accent};margin:0 auto;"></div>
         </div>
-        ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:${theme.textMuted};">${ws.description}</div>` : ''}
+        ${ws.description ? `<div style="${descStyle}color:${theme.textMuted};">${ws.description}</div>` : ''}
         ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
         <button class="welcome-btn" onclick="openKatalog()" style="${btnStyle}">Lihat Katalog</button>
     </div>`;
@@ -394,11 +399,11 @@ function renderWelcomeSplit(ws, theme) {
         </div>
         <div style="width:60%;height:100%;${rightBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;position:relative;">
             <div style="${titleStyle}">
-                <h1 style="font-family:'${ws.fontFamily}',serif;margin-bottom:15px;">${ws.title}</h1>
-                <p style="color:${theme.accentAlt};letter-spacing:0.2em;margin-bottom:15px;">${ws.subtitle}</p>
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:${ws.titleSize || 32}px;margin-bottom:15px;">${ws.title}</h1>
+                <p style="color:${theme.accentAlt};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.2em;margin-bottom:15px;">${ws.subtitle}</p>
                 <div style="width:40px;height:2px;background:${theme.textDark};margin-bottom:20px;"></div>
             </div>
-            ${ws.description ? `<div style="position:absolute;left:65%;top:60%;transform:translate(-50%, -50%);width:50%;${descStyle}color:${theme.textMuted};">${ws.description}</div>` : ''}
+            ${ws.description ? `<div style="position:absolute;left:65%;top:60%;transform:translate(-50%, -50%);width:50%;font-size:${ws.descriptionSize || 14}px;color:${theme.textMuted};line-height:1.6;">${ws.description}</div>` : ''}
             <button class="welcome-btn" onclick="openKatalog()" style="${btnStyle}">Lihat Katalog</button>
         </div>
     </div>`;
@@ -426,11 +431,11 @@ function renderWelcomeNumbered(ws, theme) {
         <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
         ${logoHtml}
         <div style="${titleStyle}">
-            <h1 style="font-family:'${ws.fontFamily}',serif;margin-bottom:15px;letter-spacing:0.05em;">${ws.title}</h1>
-            <p style="color:${theme.accent};letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:${ws.titleSize || 32}px;margin-bottom:15px;letter-spacing:0.05em;">${ws.title}</h1>
+            <p style="color:${theme.accent};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
             <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${theme.accent},transparent);margin:0 auto;"></div>
         </div>
-        ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:rgba(255,255,255,0.7);">${ws.description}</div>` : ''}
+        ${ws.description ? `<div style="${descStyle}color:rgba(255,255,255,0.7);">${ws.description}</div>` : ''}
         ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
         <button class="welcome-btn" onclick="openKatalog()" style="${btnStyle}">Lihat Katalog</button>
     </div>`;
@@ -458,11 +463,11 @@ function renderWelcomeMinimal(ws, theme) {
         <div style="position:absolute;bottom:8%;left:8%;width:40px;height:40px;border-bottom:1px solid ${theme.textMuted};border-left:1px solid ${theme.textMuted};"></div>
         ${logoHtml}
         <div style="${titleStyle}">
-            <p style="color:${theme.textMuted};letter-spacing:0.3em;margin-bottom:15px;text-transform:uppercase;">${ws.subtitle}</p>
-            <h1 style="font-family:'${ws.fontFamily}',serif;font-weight:300;margin-bottom:30px;">${ws.title}</h1>
+            <p style="color:${theme.textMuted};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.3em;margin-bottom:15px;text-transform:uppercase;">${ws.subtitle}</p>
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-weight:300;font-size:${ws.titleSize || 32}px;margin-bottom:30px;">${ws.title}</h1>
             <div style="width:50px;height:1px;background:${theme.accentAlt};margin-bottom:20px;"></div>
         </div>
-        ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:${theme.textMuted};font-style:italic;">${ws.description}</div>` : ''}
+        ${ws.description ? `<div style="${descStyle}color:${theme.textMuted};font-style:italic;">${ws.description}</div>` : ''}
         ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
         <button class="welcome-btn" onclick="openKatalog()" style="${btnStyle}">Lihat Katalog</button>
     </div>`;

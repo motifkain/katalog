@@ -543,6 +543,18 @@ class AdminDashboard {
             document.getElementById('wsSubtitleY').value = ws.subtitleY;
             document.getElementById('subtitleYValue').textContent = ws.subtitleY;
         }
+        if (ws.descriptionSize) {
+            document.getElementById('wsDescriptionSize').value = ws.descriptionSize;
+            document.getElementById('descriptionSizeValue').textContent = ws.descriptionSize;
+        }
+        if (ws.descriptionX) {
+            document.getElementById('wsDescriptionX').value = ws.descriptionX;
+            document.getElementById('descriptionXValue').textContent = ws.descriptionX;
+        }
+        if (ws.descriptionY) {
+            document.getElementById('wsDescriptionY').value = ws.descriptionY;
+            document.getElementById('descriptionYValue').textContent = ws.descriptionY;
+        }
 
         this.updateWelcomePreview();
     }
@@ -916,6 +928,14 @@ class AdminDashboard {
         ws.subtitleSize = parseInt(document.getElementById('wsSubtitleSize').value) || 14;
         ws.subtitleX = parseInt(document.getElementById('wsSubtitleX').value) || 50;
         ws.subtitleY = parseInt(document.getElementById('wsSubtitleY').value) || 70;
+        ws.descriptionSize = parseInt(document.getElementById('wsDescriptionSize').value) || 14;
+        ws.descriptionX = parseInt(document.getElementById('wsDescriptionX').value) || 50;
+        ws.descriptionY = parseInt(document.getElementById('wsDescriptionY').value) || 75;
+        ws.btnX = parseInt(document.getElementById('wsBtnX').value) || 50;
+        ws.btnY = parseInt(document.getElementById('wsBtnY').value) || 90;
+        ws.btnBgColor = document.getElementById('wsBtnBgColor').value || '#1B5E20';
+        ws.btnTextColor = document.getElementById('wsBtnTextColor').value || '#FFFFFF';
+        ws.btnFontSize = parseInt(document.getElementById('wsBtnFontSize').value) || 14;
 
         // Use URL from PocketBase or from upload (base64)
         ws.backgroundImageUrl = ws.backgroundImageUrl || ws.backgroundImage;
@@ -971,6 +991,13 @@ class AdminDashboard {
         const y = ws.subtitleY || 70;
         const size = ws.subtitleSize || 14;
         return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
+    }
+
+    getDescriptionStyle(ws) {
+        const x = ws.descriptionX || 50;
+        const y = ws.descriptionY || 75;
+        const size = ws.descriptionSize || 14;
+        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;line-height:1.6;`;
     }
 
     // Background Image handlers
@@ -1179,11 +1206,11 @@ class AdminDashboard {
             <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
             ${logoHtml}
             <div style="${titleStyle}">
-                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.1rem;color:#fff;margin-bottom:4%;letter-spacing:0.05em;">${ws.title}</h1>
-                <p style="color:${theme.accent};font-size:0.5rem;letter-spacing:0.2em;margin-bottom:4%;">${ws.subtitle}</p>
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:${ws.titleSize || 32}px;color:#fff;margin-bottom:4%;letter-spacing:0.05em;">${ws.title}</h1>
+                <p style="color:${theme.accent};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.2em;margin-bottom:4%;">${ws.subtitle}</p>
                 <div style="width:30px;height:1px;background:${theme.accent};margin:0 auto;"></div>
             </div>
-            ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.45rem;color:rgba(255,255,255,0.7);line-height:1.4;">${ws.description}</div>` : ''}
+            ${ws.description ? `<div style="${this.getDescriptionStyle(ws)}color:rgba(255,255,255,0.7);">${ws.description}</div>` : ''}
             ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
             <button style="${btnStyle}">Lihat Katalog</button>
         </div>`;
@@ -1210,11 +1237,11 @@ class AdminDashboard {
             <div style="position:absolute;top:5%;right:5%;width:30px;height:30px;border-top:2px solid ${theme.accentAlt};border-right:2px solid ${theme.accentAlt};opacity:0.3;"></div>
             ${logoHtml}
             <div style="${titleStyle}">
-                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.1rem;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
-                <p style="color:${theme.accentAlt};font-size:0.5rem;letter-spacing:0.2em;margin-bottom:4%;">${ws.subtitle}</p>
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:${ws.titleSize || 32}px;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
+                <p style="color:${theme.accentAlt};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.2em;margin-bottom:4%;">${ws.subtitle}</p>
                 <div style="width:30px;height:1px;background:${theme.accent};margin:0 auto;"></div>
             </div>
-            ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.description}</div>` : ''}
+            ${ws.description ? `<div style="${this.getDescriptionStyle(ws)}color:${theme.textMuted};">${ws.description}</div>` : ''}
             ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
             <button style="${btnStyle}">Lihat Katalog</button>
         </div>`;
@@ -1242,11 +1269,11 @@ class AdminDashboard {
             </div>
             <div style="width:60%;height:100%;background:${rightBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;position:relative;">
                 <div style="${titleStyle}">
-                    <h1 style="font-family:'${ws.fontFamily}',serif;font-size:0.9rem;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
-                    <p style="color:${theme.accentAlt};font-size:0.4rem;letter-spacing:0.1em;margin-bottom:4%;">${ws.subtitle}</p>
+                    <h1 style="font-family:'${ws.fontFamily}',serif;font-size:${ws.titleSize || 32}px;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
+                    <p style="color:${theme.accentAlt};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.1em;margin-bottom:4%;">${ws.subtitle}</p>
                     <div style="width:25px;height:1px;background:${theme.textDark};margin-bottom:8%;"></div>
                 </div>
-                ${ws.description ? `<div style="position:absolute;left:65%;top:60%;transform:translate(-50%, -50%);width:50%;font-size:0.4rem;color:${theme.textMuted};line-height:1.4;">${ws.description}</div>` : ''}
+                ${ws.description ? `<div style="position:absolute;left:65%;top:60%;transform:translate(-50%, -50%);width:50%;font-size:${ws.descriptionSize || 14}px;color:${theme.textMuted};line-height:1.6;">${ws.description}</div>` : ''}
                 <button style="${btnStyle}">Lihat Katalog</button>
             </div>
         </div>`;
@@ -1275,10 +1302,10 @@ class AdminDashboard {
             ${logoHtml}
             <div style="${titleStyle}">
                 <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1rem;color:#fff;margin-bottom:10px;letter-spacing:0.1em;">${ws.title}</h1>
-                <p style="color:${theme.accent};font-size:0.5rem;letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
+                <p style="color:${theme.accent};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
                 <div style="width:40px;height:1px;background:${theme.accent};margin-bottom:15px;"></div>
             </div>
-            ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.45rem;color:rgba(255,255,255,0.7);line-height:1.5;max-width:80%;">${ws.description}</div>` : ''}
+            ${ws.description ? `<div style="${this.getDescriptionStyle(ws)}color:rgba(255,255,255,0.7);line-height:1.5;max-width:80%;">${ws.description}</div>` : ''}
             ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
             <button style="${btnStyle}">Lihat Katalog</button>
         </div>`;
@@ -1306,11 +1333,11 @@ class AdminDashboard {
             <div style="position:absolute;bottom:8%;left:8%;width:40px;height:40px;border-bottom:1px solid ${theme.textMuted};border-left:1px solid ${theme.textMuted};"></div>
             ${logoHtml}
             <div style="${titleStyle}">
-                <p style="color:${theme.textMuted};font-size:0.4rem;letter-spacing:0.2em;margin-bottom:4%;text-transform:uppercase;">${ws.subtitle}</p>
+                <p style="color:${theme.textMuted};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.2em;margin-bottom:4%;text-transform:uppercase;">${ws.subtitle}</p>
                 <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1rem;color:${theme.textDark};margin-bottom:6%;font-weight:300;">${ws.title}</h1>
                 <div style="width:30px;height:1px;background:${theme.accentAlt};margin-bottom:6%;"></div>
             </div>
-            ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.4rem;color:${theme.textMuted};line-height:1.4;font-style:italic;">${ws.description}</div>` : ''}
+            ${ws.description ? `<div style="${this.getDescriptionStyle(ws)}color:${theme.textMuted};font-style:italic;">${ws.description}</div>` : ''}
             ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.4rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
             <button style="${btnStyle}">Lihat Katalog</button>
         </div>`;
@@ -1364,6 +1391,9 @@ class AdminDashboard {
         data.subtitleSize = parseInt(document.getElementById('wsSubtitleSize') ? document.getElementById('wsSubtitleSize').value : 14);
         data.subtitleX = parseInt(document.getElementById('wsSubtitleX') ? document.getElementById('wsSubtitleX').value : 50);
         data.subtitleY = parseInt(document.getElementById('wsSubtitleY') ? document.getElementById('wsSubtitleY').value : 70);
+        data.descriptionSize = parseInt(document.getElementById('wsDescriptionSize') ? document.getElementById('wsDescriptionSize').value : 14);
+        data.descriptionX = parseInt(document.getElementById('wsDescriptionX') ? document.getElementById('wsDescriptionX').value : 50);
+        data.descriptionY = parseInt(document.getElementById('wsDescriptionY') ? document.getElementById('wsDescriptionY').value : 75);
         data.btnX = parseInt(document.getElementById('wsBtnX') ? document.getElementById('wsBtnX').value : 50);
         data.btnY = parseInt(document.getElementById('wsBtnY') ? document.getElementById('wsBtnY').value : 90);
         data.btnBgColor = document.getElementById('wsBtnBgColor') ? document.getElementById('wsBtnBgColor').value : '#1B5E20';

@@ -308,6 +308,22 @@
                     </div>
 
                     <div class="settings-section">
+                        <h3>Deskripsi</h3>
+                        <div class="form-group">
+                            <label>Ukuran Deskripsi: <span id="descriptionSizeValue">14</span>px</label>
+                            <input type="range" id="wsDescriptionSize" min="10" max="24" value="14" style="width:100%;" oninput="admin.updateWelcomePreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Posisi X Deskripsi: <span id="descriptionXValue">50</span>%</label>
+                            <input type="range" id="wsDescriptionX" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateWelcomePreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Posisi Y Deskripsi: <span id="descriptionYValue">75</span>%</label>
+                            <input type="range" id="wsDescriptionY" min="0" max="100" value="75" style="width:100%;" oninput="admin.updateWelcomePreview()">
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
                         <h3>Background Image (Opsional)</h3>
                         <div class="logo-upload-area" id="wsBgUpload" onclick="document.getElementById('wsBgInput').click()">
                             <div class="logo-placeholder" id="wsBgPlaceholder">
