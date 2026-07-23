@@ -1269,6 +1269,7 @@ class AdminDashboard {
 
         const logoStyle = this.getLogoStyle(ws);
         const titleStyle = this.getTitleStyle(ws);
+        const descStyle = this.getDescriptionStyle(ws);
         const btnStyle = this.getBtnStyle(ws);
         const logoUrl = ws.logoUrl || ws.logo;
         const logoHtml = logoUrl ? `<img src="${logoUrl}" style="${logoStyle}">` : '';
@@ -1288,7 +1289,7 @@ class AdminDashboard {
                     <p style="color:${theme.accentAlt};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.1em;margin-bottom:4%;">${ws.subtitle}</p>
                     <div style="width:25px;height:1px;background:${theme.textDark};margin-bottom:8%;"></div>
                 </div>
-                ${ws.description ? `<div style="position:absolute;left:65%;top:60%;transform:translate(-50%, -50%);width:50%;font-size:${ws.descriptionSize || 14}px;color:${theme.textMuted};line-height:1.6;">${ws.description}</div>` : ''}
+                ${ws.description ? `<div style="${descStyle}color:${theme.textMuted};">${ws.description}</div>` : ''}
                 <button style="${btnStyle}">Lihat Katalog</button>
             </div>
         </div>`;

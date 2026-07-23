@@ -408,7 +408,7 @@ function renderWelcomeSplit(ws, theme) {
                 <p style="color:${theme.accentAlt};font-size:${ws.subtitleSize || 14}px;letter-spacing:0.2em;margin-bottom:15px;">${ws.subtitle}</p>
                 <div style="width:40px;height:2px;background:${theme.textDark};margin-bottom:20px;"></div>
             </div>
-            ${ws.description ? `<div style="position:absolute;left:65%;top:60%;transform:translate(-50%, -50%);width:50%;font-size:${ws.descriptionSize || 14}px;color:${theme.textMuted};line-height:1.6;">${ws.description}</div>` : ''}
+            ${ws.description ? `<div style="${descStyle}color:${theme.textMuted};">${ws.description}</div>` : ''}
             <button class="welcome-btn" onclick="openKatalog()" style="${btnStyle}">Lihat Katalog</button>
         </div>
     </div>`;
