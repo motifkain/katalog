@@ -573,8 +573,8 @@ input, textarea, select { font-family: inherit; outline: none; }
 .template-dark { background: linear-gradient(180deg, #1a2a3a 0%, #5D4037 100%); }
 .template-light { background: linear-gradient(180deg, #FFF8F0 0%, #E0E0E0 100%); }
 .template-split { background: linear-gradient(90deg, #1a2a3a 40%, #FFFFFF 40%); }
-.template-numbered { background: #1a2a3a; position: relative; }
-.template-numbered::after { content: '01'; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 1.5rem; color: #C9A66B; font-weight: bold; }
+.template-numbered { background: #1a2a3a; position: relative; display: flex; align-items: center; justify-content: center; }
+.template-numbered::after { content: ''; display: none; }
 .template-minimal { background: #FAFAFA; border: 1px solid #ddd; }
 
 .template-btn span {
