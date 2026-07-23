@@ -71,7 +71,6 @@ class AdminDashboard {
             if (response.ok) {
                 const data = await response.json();
                 this.pocketbaseToken = data.token;
-                console.log('Admin logged in, token prefix:', data.token?.substring(0, 20) + '...');
                 sessionStorage.setItem('motifkain_admin_token', data.token);
                 sessionStorage.setItem('motifkain_admin_url', this.pocketbaseUrl);
                 sessionStorage.setItem('motifkain_admin_email', email);
@@ -98,12 +97,10 @@ class AdminDashboard {
             });
             if (res.ok) {
                 const data = await res.json();
-                console.log('Collections accessible:', data.items?.map(c => c.name).join(', '));
-            } else {
-                console.error('Collections access denied:', res.status);
+                // Collections loaded successfully
             }
         } catch (e) {
-            console.error('Collections test error:', e);
+            // Silent fail
         }
     }
 
@@ -416,19 +413,13 @@ class AdminDashboard {
         const col = window.MOTIFKAIN_CONFIG?.layananCollection || 'layanan';
         try {
             const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+order');
-            console.log('Layanan API Response:', res.status, res.statusText);
             if (res.ok) {
                 const data = await res.json();
-                console.log('Layanan Data:', data);
                 this.layanan = data.items || [];
             } else {
-                // Log error details
-                const errorText = await res.text();
-                console.error('Layanan API Error:', res.status, errorText);
                 this.layanan = [];
             }
         } catch (e) {
-            console.error('Layanan fetch error:', e);
             this.layanan = [];
         }
         this.renderLayanan();
@@ -1250,23 +1241,14 @@ class AdminDashboard {
         const col = window.MOTIFKAIN_CONFIG?.kategoriCollection || 'kategori';
         try {
             const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+order');
-            console.log('Kategori API Response:', res.status);
             if (res.ok) {
                 const data = await res.json();
                 this.kategori = data.items || [];
             } else {
-                const errorText = await res.text();
-                console.error('Kategori API Error:', res.status, errorText);
                 this.kategori = [];
             }
         } catch (e) {
-            console.error('Kategori fetch error:', e);
-            this.kategori = [
-                { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif', layanan: null },
-                { id: 'printing', name: 'Printing Kain', slug: 'printing', layanan: null },
-                { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian', layanan: null },
-                { id: 'asesoris', name: 'Asesoris', slug: 'asesoris', layanan: null }
-            ];
+            this.kategori = [];
         }
         this.renderKategori();
         this.populateLayananDropdowns();
