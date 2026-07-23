@@ -1273,16 +1273,18 @@ class AdminDashboard {
         var html = '';
         for (var i = 0; i < filtered.length; i++) {
             var k = filtered[i];
+            var kategoriName = k.name || k.nama || '-';
+            var kategoriSlug = k.slug || k.id || '';
             var layananName = '';
             if (k.layanan || k.layanan_id) {
                 var layanan = this.layanan.find(function(l) { return l.id === (k.layanan || k.layanan_id); });
-                if (layanan) layananName = '<span class="kategori-layanan-badge">' + layanan.name + '</span>';
+                if (layanan) layananName = '<span class="kategori-layanan-badge">' + (layanan.name || '-') + '</span>';
             }
             html += '<div class="kategori-item">';
-            html += '<div class="kategori-icon">' + (k.name.charAt ? k.name.charAt(0).toUpperCase() : '?') + '</div>';
+            html += '<div class="kategori-icon">' + (kategoriName.charAt ? kategoriName.charAt(0).toUpperCase() : '?') + '</div>';
             html += '<div class="kategori-info">';
-            html += '<div class="kategori-name">' + k.name + '</div>';
-            html += '<div class="kategori-slug">' + k.slug + '</div>';
+            html += '<div class="kategori-name">' + kategoriName + '</div>';
+            if (kategoriSlug) html += '<div class="kategori-slug">' + kategoriSlug + '</div>';
             if (layananName) html += '<div>' + layananName + '</div>';
             html += '</div>';
             html += '<div class="kategori-actions">';
@@ -1350,11 +1352,13 @@ class AdminDashboard {
         var html = '';
         for (var i = 0; i < this.kategori.length; i++) {
             var k = this.kategori[i];
+            var kategoriName = k.name || k.nama || '-';
+            var kategoriSlug = k.slug || k.id || '';
             html += '<div class="kategori-item">';
-            html += '<div class="kategori-icon">' + (k.name.charAt ? k.name.charAt(0).toUpperCase() : '?') + '</div>';
+            html += '<div class="kategori-icon">' + (kategoriName.charAt ? kategoriName.charAt(0).toUpperCase() : '?') + '</div>';
             html += '<div class="kategori-info">';
-            html += '<div class="kategori-name">' + k.name + '</div>';
-            html += '<div class="kategori-slug">' + k.slug + '</div>';
+            html += '<div class="kategori-name">' + kategoriName + '</div>';
+            if (kategoriSlug) html += '<div class="kategori-slug">' + kategoriSlug + '</div>';
             html += '</div>';
             html += '<div class="kategori-actions">';
             html += '<button class="btn btn-sm" onclick="admin.editKategori(\'' + k.id + '\')">Edit</button> ';
@@ -1512,7 +1516,9 @@ class AdminDashboard {
             var html = '<option value="">Semua Kategori</option>';
             for (var i = 0; i < this.kategori.length; i++) {
                 var k = this.kategori[i];
-                html += '<option value="' + k.slug + '">' + k.name + '</option>';
+                var val = k.slug || k.name || k.nama || k.id;
+                var label = k.name || k.nama || '-';
+                html += '<option value="' + val + '">' + label + '</option>';
             }
             sel.innerHTML = html;
             sel.value = cur;
