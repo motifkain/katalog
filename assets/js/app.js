@@ -280,6 +280,11 @@ function renderWelcomeSplit(ws, theme) {
     const logoStyle = getLogoStyleWelcome(ws);
     const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
 
+    // Background image for right side (white area)
+    const rightBgStyle = ws.backgroundImage
+        ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`
+        : `background:${theme.bgCard};`;
+
     return `
     <div style="width:100%;height:100%;display:flex;">
         <div style="width:40%;height:100%;background:${theme.bgDark};padding:6%;display:flex;flex-direction:column;justify-content:center;">
@@ -287,7 +292,7 @@ function renderWelcomeSplit(ws, theme) {
             <div style="width:25px;height:1px;background:${theme.accent};margin:20px 0;"></div>
             <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
         </div>
-        <div style="width:60%;height:100%;background:${theme.bgCard};padding:8%;display:flex;flex-direction:column;justify-content:center;">
+        <div style="width:60%;height:100%;${rightBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;">
             <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.2rem;color:${theme.textDark};margin-bottom:15px;">${ws.title}</h1>
             <p style="color:${theme.accentAlt};font-size:0.85rem;letter-spacing:0.2em;margin-bottom:20px;">${ws.subtitle}</p>
             <div style="width:40px;height:2px;background:${theme.textDark};margin-bottom:30px;"></div>
