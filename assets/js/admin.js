@@ -91,7 +91,7 @@ class AdminDashboard {
     }
 
     openCatalog() {
-        window.open('index.html', '_blank');
+        window.location.href = 'index.html';
     }
 
     previewWelcomeScreen() {
@@ -450,118 +450,6 @@ class AdminDashboard {
         };
     }
 
-    renderWelcomeSettings() {
-        if (!this.welcomeSettings) return;
-        const ws = this.welcomeSettings;
-        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
-
-        // Set form values
-        document.getElementById('wsTitle').value = ws.title || '';
-        document.getElementById('wsSubtitle').value = ws.subtitle || '';
-        document.getElementById('wsDescription').value = ws.description || '';
-        document.getElementById('wsLeftText').value = ws.leftText || '';
-        document.getElementById('wsFont').value = ws.fontFamily || 'Playfair Display';
-
-        // Set template active
-        document.querySelectorAll('.template-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.template === ws.template);
-        });
-
-        // Set theme active
-        document.querySelectorAll('.theme-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.theme === ws.colorTheme);
-        });
-
-        // Load logo if exists
-        if (ws.logo) {
-            const logoUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.logo;
-            document.getElementById('wsLogoPreview').src = logoUrl;
-            document.getElementById('wsLogoPreview').style.display = 'block';
-            document.getElementById('wsLogoPlaceholder').style.display = 'none';
-            document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
-            ws.logoUrl = logoUrl;
-        } else {
-            document.getElementById('wsLogoPreview').style.display = 'none';
-            document.getElementById('wsLogoPlaceholder').style.display = 'flex';
-            document.getElementById('wsLogoRemoveBtn').style.display = 'none';
-            ws.logoUrl = null;
-        }
-
-        // Load background image if exists
-        if (ws.backgroundImage) {
-            const bgUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.backgroundImage;
-            document.getElementById('wsBgPreview').src = bgUrl;
-            document.getElementById('wsBgPreview').style.display = 'block';
-            document.getElementById('wsBgPlaceholder').style.display = 'none';
-            document.getElementById('wsBgRemoveBtn').style.display = 'inline-block';
-            ws.backgroundImageUrl = bgUrl;
-        } else {
-            document.getElementById('wsBgPreview').style.display = 'none';
-            document.getElementById('wsBgPlaceholder').style.display = 'flex';
-            document.getElementById('wsBgRemoveBtn').style.display = 'none';
-            ws.backgroundImageUrl = null;
-        }
-
-        // Load values
-        if (ws.backgroundOpacity) {
-            document.getElementById('wsBgOpacity').value = ws.backgroundOpacity;
-            document.getElementById('bgOpacityValue').textContent = ws.backgroundOpacity;
-        }
-        if (ws.logoSize) {
-            document.getElementById('wsLogoSize').value = ws.logoSize;
-            document.getElementById('logoSizeValue').textContent = ws.logoSize;
-        }
-        if (ws.logoX) {
-            document.getElementById('wsLogoX').value = ws.logoX;
-            document.getElementById('logoXValue').textContent = ws.logoX;
-        }
-        if (ws.logoY) {
-            document.getElementById('wsLogoY').value = ws.logoY;
-            document.getElementById('logoYValue').textContent = ws.logoY;
-        }
-        if (ws.titleSize) {
-            document.getElementById('wsTitleSize').value = ws.titleSize;
-            document.getElementById('titleSizeValue').textContent = ws.titleSize;
-        }
-        if (ws.titleX) {
-            document.getElementById('wsTitleX').value = ws.titleX;
-            document.getElementById('titleXValue').textContent = ws.titleX;
-        }
-        if (ws.titleY) {
-            document.getElementById('wsTitleY').value = ws.titleY;
-            document.getElementById('titleYValue').textContent = ws.titleY;
-        }
-        if (ws.subtitleSize) {
-            document.getElementById('wsSubtitleSize').value = ws.subtitleSize;
-            document.getElementById('subtitleSizeValue').textContent = ws.subtitleSize;
-        }
-        if (ws.subtitleX) {
-            document.getElementById('wsSubtitleX').value = ws.subtitleX;
-            document.getElementById('subtitleXValue').textContent = ws.subtitleX;
-        }
-        if (ws.subtitleY) {
-            document.getElementById('wsSubtitleY').value = ws.subtitleY;
-            document.getElementById('subtitleYValue').textContent = ws.subtitleY;
-        }
-        if (ws.descriptionSize) {
-            document.getElementById('wsDescriptionSize').value = ws.descriptionSize;
-            document.getElementById('descriptionSizeValue').textContent = ws.descriptionSize;
-        }
-        if (ws.descriptionX) {
-            document.getElementById('wsDescriptionX').value = ws.descriptionX;
-            document.getElementById('descriptionXValue').textContent = ws.descriptionX;
-        }
-        if (ws.descriptionY) {
-            document.getElementById('wsDescriptionY').value = ws.descriptionY;
-            document.getElementById('descriptionYValue').textContent = ws.descriptionY;
-        }
-        if (ws.splitLeftWidth) {
-            document.getElementById('wsSplitLeftWidth').value = ws.splitLeftWidth;
-            document.getElementById('splitLeftWidthValue').textContent = ws.splitLeftWidth;
-        }
-
-        this.updateWelcomePreview();
-    }
 
     // ===== LAYANAN CRUD =====
     async loadLayanan() {
