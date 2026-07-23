@@ -28,6 +28,21 @@ const COLORS = {
 
 let products = [];
 let filteredProducts = [];
+
+// ===== WELCOME SCREEN =====
+
+function renderWelcomeScreen() {
+    const welcomeScreen = document.getElementById("welcomeScreen");
+    if (!welcomeScreen) return;
+    welcomeScreen.innerHTML = '<div class="simple-welcome"><img src="assets/images/KATALOG.png" alt="MotifKain Catalog" class="simple-welcome-image"><button class="simple-welcome-btn" onclick="openKatalog()">Lihat Produk</button></div>';
+}
+
+function openKatalog() {
+    const welcomeScreen = document.getElementById("welcomeScreen");
+    const appScreen = document.getElementById("appScreen");
+    if (welcomeScreen) welcomeScreen.classList.add("hidden");
+    if (appScreen) appScreen.classList.add("active");
+}
 let currentCategory = null;
 let currentDaerah = null;
 let showFilters = false;
