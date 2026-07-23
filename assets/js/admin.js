@@ -90,6 +90,86 @@ class AdminDashboard {
         window.open('index.html', '_blank');
     }
 
+    previewWelcomeScreen() {
+        // Ambil data terbaru dari form
+        const ws = {
+            template: document.querySelector('.template-btn.active')?.dataset.template || 'cover-dark',
+            colorTheme: document.querySelector('.theme-btn.active')?.dataset.theme || 'elegant-gold',
+            fontFamily: document.getElementById('wsFont').value || 'Playfair Display',
+            title: document.getElementById('wsTitle').value || 'CATALOG',
+            subtitle: document.getElementById('wsSubtitle').value || 'Company Profile',
+            description: document.getElementById('wsDescription').value || 'Koleksi produk eksklusif kami',
+            leftText: document.getElementById('wsLeftText').value || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
+            backgroundOpacity: parseInt(document.getElementById('wsBgOpacity').value) || 50,
+            logoSize: parseInt(document.getElementById('wsLogoSize').value) || 60,
+            logoX: parseInt(document.getElementById('wsLogoX').value) || 50,
+            logoY: parseInt(document.getElementById('wsLogoY').value) || 10,
+            titleSize: parseInt(document.getElementById('wsTitleSize').value) || 32,
+            titleX: parseInt(document.getElementById('wsTitleX').value) || 50,
+            titleY: parseInt(document.getElementById('wsTitleY').value) || 50,
+            subtitleSize: parseInt(document.getElementById('wsSubtitleSize').value) || 14,
+            subtitleX: parseInt(document.getElementById('wsSubtitleX').value) || 50,
+            subtitleY: parseInt(document.getElementById('wsSubtitleY').value) || 70,
+            backgroundImage: this.welcomeBgData || (this.welcomeSettings?.backgroundImage ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + this.welcomeSettings.id + '/' + this.welcomeSettings.backgroundImage : null),
+            logo: this.welcomeLogoData || (this.welcomeSettings?.logo ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + this.welcomeSettings.id + '/' + this.welcomeSettings.logo : null)
+        };
+
+        const theme = this.getThemeColors(ws.colorTheme);
+        let html = '';
+
+        switch(ws.template) {
+            case 'cover-dark':
+                html = this.renderPreviewDark(ws, theme);
+                break;
+            case 'cover-light':
+                html = this.renderPreviewLight(ws, theme);
+                break;
+            case 'cover-split':
+                html = this.renderPreviewSplit(ws, theme);
+                break;
+            case 'cover-numbered':
+                html = this.renderPreviewNumbered(ws, theme);
+                break;
+            case 'cover-minimal':
+                html = this.renderPreviewMinimal(ws, theme);
+                break;
+            default:
+                html = this.renderPreviewDark(ws, theme);
+        }
+
+        // Buat modal preview
+        const modal = document.createElement('div');
+        modal.id = 'previewModal';
+        modal.className = 'preview-modal';
+        modal.innerHTML = `
+            <div class="preview-modal-content">
+                <div class="preview-modal-header">
+                    <h3>Preview Welcome Screen</h3>
+                    <button onclick="this.closest('.preview-modal').remove()">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    </button>
+                </div>
+                <div class="preview-modal-body">
+                    <div class="preview-phone-frame">
+                        <div class="preview-phone-screen">
+                            ${html}
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-modal-footer">
+                    <button class="btn btn-outline" onclick="this.closest('.preview-modal').remove()">Tutup</button>
+                </div>
+            </div>
+        `;
+
+        // Hapus modal lama jika ada
+        const oldModal = document.getElementById('previewModal');
+        if (oldModal) oldModal.remove();
+
+        document.body.appendChild(modal);
+        modal.classList.add('active');
+    }
+
     async fetchAPI(endpoint, options) {
         options = options || {};
         const headers = { 'Authorization': this.pocketbaseToken };
@@ -127,9 +207,6 @@ class AdminDashboard {
             this.welcomeSettings = this.getDefaultWelcomeSettings();
         }
         this.renderWelcomeSettings();
-        this.welcomeSettings = this.welcomeSettings || {};
-            this.welcomeSettings.backgroundImage = e.target.result;
-            this.updateWelcomePreview();
     }
 
     getDefaultWelcomeSettings() {
@@ -240,22 +317,18 @@ class AdminDashboard {
         document.querySelectorAll('.template-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.template === templateId);
         });
-        this.welcomeSettings = this.welcomeSettings || {};
+        if (!this.welcomeSettings) this.welcomeSettings = {};
         this.welcomeSettings.template = templateId;
-        this.welcomeSettings = this.welcomeSettings || {};
-            this.welcomeSettings.backgroundImage = e.target.result;
-            this.updateWelcomePreview();
+        this.updateWelcomePreview();
     }
 
     selectTheme(themeId) {
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.theme === themeId);
         });
-        this.welcomeSettings = this.welcomeSettings || {};
+        if (!this.welcomeSettings) this.welcomeSettings = {};
         this.welcomeSettings.colorTheme = themeId;
-        this.welcomeSettings = this.welcomeSettings || {};
-            this.welcomeSettings.backgroundImage = e.target.result;
-            this.updateWelcomePreview();
+        this.updateWelcomePreview();
     }
 
     updateWelcomePreview() {
@@ -355,37 +428,35 @@ class AdminDashboard {
         document.getElementById('wsBgPlaceholder').style.display = 'flex';
         document.getElementById('wsBgRemoveBtn').style.display = 'none';
         document.getElementById('wsBgInput').value = '';
-        this.welcomeSettings = this.welcomeSettings || {};
-            this.welcomeSettings.backgroundImage = e.target.result;
-            this.updateWelcomePreview();
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.backgroundImage = null;
+        this.updateWelcomePreview();
     }
 
     updateBgOpacity() {
         const val = document.getElementById('wsBgOpacity').value;
         document.getElementById('bgOpacityValue').textContent = val;
-        this.welcomeSettings = this.welcomeSettings || {};
-            this.welcomeSettings.backgroundImage = e.target.result;
-            this.updateWelcomePreview();
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.backgroundOpacity = parseInt(val);
+        this.updateWelcomePreview();
     }
 
     // Logo handlers
     updateLogoSize() {
         const val = document.getElementById('wsLogoSize').value;
         document.getElementById('logoSizeValue').textContent = val;
-        this.welcomeSettings = this.welcomeSettings || {};
-            this.welcomeSettings.backgroundImage = e.target.result;
-            this.updateWelcomePreview();
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.logoSize = parseInt(val);
+        this.updateWelcomePreview();
     }
 
     setLogoPosition(position) {
         document.querySelectorAll('.pos-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.position === position);
         });
-        this.welcomeSettings = this.welcomeSettings || {};
+        if (!this.welcomeSettings) this.welcomeSettings = {};
         this.welcomeSettings.logoPosition = position;
-        this.welcomeSettings = this.welcomeSettings || {};
-            this.welcomeSettings.backgroundImage = e.target.result;
-            this.updateWelcomePreview();
+        this.updateWelcomePreview();
     }
 
     getThemeColors(themeId) {
@@ -443,15 +514,32 @@ class AdminDashboard {
     }
 
     renderPreviewDark(ws, theme) {
-        const bgStyle = ws.backgroundImage
-            ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`
-            : `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
+        // Handle background image - bisa dari upload (base64) atau dari PocketBase (URL)
+        let bgStyle;
+        if (ws.backgroundImage) {
+            if (ws.backgroundImage.startsWith('data:')) {
+                // Dari upload
+                bgStyle = `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`;
+            } else {
+                // Dari PocketBase
+                bgStyle = `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`;
+            }
+        } else {
+            bgStyle = `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
+        }
+
         const logoStyle = this.getLogoStyle(ws);
         const titleStyle = this.getTitleStyle(ws);
         const subtitleStyle = this.getSubtitleStyle(ws);
-        const logoHtml = ws.logo
-            ? `<img src="${ws.logo}" style="${logoStyle}" class="preview-logo">`
-            : `<div style="${logoStyle}" class="preview-logo-placeholder">📷</div>`;
+
+        // Handle logo - bisa dari upload (base64) atau dari PocketBase (URL)
+        let logoHtml;
+        if (ws.logo) {
+            const logoSrc = ws.logo.startsWith('data:') ? ws.logo : ws.logo;
+            logoHtml = `<img src="${logoSrc}" style="${logoStyle}" class="preview-logo">`;
+        } else {
+            logoHtml = `<div style="${logoStyle}" class="preview-logo-placeholder">📷</div>`;
+        }
 
         return `
         <div style="width:100%;height:100%;${bgStyle}padding:12%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
@@ -471,13 +559,19 @@ class AdminDashboard {
     }
 
     renderPreviewLight(ws, theme) {
-        const bgStyle = ws.backgroundImage
-            ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`
-            : `background:${theme.bgLight};`;
+        let bgStyle;
+        if (ws.backgroundImage) {
+            bgStyle = `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`;
+        } else {
+            bgStyle = `background:${theme.bgLight};`;
+        }
         const logoStyle = this.getLogoStyle(ws);
-        const logoHtml = ws.logo
-            ? `<img src="${ws.logo}" style="${logoStyle}" class="preview-logo">`
-            : `<div class="preview-logo-placeholder">📷</div>`;
+        let logoHtml;
+        if (ws.logo) {
+            logoHtml = `<img src="${ws.logo}" style="${logoStyle}" class="preview-logo">`;
+        } else {
+            logoHtml = `<div class="preview-logo-placeholder">📷</div>`;
+        }
 
         return `
         <div style="width:100%;height:100%;${bgStyle}padding:12%;display:flex;flex-direction:column;">
@@ -516,32 +610,51 @@ class AdminDashboard {
     }
 
     renderPreviewNumbered(ws, theme) {
-        const bgStyle = ws.backgroundImage
-            ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`
-            : `background:${theme.bgDark};`;
+        let bgStyle;
+        if (ws.backgroundImage) {
+            bgStyle = `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`;
+        } else {
+            bgStyle = `background:${theme.bgDark};`;
+        }
+        const logoStyle = this.getLogoStyle(ws);
+        let logoHtml;
+        if (ws.logo) {
+            logoHtml = `<img src="${ws.logo}" style="${logoStyle}">`;
+        } else {
+            logoHtml = `<div style="width:40px;height:40px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;">📷</div>`;
+        }
         return `
         <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;">
-            <div style="display:flex;align-items:flex-start;gap:8%;flex:1;">
+            ${logoHtml}
+            <div style="display:flex;align-items:flex-start;gap:8%;flex:1;margin-top:20px;">
                 <div style="width:30%;display:flex;flex-direction:column;justify-content:center;">
-                    <h2 style="font-family:'${ws.fontFamily}',serif;font-size:1.4rem;color:#fff;font-weight:bold;line-height:1;margin-bottom:8%;">01</h2>
-                    <div style="width:20px;height:1px;background:${theme.accent};"></div>
+                    <h2 style="font-family:'${ws.fontFamily}',serif;font-size:1.4rem;color:#fff;font-weight:bold;line-height:1;margin-bottom:15px;">01</h2>
+                    <div style="width:40px;height:1px;background:${theme.accent};"></div>
                 </div>
                 <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
-                    <p style="color:${theme.accent};font-size:0.4rem;letter-spacing:0.2em;margin-bottom:3%;">${ws.title}</p>
-                    <h1 style="font-family:'${ws.fontFamily}',serif;font-size:0.7rem;color:#fff;margin-bottom:4%;">${ws.subtitle}</h1>
-                    <div style="width:20px;height:1px;background:${theme.accent};margin-bottom:4%;"></div>
-                    ${ws.description ? `<p style="color:rgba(255,255,255,0.4);font-size:0.35rem;line-height:1.4;">${ws.description}</p>` : ''}
+                    <p style="color:${theme.accent};font-size:0.8rem;letter-spacing:0.3em;margin-bottom:10px;">${ws.title}</p>
+                    <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.8rem;color:#fff;margin-bottom:15px;">${ws.subtitle}</h1>
+                    <div style="width:30px;height:1px;background:${theme.accent};margin-bottom:15px;"></div>
+                    ${ws.description ? `<p style="color:rgba(255,255,255,0.4);font-size:0.85rem;line-height:1.8;">${ws.description}</p>` : ''}
                 </div>
             </div>
         </div>`;
     }
 
     renderPreviewMinimal(ws, theme) {
-        const bgStyle = ws.backgroundImage
-            ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`
-            : `background:${theme.bgLight};`;
+        let bgStyle;
+        if (ws.backgroundImage) {
+            bgStyle = `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`;
+        } else {
+            bgStyle = `background:${theme.bgLight};`;
+        }
         const logoStyle = this.getLogoStyle(ws);
-        const logoHtml = ws.logo ? `<img src="${ws.logo}" style="${logoStyle}">` : '';
+        let logoHtml;
+        if (ws.logo) {
+            logoHtml = `<img src="${ws.logo}" style="${logoStyle}">`;
+        } else {
+            logoHtml = `<div style="width:40px;height:40px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;">📷</div>`;
+        }
         return `
         <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;justify-content:center;">
             ${logoHtml}
@@ -565,8 +678,8 @@ class AdminDashboard {
             document.getElementById('wsLogoPreview').style.display = 'block';
             document.getElementById('wsLogoPlaceholder').style.display = 'none';
             document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
-            this.welcomeSettings = this.welcomeSettings || {};
-            this.welcomeSettings.backgroundImage = e.target.result;
+            if (!this.welcomeSettings) this.welcomeSettings = {};
+            this.welcomeSettings.logo = e.target.result;
             this.updateWelcomePreview();
         };
         reader.readAsDataURL(file);
@@ -578,9 +691,9 @@ class AdminDashboard {
         document.getElementById('wsLogoPlaceholder').style.display = 'flex';
         document.getElementById('wsLogoRemoveBtn').style.display = 'none';
         document.getElementById('wsLogoInput').value = '';
-        this.welcomeSettings = this.welcomeSettings || {};
-            this.welcomeSettings.backgroundImage = e.target.result;
-            this.updateWelcomePreview();
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.logo = null;
+        this.updateWelcomePreview();
     }
 
     async saveWelcomeSettings() {

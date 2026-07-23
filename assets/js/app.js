@@ -333,11 +333,15 @@ function renderWelcomeMinimal(ws, theme) {
 function openKatalog() {
     document.getElementById('welcomeScreen').style.display = 'none';
     document.getElementById('appScreen').classList.add('active');
+    document.getElementById('backToWelcomeBtn').style.display = 'flex';
+    document.getElementById('backBtnContainer').style.display = 'block';
 }
 
 function backToWelcome() {
     document.getElementById('appScreen').classList.remove('active');
     document.getElementById('welcomeScreen').style.display = 'flex';
+    document.getElementById('backToWelcomeBtn').style.display = 'none';
+    document.getElementById('backBtnContainer').style.display = 'none';
 }
 
 // ===== CATEGORIES & SUBCATEGORIES =====
