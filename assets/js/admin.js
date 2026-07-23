@@ -1344,65 +1344,55 @@ class AdminDashboard {
         this.welcomeSettings.logo = null;
         this.updateWelcomePreview();
     }
-
     async saveWelcomeSettings() {
-        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
-
-        // Get form values
-        const data = {
-            template: this.welcomeSettings?.template || 'cover-dark',
-            colorTheme: this.welcomeSettings?.colorTheme || 'elegant-gold',
-            fontFamily: document.getElementById('wsFont').value,
-            title: document.getElementById('wsTitle').value,
-            subtitle: document.getElementById('wsSubtitle').value,
-            description: document.getElementById('wsDescription').value,
-            leftText: document.getElementById('wsLeftText').value,
-            // Use nullish coalescing ?? to handle 0 values correctly
-        data.backgroundOpacity = parseInt(document.getElementById('wsBgOpacity')?.value) ?? 50;
-        data.logoSize = parseInt(document.getElementById('wsLogoSize')?.value) ?? 60;
-        data.logoX = parseInt(document.getElementById('wsLogoX')?.value) ?? 50;
-        data.logoY = parseInt(document.getElementById('wsLogoY')?.value) ?? 10;
-        data.titleSize = parseInt(document.getElementById('wsTitleSize')?.value) ?? 32;
-        data.titleX = parseInt(document.getElementById('wsTitleX')?.value) ?? 50;
-        data.titleY = parseInt(document.getElementById('wsTitleY')?.value) ?? 50;
-        data.subtitleSize = parseInt(document.getElementById('wsSubtitleSize')?.value) ?? 14;
-        data.subtitleX = parseInt(document.getElementById('wsSubtitleX')?.value) ?? 50;
-        data.subtitleY = parseInt(document.getElementById('wsSubtitleY')?.value) ?? 70;
-        // Button styles
-        data.btnX = parseInt(document.getElementById('wsBtnX')?.value) ?? 50;
-        data.btnY = parseInt(document.getElementById('wsBtnY')?.value) ?? 90;
-        data.btnBgColor = document.getElementById('wsBtnBgColor')?.value ?? '#1B5E20';
-        data.btnTextColor = document.getElementById('wsBtnTextColor')?.value ?? '#FFFFFF';
-        data.btnFontSize = parseInt(document.getElementById('wsBtnFontSize')?.value) ?? 14;
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome';
+        const data = {};
+        data.template = this.welcomeSettings ? this.welcomeSettings.template : 'cover-dark';
+        data.colorTheme = this.welcomeSettings ? this.welcomeSettings.colorTheme : 'elegant-gold';
+        data.fontFamily = document.getElementById('wsFont') ? document.getElementById('wsFont').value : '';
+        data.title = document.getElementById('wsTitle') ? document.getElementById('wsTitle').value : '';
+        data.subtitle = document.getElementById('wsSubtitle') ? document.getElementById('wsSubtitle').value : '';
+        data.description = document.getElementById('wsDescription') ? document.getElementById('wsDescription').value : '';
+        data.leftText = document.getElementById('wsLeftText') ? document.getElementById('wsLeftText').value : '';
+        data.backgroundOpacity = parseInt(document.getElementById('wsBgOpacity') ? document.getElementById('wsBgOpacity').value : 50);
+        data.logoSize = parseInt(document.getElementById('wsLogoSize') ? document.getElementById('wsLogoSize').value : 60);
+        data.logoX = parseInt(document.getElementById('wsLogoX') ? document.getElementById('wsLogoX').value : 50);
+        data.logoY = parseInt(document.getElementById('wsLogoY') ? document.getElementById('wsLogoY').value : 10);
+        data.titleSize = parseInt(document.getElementById('wsTitleSize') ? document.getElementById('wsTitleSize').value : 32);
+        data.titleX = parseInt(document.getElementById('wsTitleX') ? document.getElementById('wsTitleX').value : 50);
+        data.titleY = parseInt(document.getElementById('wsTitleY') ? document.getElementById('wsTitleY').value : 50);
+        data.subtitleSize = parseInt(document.getElementById('wsSubtitleSize') ? document.getElementById('wsSubtitleSize').value : 14);
+        data.subtitleX = parseInt(document.getElementById('wsSubtitleX') ? document.getElementById('wsSubtitleX').value : 50);
+        data.subtitleY = parseInt(document.getElementById('wsSubtitleY') ? document.getElementById('wsSubtitleY').value : 70);
+        data.btnX = parseInt(document.getElementById('wsBtnX') ? document.getElementById('wsBtnX').value : 50);
+        data.btnY = parseInt(document.getElementById('wsBtnY') ? document.getElementById('wsBtnY').value : 90);
+        data.btnBgColor = document.getElementById('wsBtnBgColor') ? document.getElementById('wsBtnBgColor').value : '#1B5E20';
+        data.btnTextColor = document.getElementById('wsBtnTextColor') ? document.getElementById('wsBtnTextColor').value : '#FFFFFF';
+        data.btnFontSize = parseInt(document.getElementById('wsBtnFontSize') ? document.getElementById('wsBtnFontSize').value : 14);
 
         try {
             const formData = new FormData();
 
-            // Add text fields
             for (const [key, value] of Object.entries(data)) {
                 formData.append(key, value);
             }
 
-            // Add logo if changed
             if (this.welcomeLogoData) {
                 const blob = this.dataURLtoBlob(this.welcomeLogoData);
                 formData.append('logo', blob, 'logo.png');
             }
 
-            // Add background image if changed
             if (this.welcomeBgData) {
                 const blob = this.dataURLtoBlob(this.welcomeBgData);
                 formData.append('backgroundImage', blob, 'background.jpg');
             }
 
             if (this.welcomeSettings && this.welcomeSettings.id) {
-                // Update existing
                 await this.fetchAPI('/api/collections/' + col + '/records/' + this.welcomeSettings.id, {
                     method: 'PATCH',
                     body: formData
                 });
             } else {
-                // Create new - will become the active one
                 const createRes = await this.fetchAPI('/api/collections/' + col + '/records', {
                     method: 'POST',
                     body: formData
@@ -1419,14 +1409,12 @@ class AdminDashboard {
             this.welcomeLogoData = null;
             this.welcomeBgData = null;
 
-            // Reload all welcome screens list and settings
             await this.loadAllWelcomeScreens();
             await this.loadWelcomeSettings();
         } catch (e) {
             this.showNotification('Gagal menyimpan: ' + e.message, 'error');
         }
     }
-
     dataURLtoBlob(dataurl) {
         const arr = dataurl.split(',');
         const mime = arr[0].match(/:(.*?);/)[1];
