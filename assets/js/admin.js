@@ -565,7 +565,12 @@ class AdminDashboard {
             leftText: document.getElementById('wsLeftText').value,
             backgroundOpacity: parseInt(document.getElementById('wsBgOpacity').value) || 50,
             logoSize: parseInt(document.getElementById('wsLogoSize').value) || 60,
-            logoPosition: this.welcomeSettings?.logoPosition || 'top-center'
+            logoX: parseInt(document.getElementById('wsLogoX').value) || 50,
+            logoY: parseInt(document.getElementById('wsLogoY').value) || 10,
+            titleX: parseInt(document.getElementById('wsTitleX').value) || 50,
+            titleY: parseInt(document.getElementById('wsTitleY').value) || 50,
+            subtitleX: parseInt(document.getElementById('wsSubtitleX').value) || 50,
+            subtitleY: parseInt(document.getElementById('wsSubtitleY').value) || 70
         };
 
         try {
