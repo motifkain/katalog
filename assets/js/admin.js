@@ -110,6 +110,8 @@ class AdminDashboard {
                 if (!query) return true;
                 return (
                     (p.nama && p.nama.toLowerCase().includes(query)) ||
+                    (p.kategori && p.kategori.toLowerCase().includes(query)) ||
+                    (p.subkategori && p.subkategori.toLowerCase().includes(query)) ||
                     (p.layanan && p.layanan.toLowerCase().includes(query)) ||
                     (p.deskripsi && p.deskripsi.toLowerCase().includes(query))
                 );
@@ -224,6 +226,8 @@ class AdminDashboard {
         this.warnaItems = [];
         document.getElementById('productModalTitle').textContent = 'Tambah Produk';
         document.getElementById('productName').value = '';
+        document.getElementById('productKategori').value = '';
+        document.getElementById('productSubkategori').value = '';
         document.getElementById('productLayanan').value = 'Jasa Desain';
         document.getElementById('productHarga').value = '';
         document.getElementById('productDeskripsi').value = '';
@@ -240,6 +244,8 @@ class AdminDashboard {
         this.editingProdukId = id;
         document.getElementById('productModalTitle').textContent = 'Edit Produk';
         document.getElementById('productName').value = produk.nama || '';
+        document.getElementById('productKategori').value = produk.kategori || '';
+        document.getElementById('productSubkategori').value = produk.subkategori || '';
         document.getElementById('productLayanan').value = produk.layanan || 'Jasa Desain';
         document.getElementById('productHarga').value = produk.harga || '';
         document.getElementById('productDeskripsi').value = produk.deskripsi || '';
@@ -412,6 +418,8 @@ class AdminDashboard {
     // ===== SAVE PRODUK =====
     async saveProduct() {
         const nama = document.getElementById('productName').value.trim();
+        const kategori = document.getElementById('productKategori').value.trim();
+        const subkategori = document.getElementById('productSubkategori').value.trim();
         const layanan = document.getElementById('productLayanan').value;
         const harga = document.getElementById('productHarga').value;
         const deskripsi = document.getElementById('productDeskripsi').value;
@@ -425,6 +433,8 @@ class AdminDashboard {
             // 1. Save/update produk
             const formDataProduk = new FormData();
             formDataProduk.append('nama', nama);
+            formDataProduk.append('kategori', kategori);
+            formDataProduk.append('subkategori', subkategori);
             formDataProduk.append('layanan', layanan);
             formDataProduk.append('harga', harga || 0);
             formDataProduk.append('deskripsi', deskripsi);

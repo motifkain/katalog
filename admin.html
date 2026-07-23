@@ -249,6 +249,10 @@
             display: block; font-size: 11px;
             color: var(--text-secondary); margin-top: 4px;
         }
+        .form-row {
+            display: flex; gap: 12px;
+        }
+        .form-row .form-group { flex: 1; }
 
         .image-upload-area {
             border: 2px dashed var(--divider);
@@ -467,6 +471,16 @@
                 <div class="form-group">
                     <label>Nama Produk *</label>
                     <input type="text" id="productName" class="form-input" placeholder="Contoh: Motif Parang Klasik">
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;">
+                        <label>Kategori</label>
+                        <input type="text" id="productKategori" class="form-input" placeholder="Contoh: Batik, Tenun">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Sub Kategori</label>
+                        <input type="text" id="productSubkategori" class="form-input" placeholder="Contoh: Motif Bunga">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Layanan</label>
