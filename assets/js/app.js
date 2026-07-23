@@ -58,8 +58,10 @@ async function loadWelcomeSettings() {
                     logoSize: item.logoSize || 60,
                     logoX: item.logoX || 50,
                     logoY: item.logoY || 10,
+                    titleSize: item.titleSize || 32,
                     titleX: item.titleX || 50,
                     titleY: item.titleY || 50,
+                    subtitleSize: item.subtitleSize || 14,
                     subtitleX: item.subtitleX || 50,
                     subtitleY: item.subtitleY || 70,
                     leftText: item.leftText || item.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
@@ -183,6 +185,8 @@ function renderWelcomeDark(ws, theme) {
         ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover no-repeat;`
         : `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
     const logoStyle = getLogoStyleWelcome(ws);
+    const titleStyle = getTitleStyleWelcome(ws);
+    const subtitleStyle = getSubtitleStyleWelcome(ws);
     const logoHtml = ws.logoUrl
         ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
         : `<div style="width:${ws.logoSize || 60}px;height:${ws.logoSize || 60}px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
@@ -209,21 +213,23 @@ function renderWelcomeDark(ws, theme) {
 
 function getLogoStyleWelcome(ws) {
     const size = ws.logoSize || 60;
-    const pos = ws.logoPosition || 'top-center';
-    let positionStyle = '';
-    switch(pos) {
-        case 'top-left':
-            positionStyle = 'margin-right:auto;display:block;';
-            break;
-        case 'top-right':
-            positionStyle = 'margin-left:auto;display:block;';
-            break;
-        case 'top-center':
-        default:
-            positionStyle = 'margin:0 auto;display:block;';
-            break;
-    }
-    return `height:${size}px;max-width:100%;object-fit:contain;${positionStyle}`;
+    const x = ws.logoX || 50;
+    const y = ws.logoY || 10;
+    return `height:${size}px;max-width:150px;object-fit:contain;position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, 0);`;
+}
+
+function getTitleStyleWelcome(ws) {
+    const x = ws.titleX || 50;
+    const y = ws.titleY || 50;
+    const size = ws.titleSize || 32;
+    return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
+}
+
+function getSubtitleStyleWelcome(ws) {
+    const x = ws.subtitleX || 50;
+    const y = ws.subtitleY || 70;
+    const size = ws.subtitleSize || 14;
+    return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
 }
 
 function renderWelcomeLight(ws, theme) {

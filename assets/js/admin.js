@@ -208,6 +208,10 @@ class AdminDashboard {
             document.getElementById('wsLogoY').value = ws.logoY;
             document.getElementById('logoYValue').textContent = ws.logoY;
         }
+        if (ws.titleSize) {
+            document.getElementById('wsTitleSize').value = ws.titleSize;
+            document.getElementById('titleSizeValue').textContent = ws.titleSize;
+        }
         if (ws.titleX) {
             document.getElementById('wsTitleX').value = ws.titleX;
             document.getElementById('titleXValue').textContent = ws.titleX;
@@ -215,6 +219,10 @@ class AdminDashboard {
         if (ws.titleY) {
             document.getElementById('wsTitleY').value = ws.titleY;
             document.getElementById('titleYValue').textContent = ws.titleY;
+        }
+        if (ws.subtitleSize) {
+            document.getElementById('wsSubtitleSize').value = ws.subtitleSize;
+            document.getElementById('subtitleSizeValue').textContent = ws.subtitleSize;
         }
         if (ws.subtitleX) {
             document.getElementById('wsSubtitleX').value = ws.subtitleX;
@@ -257,8 +265,10 @@ class AdminDashboard {
         ws.logoSize = parseInt(document.getElementById('wsLogoSize').value) || 60;
         ws.logoX = parseInt(document.getElementById('wsLogoX').value) || 50;
         ws.logoY = parseInt(document.getElementById('wsLogoY').value) || 10;
+        ws.titleSize = parseInt(document.getElementById('wsTitleSize').value) || 32;
         ws.titleX = parseInt(document.getElementById('wsTitleX').value) || 50;
         ws.titleY = parseInt(document.getElementById('wsTitleY').value) || 50;
+        ws.subtitleSize = parseInt(document.getElementById('wsSubtitleSize').value) || 14;
         ws.subtitleX = parseInt(document.getElementById('wsSubtitleX').value) || 50;
         ws.subtitleY = parseInt(document.getElementById('wsSubtitleY').value) || 70;
 
@@ -303,13 +313,15 @@ class AdminDashboard {
     getTitleStyle(ws) {
         const x = ws.titleX || 50;
         const y = ws.titleY || 50;
-        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;`;
+        const size = ws.titleSize || 32;
+        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
     }
 
     getSubtitleStyle(ws) {
         const x = ws.subtitleX || 50;
         const y = ws.subtitleY || 70;
-        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;`;
+        const size = ws.subtitleSize || 14;
+        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
     }
 
     // Background Image handlers
@@ -567,8 +579,10 @@ class AdminDashboard {
             logoSize: parseInt(document.getElementById('wsLogoSize').value) || 60,
             logoX: parseInt(document.getElementById('wsLogoX').value) || 50,
             logoY: parseInt(document.getElementById('wsLogoY').value) || 10,
+            titleSize: parseInt(document.getElementById('wsTitleSize').value) || 32,
             titleX: parseInt(document.getElementById('wsTitleX').value) || 50,
             titleY: parseInt(document.getElementById('wsTitleY').value) || 50,
+            subtitleSize: parseInt(document.getElementById('wsSubtitleSize').value) || 14,
             subtitleX: parseInt(document.getElementById('wsSubtitleX').value) || 50,
             subtitleY: parseInt(document.getElementById('wsSubtitleY').value) || 70
         };
