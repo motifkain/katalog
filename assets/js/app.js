@@ -305,6 +305,6 @@ function openWa() {
     if (!wa) { alert('WA belum ada'); return; }
     let p = wa.replace(/\D/g, '');
     if (p.startsWith('0')) p = '62' + p.slice(1);
-    const msg = encodeURIComponent(`Halo ${selectedProduct?.namatoko || 'Penjual'}, saya tertarik dengan produk *${selectedProduct?.nama || 'ini}*`);
+    const msg = encodeURIComponent(`Halo ${selectedProduct?.namatoko || 'Penjual'}, saya tertarik dengan produk *${selectedProduct?.nama || 'ini'}*`);
     window.open('https://wa.me/' + p + '?text=' + msg, '_blank');
 }
