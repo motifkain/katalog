@@ -179,12 +179,36 @@
                             <input type="range" id="wsLogoSize" min="30" max="150" value="60" style="width:100%;" oninput="admin.updateLogoSize()">
                         </div>
                         <div class="form-group">
-                            <label>Posisi Logo</label>
-                            <div class="position-selector">
-                                <button class="pos-btn" data-position="top-left" onclick="admin.setLogoPosition('top-left')">↖</button>
-                                <button class="pos-btn active" data-position="top-center" onclick="admin.setLogoPosition('top-center')">↑</button>
-                                <button class="pos-btn" data-position="top-right" onclick="admin.setLogoPosition('top-right')">↗</button>
-                            </div>
+                            <label>Posisi X Logo: <span id="logoXValue">50</span>%</label>
+                            <input type="range" id="wsLogoX" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateLogoPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Posisi Y Logo: <span id="logoYValue">10</span>%</label>
+                            <input type="range" id="wsLogoY" min="0" max="80" value="10" style="width:100%;" oninput="admin.updateLogoPreview()">
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Title</h3>
+                        <div class="form-group">
+                            <label>Posisi X Title: <span id="titleXValue">50</span>%</label>
+                            <input type="range" id="wsTitleX" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateLogoPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Posisi Y Title: <span id="titleYValue">50</span>%</label>
+                            <input type="range" id="wsTitleY" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateLogoPreview()">
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Subtitle</h3>
+                        <div class="form-group">
+                            <label>Posisi X Subtitle: <span id="subtitleXValue">50</span>%</label>
+                            <input type="range" id="wsSubtitleX" min="0" max="100" value="50" style="width:100%;" oninput="admin.updateLogoPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Posisi Y Subtitle: <span id="subtitleYValue">70</span>%</label>
+                            <input type="range" id="wsSubtitleY" min="0" max="100" value="70" style="width:100%;" oninput="admin.updateLogoPreview()">
                         </div>
                     </div>
 

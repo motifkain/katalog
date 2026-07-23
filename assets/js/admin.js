@@ -194,6 +194,36 @@ class AdminDashboard {
             document.getElementById('wsBgOpacity').value = ws.backgroundOpacity;
             document.getElementById('bgOpacityValue').textContent = ws.backgroundOpacity;
         }
+
+        // Load position values
+        if (ws.logoSize) {
+            document.getElementById('wsLogoSize').value = ws.logoSize;
+            document.getElementById('logoSizeValue').textContent = ws.logoSize;
+        }
+        if (ws.logoX) {
+            document.getElementById('wsLogoX').value = ws.logoX;
+            document.getElementById('logoXValue').textContent = ws.logoX;
+        }
+        if (ws.logoY) {
+            document.getElementById('wsLogoY').value = ws.logoY;
+            document.getElementById('logoYValue').textContent = ws.logoY;
+        }
+        if (ws.titleX) {
+            document.getElementById('wsTitleX').value = ws.titleX;
+            document.getElementById('titleXValue').textContent = ws.titleX;
+        }
+        if (ws.titleY) {
+            document.getElementById('wsTitleY').value = ws.titleY;
+            document.getElementById('titleYValue').textContent = ws.titleY;
+        }
+        if (ws.subtitleX) {
+            document.getElementById('wsSubtitleX').value = ws.subtitleX;
+            document.getElementById('subtitleXValue').textContent = ws.subtitleX;
+        }
+        if (ws.subtitleY) {
+            document.getElementById('wsSubtitleY').value = ws.subtitleY;
+            document.getElementById('subtitleYValue').textContent = ws.subtitleY;
+        }
     }
 
     selectTemplate(templateId) {
@@ -225,6 +255,12 @@ class AdminDashboard {
         ws.fontFamily = document.getElementById('wsFont').value;
         ws.backgroundOpacity = parseInt(document.getElementById('wsBgOpacity').value) || 50;
         ws.logoSize = parseInt(document.getElementById('wsLogoSize').value) || 60;
+        ws.logoX = parseInt(document.getElementById('wsLogoX').value) || 50;
+        ws.logoY = parseInt(document.getElementById('wsLogoY').value) || 10;
+        ws.titleX = parseInt(document.getElementById('wsTitleX').value) || 50;
+        ws.titleY = parseInt(document.getElementById('wsTitleY').value) || 50;
+        ws.subtitleX = parseInt(document.getElementById('wsSubtitleX').value) || 50;
+        ws.subtitleY = parseInt(document.getElementById('wsSubtitleY').value) || 70;
 
         const preview = document.getElementById('wsPreviewArea');
         if (!preview) return;
@@ -258,23 +294,22 @@ class AdminDashboard {
 
     getLogoStyle(ws) {
         const size = ws.logoSize || 60;
-        const pos = ws.logoPosition || 'top-center';
-        let positionStyle = '';
+        const x = ws.logoX || 50;
+        const y = ws.logoY || 10;
 
-        switch(pos) {
-            case 'top-left':
-                positionStyle = 'margin-right:auto;margin-bottom:auto;';
-                break;
-            case 'top-right':
-                positionStyle = 'margin-left:auto;margin-bottom:auto;';
-                break;
-            case 'top-center':
-            default:
-                positionStyle = 'margin:0 auto;margin-bottom:auto;';
-                break;
-        }
+        return `height:${size}px;max-width:150px;object-fit:contain;position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, 0);`;
+    }
 
-        return `height:${size}px;max-width:100%;object-fit:contain;${positionStyle}`;
+    getTitleStyle(ws) {
+        const x = ws.titleX || 50;
+        const y = ws.titleY || 50;
+        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;`;
+    }
+
+    getSubtitleStyle(ws) {
+        const x = ws.subtitleX || 50;
+        const y = ws.subtitleY || 70;
+        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;`;
     }
 
     // Background Image handlers
@@ -384,23 +419,25 @@ class AdminDashboard {
             ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`
             : `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
         const logoStyle = this.getLogoStyle(ws);
+        const titleStyle = this.getTitleStyle(ws);
+        const subtitleStyle = this.getSubtitleStyle(ws);
         const logoHtml = ws.logo
             ? `<img src="${ws.logo}" style="${logoStyle}" class="preview-logo">`
-            : `<div class="preview-logo-placeholder">📷</div>`;
+            : `<div style="${logoStyle}" class="preview-logo-placeholder">📷</div>`;
 
         return `
-        <div style="width:100%;height:100%;${bgStyle}padding:12%;display:flex;flex-direction:column;">
-            <div style="text-align:center;margin-bottom:auto;">
-                ${logoHtml}
+        <div style="width:100%;height:100%;${bgStyle}padding:12%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+            ${logoHtml}
+            <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
+            <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
+            <div style="position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:80%;background:rgba(255,255,255,0.95);border-radius:8px;padding:8%;text-align:center;">
+                <p style="font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
             </div>
-            <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <div style="${titleStyle}">
                 <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.1rem;color:#fff;margin-bottom:4%;letter-spacing:0.05em;">${ws.title}</h1>
                 <p style="color:${theme.accent};font-size:0.5rem;letter-spacing:0.2em;margin-bottom:4%;">${ws.subtitle}</p>
                 <div style="width:30px;height:1px;background:${theme.accent};margin:0 auto;"></div>
                 ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.45rem;margin-top:4%;line-height:1.4;">${ws.description}</p>` : ''}
-            </div>
-            <div style="text-align:center;margin-top:auto;padding:8%;background:rgba(255,255,255,0.95);border-radius:8px;">
-                <p style="font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
             </div>
         </div>`;
     }
