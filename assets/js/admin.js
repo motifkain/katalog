@@ -18,6 +18,7 @@ class AdminDashboard {
         this.currentUser = null;
         this.productImages = []; // Array untuk gambar produk dengan metadata
         this.currentImageIndex = null;
+        this.themes = window.ColorThemes || {};
         this.pocketbaseToken = '';
         this.pocketbaseUrl = '';
         this.init();
@@ -780,6 +781,12 @@ class AdminDashboard {
         this.updateWelcomePreview();
     }
 
+    getThemeColors(themeId) {
+        return this.themes.themes[themeId] || this.themes.themes['elegant-gold'] || {
+            primary: '#5D4037', bgDark: '#1a2a3a', accent: '#C9A66B', textDark: '#1a1a1a', textMuted: '#A1887F'
+        };
+    }
+
     selectTheme(themeId) {
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.theme === themeId);
@@ -961,61 +968,6 @@ class AdminDashboard {
         document.getElementById('wsLogoInput').value = '';
         this.updateWelcomePreview();
     }
-        const themes = {
-            'elegant-gold': {
-                primary: '#5D4037',
-                secondary: '#8D6E63',
-                accent: '#C9A66B',
-                accentAlt: '#008B8B',
-                textDark: '#1a1a1a',
-                textLight: '#6D4C41',
-                textMuted: '#A1887F',
-                bgLight: '#FFF8F0',
-                bgDark: '#1a2a3a',
-                bgCard: '#FFFFFF'
-            },
-            'ocean-blue': {
-                primary: '#1E3A5F',
-                secondary: '#4A90A4',
-                accent: '#E8F4F8',
-                accentAlt: '#26C6DA',
-                textDark: '#0D2137',
-                textLight: '#3D5A73',
-                textMuted: '#6B8BA4',
-                bgLight: '#F0F8FF',
-                bgDark: '#0D2137',
-                bgCard: '#FFFFFF'
-            },
-            'forest-green': {
-                primary: '#2D4739',
-                secondary: '#4CAF50',
-                accent: '#A5D6A7',
-                accentAlt: '#8BC34A',
-                textDark: '#1B3324',
-                textLight: '#3D5C4A',
-                textMuted: '#6B8B7A',
-                bgLight: '#F1F8E9',
-                bgDark: '#1B3324',
-                bgCard: '#FFFFFF'
-            },
-            'monochrome': {
-                primary: '#212121',
-                secondary: '#616161',
-                accent: '#BDBDBD',
-                accentAlt: '#9E9E9E',
-                textDark: '#000000',
-                textLight: '#424242',
-                textMuted: '#757575',
-                bgLight: '#FAFAFA',
-                bgDark: '#000000',
-                bgCard: '#FFFFFF'
-            }
-        };
-        return themes[themeId] || themes['elegant-gold'];
-    }
-
-    renderPreviewDark(ws, theme) {
-        // Use URL from PocketBase or from upload (base64)
         const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
         let bgStyle;
         if (bgUrl) {
@@ -1749,6 +1701,7 @@ class AdminDashboard {
     closeImageDetail() {
         document.getElementById('imageDetailModal').classList.remove('show');
         this.currentImageIndex = null;
+        this.themes = window.ColorThemes || {};
     }
 
     // Delete current image
@@ -1763,7 +1716,7 @@ class AdminDashboard {
         this.renderProductImages();
     }
 
-    async saveProduk() {
+    async saveProduct() {
         var nama = document.getElementById('productName').value.trim();
         var kategori = document.getElementById('productKategori').value;
         var subkategori = document.getElementById('productSubkategori').value.trim();
