@@ -80,7 +80,7 @@ function renderKatalogHeader() {
                 <button class="back-btn" onclick="backToWelcome()">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
                 </button>
-                <img src="assets/images/logo-motifkain.svg" alt="MotifKain" class="header-logo">
+                <img src="assets/images/logo-motifkain.png" alt="MotifKain" class="header-logo">
             </div>
             <div class="filter-section">
                 <div class="filter-chips">${filterHtml}</div>
