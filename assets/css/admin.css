@@ -662,18 +662,18 @@ input, textarea, select { font-family: inherit; outline: none; }
 /* ===== WELCOME EDITOR V2 ===== */
 .welcome-editor-container {
     display: grid;
-    grid-template-columns: 1fr 400px;
+    grid-template-columns: 1fr 1fr;
     gap: 24px;
     min-height: 600px;
 }
 
 .welcome-settings {
     background: var(--card);
-    border-radius: var(--border-radius);
+    border-radius: var(--radius);
     padding: 24px;
     box-shadow: 0 2px 8px var(--shadow);
-    overflow-y: auto;
     max-height: calc(100vh - 180px);
+    overflow-y: auto;
 }
 
 .settings-section {
@@ -816,6 +816,8 @@ input, textarea, select { font-family: inherit; outline: none; }
     border-radius: var(--border-radius);
     padding: 24px;
     box-shadow: 0 2px 8px var(--shadow);
+    position: sticky;
+    top: 24px;
 }
 
 .welcome-preview-panel h3 {

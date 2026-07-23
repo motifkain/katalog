@@ -299,14 +299,19 @@ class AdminDashboard {
         const ws = this.allWelcomeScreens.find(w => w.id === id);
         if (!ws) return;
 
-        this.welcomeSettings = ws;
+        this.welcomeSettings = { ...ws };
         this.welcomeLogoData = null;
         this.welcomeBgData = null;
+
+        // Set current template and theme
+        this.welcomeSettings.template = ws.template || 'cover-dark';
+        this.welcomeSettings.colorTheme = ws.colorTheme || 'elegant-gold';
 
         this.switchTab('welcome');
 
         setTimeout(() => {
             this.renderWelcomeSettings();
+            this.updateWelcomePreview();
             document.querySelector('.welcome-settings')?.scrollIntoView({ behavior: 'smooth' });
             this.showNotification('Welcome screen loaded. Edit dan simpan.', 'success');
         }, 100);
