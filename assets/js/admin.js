@@ -275,7 +275,7 @@ class AdminDashboard {
             for (const warna of produk.warnaList) {
                 const warnaData = {
                     id: warna.id,
-                    nama: warna.name || '',
+                    nama: warna.nama || '',
                     images: []
                 };
 
@@ -341,7 +341,7 @@ class AdminDashboard {
                 <div class="warna-item-header">
                     <input type="text" class="form-input warna-name-input"
                            placeholder="Nama Warna (cth: Merah Maroon)"
-                           value="${warna.name}"
+                           value="${warna.nama}"
                            onchange="admin.updateWarnaName(${warnaIndex}, this.value)"
                            style="flex:1;margin-bottom:0;">
                     <button class="btn btn-danger btn-sm"
@@ -492,7 +492,7 @@ class AdminDashboard {
                 if (!warna.nama.trim() && warna.images.length === 0) continue;
 
                 const formDataWarna = new FormData();
-                formDataWarna.append('name', warna.nama);
+                formDataWarna.append('nama', warna.nama);
                 // PocketBase relation fields need to be sent as JSON array string
                 formDataWarna.append('produk', JSON.stringify([produkId]));
 
