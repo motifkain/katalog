@@ -201,8 +201,14 @@ class AdminDashboard {
             if (res.ok) {
                 const data = await res.json();
                 this.layanan = data.items || [];
+            } else if (res.status === 400) {
+                // Collection doesn't exist or bad request - ignore
+                console.log('Collection "' + col + '" not available yet');
+                this.layanan = [];
             }
         } catch (e) {
+            // Collection might not exist - ignore error
+            console.log('Collection "' + col + '" not available:', e.message);
             this.layanan = [];
         }
         this.renderLayanan();
