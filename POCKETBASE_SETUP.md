@@ -83,18 +83,18 @@
 
 ---
 
-## 4. Collection: `portfolio`
+## 4. Collection: `portofolio`
 
 | Field Name | Type | Required | Description |
 |------------|------|----------|-------------|
-| `judul` | text | Yes | Judul portfolio (contoh: "Koleksi Batik Nusantara") |
-| `kategori` | text | No | Kategori portfolio (contoh: "Batik", "Tenun") |
-| `deskripsi` | text | No | Deskripsi portfolio |
-| `image` | file | No | Gambar utama portfolio |
-| `images` | file (multiple) | No | Gambar tambahan portfolio |
+| `judul` | text | Yes | Judul portofolio (contoh: "Koleksi Batik Nusantara") |
+| `kategori` | text | No | Kategori portofolio (contoh: "Batik", "Tenun") |
+| `deskripsi` | text | No | Deskripsi portofolio |
+| `image` | file | No | Gambar utama portofolio |
+| `images` | file (multiple) | No | Gambar tambahan portofolio |
 
 ### Settings:
-- **Name**: `portfolio`
+- **Name**: `portofolio`
 - **List rule**: Leave empty (public read)
 - **Create rule**: Admin auth only
 - **Update rule**: Admin auth only

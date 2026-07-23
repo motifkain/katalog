@@ -604,7 +604,7 @@ class AdminDashboard {
     // ========== PORTFOLIO ==========
     async loadPortfolio() {
         try {
-            const res = await this.fetchAPI('/api/collections/portfolio/records?per-page=500&sort=-created');
+            const res = await this.fetchAPI('/api/collections/portofolio/records?per-page=500&sort=-created');
             this.portfolio = res.items || [];
             this.filteredPortfolio = [...this.portfolio];
             this.renderPortfolioGrid();
@@ -633,7 +633,7 @@ class AdminDashboard {
         }
 
         container.innerHTML = this.filteredPortfolio.map(p => {
-            const imgUrl = p.image ? `${this.pocketbaseUrl}/api/files/portfolio/${p.id}/${p.image}` : '';
+            const imgUrl = p.image ? `${this.pocketbaseUrl}/api/files/portofolio/${p.id}/${p.image}` : '';
             const imgCount = p.images?.length || 0;
             return `
                 <div class="product-card" onclick="admin.editPortfolio('${p.id}')">
@@ -678,7 +678,7 @@ class AdminDashboard {
             this.portfolioImages.push({
                 id: null,
                 file: null,
-                url: `${this.pocketbaseUrl}/api/files/portfolio/${id}/${portfolio.image}`,
+                url: `${this.pocketbaseUrl}/api/files/portofolio/${id}/${portfolio.image}`,
                 deskripsi: ''
             });
         }
@@ -687,7 +687,7 @@ class AdminDashboard {
                 this.portfolioImages.push({
                     id: null,
                     file: null,
-                    url: `${this.pocketbaseUrl}/api/files/portfolio/${id}/${img}`,
+                    url: `${this.pocketbaseUrl}/api/files/portofolio/${id}/${img}`,
                     deskripsi: ''
                 });
             }
@@ -754,7 +754,7 @@ class AdminDashboard {
             });
 
             let method = 'POST';
-            let url = '/api/collections/portfolio/records';
+            let url = '/api/collections/portofolio/records';
             if (this.editingPortfolioId) {
                 method = 'PATCH';
                 url += '/' + this.editingPortfolioId;
@@ -784,7 +784,7 @@ class AdminDashboard {
         if (!confirm('Hapus portfolio ini?')) return;
 
         try {
-            await this.fetchAPI(`/api/collections/portfolio/records/${this.editingPortfolioId}`, 'DELETE');
+            await this.fetchAPI(`/api/collections/portofolio/records/${this.editingPortfolioId}`, 'DELETE');
             this.closeModal('portfolioModal');
             await this.loadPortfolio();
             this.showNotification('Portfolio dihapus', 'success');

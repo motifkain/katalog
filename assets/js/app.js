@@ -7,7 +7,7 @@
 const CONFIG = window.MOTIFKAIN_CONFIG || {
     pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
     produkCollection: 'produk',
-    portfolioCollection: 'portfolio',
+    portfolioCollection: 'portofolio',
     kontakCollection: 'kontak'
 };
 
