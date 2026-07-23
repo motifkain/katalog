@@ -273,39 +273,6 @@ function hexToRgb(hex) {
     return r + ',' + g + ',' + b;
 }
 
-function renderWelcomeDark(ws, theme) {
-    const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
-    const bgStyle = bgImg
-        ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${bgImg}') center/cover no-repeat;`
-        : `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
-    const logoStyle = getLogoStyleWelcome(ws);
-    const titleStyle = getTitleStyleWelcome(ws);
-    const subtitleStyle = getSubtitleStyleWelcome(ws);
-    const logoHtml = ws.logoUrl
-        ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
-        : `<div style="width:${ws.logoSize || 60}px;height:${ws.logoSize || 60}px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
-    const panelOpacity = (ws.bottomPanelOpacity || 95) / 100;
-
-    return `
-    <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-        <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
-        <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
-        <div style="text-align:center;margin-bottom:auto;">
-            ${logoHtml}
-        </div>
-        <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
-            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:#fff;margin-bottom:10px;letter-spacing:0.05em;">${ws.title}</h1>
-            <p style="color:${theme.accent};font-size:0.9rem;letter-spacing:0.3em;margin-bottom:20px;">${ws.subtitle}</p>
-            <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${theme.accent},transparent);margin:0 auto;"></div>
-            ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.9rem;margin-top:20px;line-height:1.6;">${ws.description}</p>` : ''}
-        </div>
-        <div style="background:rgba(255,255,255,${panelOpacity});border-radius:12px;padding:24px;text-align:center;margin-top:auto;">
-            <p style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
-        </div>
-        <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>
-    </div>`;
-}
-
 function getLogoStyleWelcome(ws) {
     const size = ws.logoSize || 60;
     const x = ws.logoX || 50;
@@ -317,7 +284,7 @@ function getTitleStyleWelcome(ws) {
     const x = ws.titleX || 50;
     const y = ws.titleY || 50;
     const size = ws.titleSize || 32;
-    return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
+    return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;color:#fff;`;
 }
 
 function getSubtitleStyleWelcome(ws) {
@@ -327,59 +294,105 @@ function getSubtitleStyleWelcome(ws) {
     return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
 }
 
+function getDescriptionStyleWelcome(ws) {
+    const size = ws.descriptionSize || 14;
+    return `font-size:${size}px;line-height:1.6;`;
+}
+
+function getTaglineStyleWelcome(ws) {
+    const size = ws.taglineSize || 14;
+    return `font-size:${size}px;line-height:1.6;`;
+}
+
+function renderWelcomeDark(ws, theme) {
+    const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
+    const bgStyle = bgImg
+        ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${bgImg}') center/cover no-repeat;`
+        : `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
+
+    const logoStyle = getLogoStyleWelcome(ws);
+    const titleStyle = getTitleStyleWelcome(ws);
+    const subtitleStyle = getSubtitleStyleWelcome(ws);
+    const descStyle = getDescriptionStyleWelcome(ws);
+    const taglineStyle = getTaglineStyleWelcome(ws);
+
+    const logoHtml = ws.logoUrl
+        ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
+        : `<div style="width:60px;height:60px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;opacity:0.5;${logoStyle}"><span style="font-size:1.5rem;">📷</span></div>`;
+
+    return `
+    <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
+        <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
+        ${logoHtml}
+        <div style="${titleStyle}">
+            <h1 style="font-family:'${ws.fontFamily}',serif;margin-bottom:10px;letter-spacing:0.05em;">${ws.title}</h1>
+            <p style="color:${theme.accent};letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
+            <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${theme.accent},transparent);margin:0 auto;"></div>
+        </div>
+        ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:rgba(255,255,255,0.7);">${ws.description}</div>` : ''}
+        ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
+        <button class="welcome-btn" onclick="openKatalog()" style="position:absolute;bottom:5%;left:50%;transform:translateX(-50%);">Lihat Katalog</button>
+    </div>`;
+}
+
 function renderWelcomeLight(ws, theme) {
     const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
     const bgStyle = bgImg
         ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgImg}') center/cover no-repeat;`
         : `background:${theme.bgLight};`;
+
     const logoStyle = getLogoStyleWelcome(ws);
+    const titleStyle = getTitleStyleWelcome(ws);
+    const subtitleStyle = getSubtitleStyleWelcome(ws);
+    const descStyle = getDescriptionStyleWelcome(ws);
+    const taglineStyle = getTaglineStyleWelcome(ws);
+
     const logoHtml = ws.logoUrl
         ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
-        : `<div style="width:${ws.logoSize || 60}px;height:${ws.logoSize || 60}px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
-    const panelOpacity = (ws.bottomPanelOpacity || 95) / 100;
+        : `<div style="width:60px;height:60px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;opacity:0.5;${logoStyle}"><span style="font-size:1.5rem;">📷</span></div>`;
 
     return `
     <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
         <div style="position:absolute;top:5%;right:5%;width:30px;height:30px;border-top:2px solid ${theme.accentAlt};border-right:2px solid ${theme.accentAlt};opacity:0.3;"></div>
-        <div style="text-align:center;margin-bottom:auto;">
-            ${logoHtml}
-        </div>
-        <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
-            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:${theme.textDark};margin-bottom:10px;">${ws.title}</h1>
-            <p style="color:${theme.accentAlt};font-size:0.9rem;letter-spacing:0.3em;margin-bottom:20px;">${ws.subtitle}</p>
+        ${logoHtml}
+        <div style="${titleStyle}">
+            <h1 style="font-family:'${ws.fontFamily}',serif;margin-bottom:10px;">${ws.title}</h1>
+            <p style="color:${theme.accentAlt};letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
             <div style="width:50px;height:2px;background:${theme.accent};margin:0 auto;"></div>
-            ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.9rem;margin-top:20px;line-height:1.6;">${ws.description}</p>` : ''}
         </div>
-        <div style="background:rgba(${hexToRgb(theme.bgDark)},${panelOpacity});border-radius:12px;padding:24px;text-align:center;margin-top:auto;">
-            <p style="font-size:0.85rem;color:rgba(255,255,255,0.8);line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
-        </div>
-        <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>
+        ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:${theme.textMuted};">${ws.description}</div>` : ''}
+        ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
+        <button class="welcome-btn" onclick="openKatalog()" style="position:absolute;bottom:5%;left:50%;transform:translateX(-50%);">Lihat Katalog</button>
     </div>`;
 }
 
 function renderWelcomeSplit(ws, theme) {
     const logoStyle = getLogoStyleWelcome(ws);
-    const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
+    const titleStyle = getTitleStyleWelcome(ws);
+    const subtitleStyle = getSubtitleStyleWelcome(ws);
+    const descStyle = getDescriptionStyleWelcome(ws);
+    const taglineStyle = getTaglineStyleWelcome(ws);
 
-    // Background image for right side - check both ws.backgroundImage and ws.backgroundImageUrl
     const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
     const rightBgStyle = bgImg
         ? `background: linear-gradient(rgba(255,255,255,${(100 - (ws.backgroundOpacity || 50))/100}), rgba(255,255,255,${(100 - (ws.backgroundOpacity || 50))/100})), url('${bgImg}') center/cover;`
         : `background:${theme.bgCard || '#FFFAF0'};`;
 
     return `
-    <div style="width:100%;height:100%;display:flex;">
-        <div style="width:40%;height:100%;background:${theme.bgDark};padding:6%;display:flex;flex-direction:column;justify-content:center;">
-            ${logoHtml}
-            <div style="width:25px;height:1px;background:${theme.accent};margin:20px 0;"></div>
-            <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+    <div style="width:100%;height:100%;display:flex;position:relative;">
+        <div style="width:40%;height:100%;background:${theme.bgDark};padding:6%;display:flex;flex-direction:column;justify-content:center;position:relative;">
+            ${ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : ''}
+            ${ws.leftText ? `<div style="width:25px;height:1px;background:${theme.accent};margin:20px 0;"></div><div style="${taglineStyle}color:rgba(255,255,255,0.6);">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
         </div>
-        <div style="width:60%;height:100%;${rightBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;">
-            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.2rem;color:${theme.textDark};margin-bottom:15px;">${ws.title}</h1>
-            <p style="color:${theme.accentAlt};font-size:0.85rem;letter-spacing:0.2em;margin-bottom:20px;">${ws.subtitle}</p>
-            <div style="width:40px;height:2px;background:${theme.textDark};margin-bottom:30px;"></div>
-            ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.9rem;line-height:1.8;">${ws.description}</p>` : ''}
-            <button class="welcome-btn" onclick="openKatalog()" style="margin-top:40px;align-self:flex-start;">Lihat Katalog</button>
+        <div style="width:60%;height:100%;${rightBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;position:relative;">
+            <div style="${titleStyle}">
+                <h1 style="font-family:'${ws.fontFamily}',serif;margin-bottom:15px;">${ws.title}</h1>
+                <p style="color:${theme.accentAlt};letter-spacing:0.2em;margin-bottom:15px;">${ws.subtitle}</p>
+                <div style="width:40px;height:2px;background:${theme.textDark};margin-bottom:20px;"></div>
+            </div>
+            ${ws.description ? `<div style="position:absolute;left:65%;top:60%;transform:translate(-50%, -50%);width:50%;${descStyle}color:${theme.textMuted};">${ws.description}</div>` : ''}
+            <button class="welcome-btn" onclick="openKatalog()" style="position:absolute;bottom:10%;left:65%;transform:translateX(-50%);">Lihat Katalog</button>
         </div>
     </div>`;
 }
@@ -389,47 +402,62 @@ function renderWelcomeNumbered(ws, theme) {
     const bgStyle = bgImg
         ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${bgImg}') center/cover no-repeat;`
         : `background:${theme.bgDark};`;
+
     const logoStyle = getLogoStyleWelcome(ws);
-    const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
-    const panelOpacity = (ws.bottomPanelOpacity || 95) / 100;
+    const titleStyle = getTitleStyleWelcome(ws);
+    const subtitleStyle = getSubtitleStyleWelcome(ws);
+    const descStyle = getDescriptionStyleWelcome(ws);
+    const taglineStyle = getTaglineStyleWelcome(ws);
+
+    const logoHtml = ws.logoUrl
+        ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
+        : `<div style="width:60px;height:60px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;opacity:0.5;${logoStyle}"><span style="font-size:1.5rem;">📷</span></div>`;
 
     return `
     <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
         <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
         <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
         ${logoHtml}
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
-            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:#fff;margin-bottom:15px;letter-spacing:0.05em;">${ws.title}</h1>
-            <p style="color:${theme.accent};font-size:0.9rem;letter-spacing:0.3em;margin-bottom:20px;">${ws.subtitle}</p>
+        <div style="${titleStyle}">
+            <h1 style="font-family:'${ws.fontFamily}',serif;margin-bottom:15px;letter-spacing:0.05em;">${ws.title}</h1>
+            <p style="color:${theme.accent};letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
             <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${theme.accent},transparent);margin:0 auto;"></div>
-            ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.9rem;margin-top:20px;line-height:1.6;max-width:80%;">${ws.description}</p>` : ''}
         </div>
-        <div style="background:rgba(255,255,255,${panelOpacity});border-radius:12px;padding:20px;text-align:center;margin-top:auto;">
-            <p style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
-        </div>
-        <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>
+        ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:rgba(255,255,255,0.7);">${ws.description}</div>` : ''}
+        ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
+        <button class="welcome-btn" onclick="openKatalog()" style="position:absolute;bottom:5%;left:50%;transform:translateX(-50%);">Lihat Katalog</button>
     </div>`;
 }
 
 function renderWelcomeMinimal(ws, theme) {
-    const bgStyle = ws.backgroundImage
-        ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover no-repeat;`
+    const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
+    const bgStyle = bgImg
+        ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgImg}') center/cover no-repeat;`
         : `background:${theme.bgLight};`;
+
     const logoStyle = getLogoStyleWelcome(ws);
-    const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
+    const titleStyle = getTitleStyleWelcome(ws);
+    const subtitleStyle = getSubtitleStyleWelcome(ws);
+    const descStyle = getDescriptionStyleWelcome(ws);
+    const taglineStyle = getTaglineStyleWelcome(ws);
+
+    const logoHtml = ws.logoUrl
+        ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
+        : `<div style="width:60px;height:60px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;opacity:0.5;${logoStyle}"><span style="font-size:1.5rem;">📷</span></div>`;
 
     return `
     <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
         <div style="position:absolute;top:8%;right:8%;width:40px;height:40px;border-top:1px solid ${theme.textMuted};border-right:1px solid ${theme.textMuted};"></div>
         <div style="position:absolute;bottom:8%;left:8%;width:40px;height:40px;border-bottom:1px solid ${theme.textMuted};border-left:1px solid ${theme.textMuted};"></div>
         ${logoHtml}
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
-            <p style="color:${theme.textMuted};font-size:0.85rem;letter-spacing:0.3em;margin-bottom:15px;text-transform:uppercase;">${ws.subtitle}</p>
-            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:${theme.textDark};margin-bottom:30px;font-weight:300;">${ws.title}</h1>
-            <div style="width:50px;height:1px;background:${theme.accentAlt};margin-bottom:30px;"></div>
-            ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.9rem;line-height:1.8;font-style:italic;">${ws.description}</p>` : ''}
+        <div style="${titleStyle}">
+            <p style="color:${theme.textMuted};letter-spacing:0.3em;margin-bottom:15px;text-transform:uppercase;">${ws.subtitle}</p>
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-weight:300;margin-bottom:30px;">${ws.title}</h1>
+            <div style="width:50px;height:1px;background:${theme.accentAlt};margin-bottom:20px;"></div>
         </div>
-        <button class="welcome-btn" onclick="openKatalog()" style="align-self:center;">Lihat Katalog</button>
+        ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;${descStyle}color:${theme.textMuted};font-style:italic;">${ws.description}</div>` : ''}
+        ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;${taglineStyle}color:${theme.textMuted};">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
+        <button class="welcome-btn" onclick="openKatalog()" style="position:absolute;bottom:5%;left:50%;transform:translateX(-50%);">Lihat Katalog</button>
     </div>`;
 }
 

@@ -1120,7 +1120,6 @@ class AdminDashboard {
     }
 
     renderPreviewDark(ws, theme) {
-        // Use URL from PocketBase or from upload (base64)
         const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
         let bgStyle;
         if (bgUrl) {
@@ -1131,36 +1130,27 @@ class AdminDashboard {
 
         const logoStyle = this.getLogoStyle(ws);
         const titleStyle = this.getTitleStyle(ws);
-        const subtitleStyle = this.getSubtitleStyle(ws);
-
-        // Handle logo - bisa dari upload (base64) atau dari PocketBase (URL)
         const logoUrl = ws.logoUrl || ws.logo;
-        let logoHtml;
-        if (logoUrl) {
-            logoHtml = `<img src="${logoUrl}" style="${logoStyle}" class="preview-logo">`;
-        } else {
-            logoHtml = `<div style="${logoStyle}" class="preview-logo-placeholder">📷</div>`;
-        }
+        const logoHtml = logoUrl
+            ? `<img src="${logoUrl}" style="${logoStyle}" class="preview-logo">`
+            : `<div style="${logoStyle}" class="preview-logo-placeholder">📷</div>`;
 
         return `
         <div style="width:100%;height:100%;${bgStyle}padding:12%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-            ${logoHtml}
             <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
             <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
-            <div style="position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:80%;background:rgba(255,255,255,0.95);border-radius:8px;padding:8%;text-align:center;">
-                <p style="font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
-            </div>
+            ${logoHtml}
             <div style="${titleStyle}">
                 <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.1rem;color:#fff;margin-bottom:4%;letter-spacing:0.05em;">${ws.title}</h1>
                 <p style="color:${theme.accent};font-size:0.5rem;letter-spacing:0.2em;margin-bottom:4%;">${ws.subtitle}</p>
                 <div style="width:30px;height:1px;background:${theme.accent};margin:0 auto;"></div>
-                ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.45rem;margin-top:4%;line-height:1.4;">${ws.description}</p>` : ''}
             </div>
+            ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.45rem;color:rgba(255,255,255,0.7);line-height:1.4;">${ws.description}</div>` : ''}
+            ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
         </div>`;
     }
 
     renderPreviewLight(ws, theme) {
-        // Use URL from PocketBase or from upload (base64)
         const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
         let bgStyle;
         if (bgUrl) {
@@ -1169,63 +1159,57 @@ class AdminDashboard {
             bgStyle = `background:${theme.bgLight};`;
         }
         const logoStyle = this.getLogoStyle(ws);
+        const titleStyle = this.getTitleStyle(ws);
         const logoUrl = ws.logoUrl || ws.logo;
-        let logoHtml;
-        if (logoUrl) {
-            logoHtml = `<img src="${logoUrl}" style="${logoStyle}" class="preview-logo">`;
-        } else {
-            logoHtml = `<div class="preview-logo-placeholder">📷</div>`;
-        }
+        const logoHtml = logoUrl
+            ? `<img src="${logoUrl}" style="${logoStyle}" class="preview-logo">`
+            : `<div style="${logoStyle}" class="preview-logo-placeholder">📷</div>`;
 
         return `
-        <div style="width:100%;height:100%;${bgStyle}padding:12%;display:flex;flex-direction:column;">
-            <div style="text-align:center;margin-bottom:auto;">
-                ${logoHtml}
-            </div>
-            <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;">
+        <div style="width:100%;height:100%;${bgStyle}padding:12%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:5%;right:5%;width:30px;height:30px;border-top:2px solid ${theme.accentAlt};border-right:2px solid ${theme.accentAlt};opacity:0.3;"></div>
+            ${logoHtml}
+            <div style="${titleStyle}">
                 <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.1rem;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
                 <p style="color:${theme.accentAlt};font-size:0.5rem;letter-spacing:0.2em;margin-bottom:4%;">${ws.subtitle}</p>
                 <div style="width:30px;height:1px;background:${theme.accent};margin:0 auto;"></div>
-                ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.45rem;margin-top:4%;line-height:1.4;">${ws.description}</p>` : ''}
             </div>
-            <div style="text-align:center;margin-top:auto;padding:8%;background:${theme.bgDark};border-radius:8px;">
-                <p style="font-size:0.45rem;color:rgba(255,255,255,0.8);line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
-            </div>
+            ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.description}</div>` : ''}
+            ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
         </div>`;
     }
 
     renderPreviewSplit(ws, theme) {
-        // Use URL from PocketBase or from upload (base64)
         const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
-        let leftBgStyle = theme.bgDark;
         let rightBgStyle = theme.bgCard;
 
         if (bgUrl) {
-            // For split, use background on right side
             rightBgStyle = `linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover`;
         }
 
         const logoStyle = this.getLogoStyle(ws);
+        const titleStyle = this.getTitleStyle(ws);
         const logoUrl = ws.logoUrl || ws.logo;
         const logoHtml = logoUrl ? `<img src="${logoUrl}" style="${logoStyle}">` : '';
+
         return `
-        <div style="width:100%;height:100%;display:flex;">
-            <div style="width:35%;height:100%;background:${leftBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;">
+        <div style="width:100%;height:100%;display:flex;position:relative;">
+            <div style="width:40%;height:100%;background:${theme.bgDark};padding:6%;display:flex;flex-direction:column;justify-content:center;position:relative;">
                 ${logoHtml}
-                <div style="width:30px;height:1px;background:${theme.accent};margin:12% 0;"></div>
-                <p style="color:rgba(255,255,255,0.5);font-size:0.4rem;line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+                ${ws.leftText ? `<div style="width:25px;height:1px;background:${theme.accent};margin:12% 0;"></div><div style="font-size:0.4rem;color:rgba(255,255,255,0.6);line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
             </div>
-            <div style="width:65%;height:100%;background:${rightBgStyle};padding:10%;display:flex;flex-direction:column;justify-content:center;">
-                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:0.9rem;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
-                <p style="color:${theme.accentAlt};font-size:0.4rem;letter-spacing:0.1em;margin-bottom:4%;">${ws.subtitle}</p>
-                <div style="width:25px;height:1px;background:${theme.textDark};margin-bottom:8%;"></div>
-                ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.4rem;line-height:1.4;">${ws.description}</p>` : ''}
+            <div style="width:60%;height:100%;background:${rightBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;position:relative;">
+                <div style="${titleStyle}">
+                    <h1 style="font-family:'${ws.fontFamily}',serif;font-size:0.9rem;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
+                    <p style="color:${theme.accentAlt};font-size:0.4rem;letter-spacing:0.1em;margin-bottom:4%;">${ws.subtitle}</p>
+                    <div style="width:25px;height:1px;background:${theme.textDark};margin-bottom:8%;"></div>
+                </div>
+                ${ws.description ? `<div style="position:absolute;left:65%;top:60%;transform:translate(-50%, -50%);width:50%;font-size:0.4rem;color:${theme.textMuted};line-height:1.4;">${ws.description}</div>` : ''}
             </div>
         </div>`;
     }
 
     renderPreviewNumbered(ws, theme) {
-        // Use URL from PocketBase or from upload (base64)
         const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
         let bgStyle;
         if (bgUrl) {
@@ -1234,32 +1218,28 @@ class AdminDashboard {
             bgStyle = `background:${theme.bgDark};`;
         }
         const logoStyle = this.getLogoStyle(ws);
+        const titleStyle = this.getTitleStyle(ws);
         const logoUrl = ws.logoUrl || ws.logo;
-        let logoHtml;
-        if (logoUrl) {
-            logoHtml = `<img src="${logoUrl}" style="${logoStyle}">`;
-        } else {
-            logoHtml = `<div style="width:60px;height:60px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;font-size:1.5rem;">📷</div>`;
-        }
+        const logoHtml = logoUrl
+            ? `<img src="${logoUrl}" style="${logoStyle}">`
+            : `<div style="${logoStyle}" class="preview-logo-placeholder">📷</div>`;
+
         return `
         <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-            ${logoHtml}
             <div style="position:absolute;top:5%;left:5%;width:30px;height:30px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
             <div style="position:absolute;bottom:5%;right:5%;width:30px;height:30px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
-            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+            ${logoHtml}
+            <div style="${titleStyle}">
                 <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1rem;color:#fff;margin-bottom:10px;letter-spacing:0.1em;">${ws.title}</h1>
                 <p style="color:${theme.accent};font-size:0.5rem;letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
                 <div style="width:40px;height:1px;background:${theme.accent};margin-bottom:15px;"></div>
-                ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.45rem;line-height:1.5;max-width:80%;">${ws.description}</p>` : ''}
             </div>
-            <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.95);border-radius:8px;">
-                <p style="font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
-            </div>
+            ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.45rem;color:rgba(255,255,255,0.7);line-height:1.5;max-width:80%;">${ws.description}</div>` : ''}
+            ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
         </div>`;
     }
 
     renderPreviewMinimal(ws, theme) {
-        // Use URL from PocketBase or from upload (base64)
         const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
         let bgStyle;
         if (bgUrl) {
@@ -1268,22 +1248,24 @@ class AdminDashboard {
             bgStyle = `background:${theme.bgLight};`;
         }
         const logoStyle = this.getLogoStyle(ws);
+        const titleStyle = this.getTitleStyle(ws);
         const logoUrl = ws.logoUrl || ws.logo;
-        let logoHtml;
-        if (logoUrl) {
-            logoHtml = `<img src="${logoUrl}" style="${logoStyle}">`;
-        } else {
-            logoHtml = `<div style="width:40px;height:40px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;">📷</div>`;
-        }
+        const logoHtml = logoUrl
+            ? `<img src="${logoUrl}" style="${logoStyle}">`
+            : `<div style="${logoStyle}" class="preview-logo-placeholder">📷</div>`;
+
         return `
-        <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;justify-content:center;">
+        <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:8%;right:8%;width:40px;height:40px;border-top:1px solid ${theme.textMuted};border-right:1px solid ${theme.textMuted};"></div>
+            <div style="position:absolute;bottom:8%;left:8%;width:40px;height:40px;border-bottom:1px solid ${theme.textMuted};border-left:1px solid ${theme.textMuted};"></div>
             ${logoHtml}
-            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <div style="${titleStyle}">
                 <p style="color:${theme.textMuted};font-size:0.4rem;letter-spacing:0.2em;margin-bottom:4%;text-transform:uppercase;">${ws.subtitle}</p>
                 <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1rem;color:${theme.textDark};margin-bottom:6%;font-weight:300;">${ws.title}</h1>
                 <div style="width:30px;height:1px;background:${theme.accentAlt};margin-bottom:6%;"></div>
-                ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.4rem;line-height:1.4;font-style:italic;">${ws.description}</p>` : ''}
             </div>
+            ${ws.description ? `<div style="position:absolute;left:50%;top:75%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:0.4rem;color:${theme.textMuted};line-height:1.4;font-style:italic;">${ws.description}</div>` : ''}
+            ${ws.leftText ? `<div style="position:absolute;left:50%;bottom:15%;transform:translateX(-50%);text-align:center;width:80%;font-size:0.4rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</div>` : ''}
         </div>`;
     }
 
