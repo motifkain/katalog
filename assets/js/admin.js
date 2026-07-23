@@ -6,11 +6,13 @@ class AdminDashboard {
     constructor() {
         this.produk = [];
         this.portfolio = [];
+        this.filteredProduk = [];
+        this.filteredPortfolio = [];
         this.editingProductId = null;
         this.editingPortfolioId = null;
         this.productImages = [];
         this.portfolioImages = [];
-        this.currentImageContext = 'product'; // 'product' or 'portfolio'
+        this.currentImageContext = 'product';
         this.pocketbaseToken = '';
         this.pocketbaseUrl = '';
         this.init();
@@ -43,7 +45,7 @@ class AdminDashboard {
     async login(email, password) {
         const url = window.MOTIFKAIN_CONFIG?.pocketbaseUrl;
         if (!url) {
-            this.showNotification('PocketBase URL belum diset di config.js', 'error');
+            this.showNotification('PocketBase URL belum diset', 'error');
             return;
         }
 
@@ -82,15 +84,47 @@ class AdminDashboard {
     }
 
     switchTab(tabName) {
-        // Update tab buttons
         document.querySelectorAll('.menu-tab').forEach(tab => {
             tab.classList.toggle('active', tab.textContent.toLowerCase() === tabName);
         });
-
-        // Update tab content
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.toggle('active', content.id === 'tab-' + tabName);
         });
+        // Update search filter
+        document.getElementById('searchFilter').value = tabName;
+        this.doSearch();
+    }
+
+    doSearch() {
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        const filter = document.getElementById('searchFilter').value;
+
+        if (filter === 'all' || filter === 'produk') {
+            this.filteredProduk = this.produk.filter(p => {
+                if (!query) return true;
+                return (
+                    (p.nama && p.nama.toLowerCase().includes(query)) ||
+                    (p.layanan && p.layanan.toLowerCase().includes(query)) ||
+                    (p.kategori && p.kategori.toLowerCase().includes(query)) ||
+                    (p.subkategori && p.subkategori.toLowerCase().includes(query)) ||
+                    (p.warna && p.warna.toLowerCase().includes(query)) ||
+                    (p.deskripsi && p.deskripsi.toLowerCase().includes(query))
+                );
+            });
+            this.renderProdukGrid();
+        }
+
+        if (filter === 'all' || filter === 'portfolio') {
+            this.filteredPortfolio = this.portfolio.filter(p => {
+                if (!query) return true;
+                return (
+                    (p.judul && p.judul.toLowerCase().includes(query)) ||
+                    (p.kategori && p.kategori.toLowerCase().includes(query)) ||
+                    (p.deskripsi && p.deskripsi.toLowerCase().includes(query))
+                );
+            });
+            this.renderPortfolioGrid();
+        }
     }
 
     async loadAllData() {
@@ -105,29 +139,33 @@ class AdminDashboard {
         try {
             const res = await this.fetchAPI('/api/collections/produk/records?per-page=500&sort=-created');
             this.produk = res.items || [];
+            this.filteredProduk = [...this.produk];
             this.renderProdukGrid();
         } catch (e) {
             console.error('Error loading produk:', e);
             this.produk = [];
+            this.filteredProduk = [];
             this.renderProdukGrid();
         }
     }
 
     renderProdukGrid() {
         const container = document.getElementById('produkGrid');
+        const countEl = document.getElementById('produkCount');
+        countEl.textContent = `${this.filteredProduk.length} produk`;
 
-        if (this.produk.length === 0) {
+        if (this.filteredProduk.length === 0) {
             container.innerHTML = `
-                <div class="empty-state">
+                <div class="empty-state" style="grid-column: span 2;">
                     <div class="icon">📦</div>
                     <p>Belum ada produk</p>
-                    <button class="btn btn-primary btn-sm" onclick="admin.showAddProductModal()" style="margin-top: 12px;">+ Tambah Produk</button>
+                    <button class="btn btn-primary btn-sm" onclick="admin.showAddProductModal()" style="margin-top:10px;">+ Tambah</button>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = this.produk.map(p => {
+        container.innerHTML = this.filteredProduk.map(p => {
             const imgUrl = p.image ? `${this.pocketbaseUrl}/api/files/produk/${p.id}/${p.image}` : '';
             const imgCount = p.images?.length || 0;
             return `
@@ -153,6 +191,8 @@ class AdminDashboard {
         document.getElementById('productName').value = '';
         document.getElementById('productLayanan').value = 'Jasa Desain';
         document.getElementById('productKategori').value = '';
+        document.getElementById('productSubkategori').value = '';
+        document.getElementById('productWarna').value = '';
         document.getElementById('productHarga').value = '';
         document.getElementById('productDeskripsi').value = '';
         document.getElementById('productWhatsapp').value = '';
@@ -170,12 +210,13 @@ class AdminDashboard {
         document.getElementById('productName').value = product.nama || '';
         document.getElementById('productLayanan').value = product.layanan || 'Jasa Desain';
         document.getElementById('productKategori').value = product.kategori || '';
+        document.getElementById('productSubkategori').value = product.subkategori || '';
+        document.getElementById('productWarna').value = product.warna || '';
         document.getElementById('productHarga').value = product.harga || '';
         document.getElementById('productDeskripsi').value = product.deskripsi || '';
         document.getElementById('productWhatsapp').value = product.nowa || '';
         document.getElementById('deleteProductBtn').style.display = 'block';
 
-        // Load existing images
         this.productImages = [];
         if (product.image) {
             this.productImages.push({
@@ -194,7 +235,6 @@ class AdminDashboard {
             }
         }
         this.renderUploadedImages('product');
-
         document.getElementById('productModal').classList.add('show');
     }
 
@@ -209,12 +249,7 @@ class AdminDashboard {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const images = this.currentImageContext === 'product' ? this.productImages : this.portfolioImages;
-                images.push({
-                    file: file,
-                    url: e.target.result,
-                    warna: '',
-                    deskripsi: ''
-                });
+                images.push({ file: file, url: e.target.result, warna: '', deskripsi: '' });
                 this.renderUploadedImages(this.currentImageContext);
             };
             reader.readAsDataURL(file);
@@ -281,6 +316,8 @@ class AdminDashboard {
         const nama = document.getElementById('productName').value.trim();
         const layanan = document.getElementById('productLayanan').value;
         const kategori = document.getElementById('productKategori').value.trim();
+        const subkategori = document.getElementById('productSubkategori').value.trim();
+        const warna = document.getElementById('productWarna').value.trim();
         const harga = document.getElementById('productHarga').value;
         const deskripsi = document.getElementById('productDeskripsi').value;
         const nowa = document.getElementById('productWhatsapp').value;
@@ -295,24 +332,18 @@ class AdminDashboard {
             formData.append('nama', nama);
             formData.append('layanan', layanan);
             formData.append('kategori', kategori);
+            formData.append('subkategori', subkategori);
+            formData.append('warna', warna);
             formData.append('harga', harga || 0);
             formData.append('deskripsi', deskripsi);
             formData.append('nowa', nowa);
 
-            // Append images
             this.productImages.forEach((img, index) => {
                 if (img.file) {
-                    if (index === 0) {
-                        formData.append('image', img.file);
-                    } else {
-                        formData.append('images', img.file);
-                    }
+                    if (index === 0) formData.append('image', img.file);
+                    else formData.append('images', img.file);
                 }
             });
-
-            if (this.productImages.length > 0) {
-                formData.append('warna', this.productImages[0].warna || '');
-            }
 
             let method = 'POST';
             let url = '/api/collections/produk/records';
@@ -358,29 +389,33 @@ class AdminDashboard {
         try {
             const res = await this.fetchAPI('/api/collections/portfolio/records?per-page=500&sort=-created');
             this.portfolio = res.items || [];
+            this.filteredPortfolio = [...this.portfolio];
             this.renderPortfolioGrid();
         } catch (e) {
             console.error('Error loading portfolio:', e);
             this.portfolio = [];
+            this.filteredPortfolio = [];
             this.renderPortfolioGrid();
         }
     }
 
     renderPortfolioGrid() {
         const container = document.getElementById('portfolioGrid');
+        const countEl = document.getElementById('portfolioCount');
+        countEl.textContent = `${this.filteredPortfolio.length} portfolio`;
 
-        if (this.portfolio.length === 0) {
+        if (this.filteredPortfolio.length === 0) {
             container.innerHTML = `
-                <div class="empty-state">
+                <div class="empty-state" style="grid-column: span 2;">
                     <div class="icon">🎨</div>
                     <p>Belum ada portfolio</p>
-                    <button class="btn btn-primary btn-sm" onclick="admin.showAddPortfolioModal()" style="margin-top: 12px;">+ Tambah Portfolio</button>
+                    <button class="btn btn-primary btn-sm" onclick="admin.showAddPortfolioModal()" style="margin-top:10px;">+ Tambah</button>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = this.portfolio.map(p => {
+        container.innerHTML = this.filteredPortfolio.map(p => {
             const imgUrl = p.image ? `${this.pocketbaseUrl}/api/files/portfolio/${p.id}/${p.image}` : '';
             const imgCount = p.images?.length || 0;
             return `
@@ -423,7 +458,6 @@ class AdminDashboard {
         document.getElementById('portfolioDeskripsi').value = portfolio.deskripsi || '';
         document.getElementById('deletePortfolioBtn').style.display = 'block';
 
-        // Load existing images
         this.portfolioImages = [];
         if (portfolio.image) {
             this.portfolioImages.push({
@@ -442,7 +476,6 @@ class AdminDashboard {
             }
         }
         this.renderUploadedImages('portfolio');
-
         document.getElementById('portfolioModal').classList.add('show');
     }
 
@@ -467,14 +500,10 @@ class AdminDashboard {
             formData.append('kategori', kategori);
             formData.append('deskripsi', deskripsi);
 
-            // Append images
             this.portfolioImages.forEach((img, index) => {
                 if (img.file) {
-                    if (index === 0) {
-                        formData.append('image', img.file);
-                    } else {
-                        formData.append('images', img.file);
-                    }
+                    if (index === 0) formData.append('image', img.file);
+                    else formData.append('images', img.file);
                 }
             });
 

@@ -53,9 +53,9 @@
         .form-input:focus { outline: none; border-color: var(--primary); }
 
         .btn {
-            padding: 12px 24px; border: none; border-radius: 10px;
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            transition: all 0.2s;
+            padding: 10px 16px; border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
         }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: #7A4E26; }
@@ -66,38 +66,71 @@
         .btn-outline:hover { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #B71C1C; }
-        .btn-sm { padding: 8px 16px; font-size: 13px; }
-        .btn-block { width: 100%; }
+        .btn-sm { padding: 8px 12px; font-size: 12px; }
 
         .dashboard-section { display: none; }
         .dashboard-section.active { display: block; }
 
         .dashboard-header {
             background: var(--primary); color: white;
-            padding: 16px 24px;
+            padding: 12px 16px;
             display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 8px;
         }
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .header-logo { width: 40px; height: 40px; border-radius: 50%; }
-        .header-left h1 { font-family: 'Playfair Display', serif; font-size: 20px; }
-        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .header-logo { height: 36px; width: auto; }
+        .header-right {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
         .header-right .btn-outline {
-            border-color: white; color: white;
+            border-color: white; color: white; padding: 8px 12px;
         }
         .header-right .btn-outline:hover {
             background: white; color: var(--primary);
         }
 
+        /* SEARCH BAR */
+        .search-section {
+            padding: 12px 16px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--divider);
+        }
+        .search-bar {
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .search-input-wrap {
+            flex: 1; min-width: 200px; position: relative;
+        }
+        .search-input-wrap input {
+            width: 100%; padding: 10px 12px 10px 36px;
+            border: 1px solid var(--divider); border-radius: 8px;
+            font-size: 13px; background: var(--background);
+        }
+        .search-input-wrap input:focus {
+            outline: none; border-color: var(--primary);
+        }
+        .search-input-wrap .search-icon {
+            position: absolute; left: 10px; top: 50%;
+            transform: translateY(-50%); color: var(--text-secondary);
+        }
+        .search-filter {
+            padding: 10px 12px; border: 1px solid var(--divider);
+            border-radius: 8px; font-size: 13px; background: var(--background);
+            min-width: 120px;
+        }
+
         /* MENU TABS */
         .menu-tabs {
-            display: flex; gap: 8px; padding: 16px 24px;
+            display: flex; gap: 6px; padding: 12px 16px;
             background: var(--surface); border-bottom: 1px solid var(--divider);
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
         }
+        .menu-tabs::-webkit-scrollbar { display: none; }
         .menu-tab {
-            padding: 12px 24px; border: none; border-radius: 10px;
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            background: transparent; color: var(--text-secondary);
-            transition: all 0.2s;
+            padding: 10px 16px; border: none; border-radius: 20px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            background: var(--background); color: var(--text-secondary);
+            transition: all 0.2s; white-space: nowrap;
         }
         .menu-tab:hover { background: rgba(139,90,43,0.1); }
         .menu-tab.active {
@@ -105,39 +138,40 @@
         }
 
         .dashboard-content {
-            padding: 24px; max-width: 1200px; margin: 0 auto;
+            padding: 16px; max-width: 1200px; margin: 0 auto;
         }
 
         .section-card {
             background: var(--surface);
-            border-radius: 16px; padding: 24px;
-            margin-bottom: 24px;
+            border-radius: 12px; padding: 16px;
+            margin-bottom: 16px;
             box-shadow: 0 2px 10px rgba(139,90,43,0.08);
         }
         .section-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 20px; padding-bottom: 16px;
+            margin-bottom: 16px; padding-bottom: 12px;
             border-bottom: 1px solid var(--divider);
+            flex-wrap: wrap; gap: 8px;
         }
         .section-header h2 {
             font-family: 'Playfair Display', serif;
-            font-size: 18px; color: var(--primary);
+            font-size: 16px; color: var(--primary);
         }
 
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
         }
         .product-card {
             background: var(--surface);
-            border-radius: 12px; overflow: hidden;
+            border-radius: 10px; overflow: hidden;
             border: 1px solid var(--divider);
             cursor: pointer; transition: all 0.2s;
         }
         .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(139,90,43,0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(139,90,43,0.12);
         }
         .product-img {
             width: 100%; aspect-ratio: 1;
@@ -150,31 +184,31 @@
         .product-img-count {
             position: absolute; bottom: 4px; right: 4px;
             background: rgba(0,0,0,0.6); color: white;
-            padding: 2px 8px; border-radius: 8px;
+            padding: 2px 6px; border-radius: 6px;
             font-size: 10px;
         }
-        .product-info { padding: 12px; }
+        .product-info { padding: 10px; }
         .product-info h4 {
-            font-size: 14px; margin-bottom: 4px;
+            font-size: 13px; margin-bottom: 4px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .product-info .price {
-            color: var(--primary); font-weight: 600; font-size: 13px;
+            color: var(--primary); font-weight: 600; font-size: 12px;
         }
         .product-info .category {
-            font-size: 11px; color: var(--text-secondary);
+            font-size: 10px; color: var(--text-secondary);
         }
 
         .modal {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,0.5); z-index: 9999;
             justify-content: center; align-items: center;
-            padding: 20px;
+            padding: 16px;
         }
         .modal.show { display: flex; }
         .modal-content {
             background: var(--surface);
-            border-radius: 16px; width: 100%; max-width: 500px;
+            border-radius: 16px; width: 100%; max-width: 480px;
             max-height: 90vh; overflow-y: auto;
             animation: slideUp 0.3s ease;
         }
@@ -183,29 +217,31 @@
             to { transform: translateY(0); opacity: 1; }
         }
         .modal-header {
-            padding: 20px 24px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--divider);
             display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; background: var(--surface);
         }
         .modal-header h3 {
             font-family: 'Playfair Display', serif;
-            color: var(--primary);
+            color: var(--primary); font-size: 16px;
         }
         .modal-close {
-            background: none; border: none; font-size: 24px;
+            background: none; border: none; font-size: 20px;
             cursor: pointer; color: var(--text-secondary);
         }
         .modal-close:hover { color: var(--text-primary); }
-        .modal-body { padding: 24px; }
+        .modal-body { padding: 20px; }
         .modal-footer {
-            padding: 16px 24px;
+            padding: 12px 20px;
             border-top: 1px solid var(--divider);
-            display: flex; justify-content: flex-end; gap: 12px;
+            display: flex; justify-content: flex-end; gap: 8px;
+            position: sticky; bottom: 0; background: var(--surface);
         }
 
-        .form-group { margin-bottom: 16px; }
+        .form-group { margin-bottom: 14px; }
         .form-group label {
-            display: block; font-size: 13px;
+            display: block; font-size: 12px;
             font-weight: 500; margin-bottom: 6px;
             color: var(--text-secondary);
         }
@@ -216,7 +252,7 @@
 
         .image-upload-area {
             border: 2px dashed var(--divider);
-            border-radius: 12px; padding: 40px;
+            border-radius: 10px; padding: 24px;
             text-align: center; cursor: pointer;
             transition: all 0.2s;
         }
@@ -224,13 +260,13 @@
             border-color: var(--primary);
             background: rgba(139,90,43,0.05);
         }
-        .image-upload-area .icon { font-size: 32px; margin-bottom: 8px; }
-        .image-upload-area p { color: var(--text-secondary); font-size: 13px; }
+        .image-upload-area .icon { font-size: 24px; margin-bottom: 6px; }
+        .image-upload-area p { color: var(--text-secondary); font-size: 12px; }
 
         .uploaded-images {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 12px; margin-top: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px; margin-top: 12px;
         }
         .uploaded-img {
             position: relative; aspect-ratio: 1;
@@ -241,23 +277,23 @@
             width: 100%; height: 100%; object-fit: cover;
         }
         .uploaded-img .delete-btn {
-            position: absolute; top: 4px; right: 4px;
+            position: absolute; top: 2px; right: 2px;
             background: var(--danger); color: white;
-            border: none; width: 24px; height: 24px;
+            border: none; width: 20px; height: 20px;
             border-radius: 50%; cursor: pointer;
-            font-size: 14px; line-height: 24px;
+            font-size: 12px; line-height: 20px;
         }
         .uploaded-img .edit-btn {
-            position: absolute; bottom: 4px; right: 4px;
+            position: absolute; bottom: 2px; right: 2px;
             background: var(--primary); color: white;
-            border: none; width: 24px; height: 24px;
+            border: none; width: 20px; height: 20px;
             border-radius: 50%; cursor: pointer;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         .notification {
-            position: fixed; bottom: 24px; right: 24px;
-            padding: 14px 24px; border-radius: 10px;
+            position: fixed; bottom: 20px; right: 20px;
+            padding: 12px 20px; border-radius: 8px;
             color: white; font-weight: 500;
             z-index: 99999; animation: slideIn 0.3s ease;
         }
@@ -269,13 +305,31 @@
         }
 
         .empty-state {
-            text-align: center; padding: 40px;
+            text-align: center; padding: 32px;
             color: var(--text-secondary);
         }
-        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+
+        .result-count {
+            font-size: 12px; color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 480px) {
+            .header-left h1 { font-size: 14px; }
+            .search-bar { flex-direction: column; }
+            .search-input-wrap { min-width: 100%; }
+            .search-filter { width: 100%; }
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .modal-content { margin: 8px; }
+        }
     </style>
 </head>
 <body>
@@ -288,9 +342,9 @@
             <form id="loginForm">
                 <input type="email" id="emailInput" class="form-input" placeholder="Email" required>
                 <input type="password" id="passwordInput" class="form-input" placeholder="Password" required>
-                <button type="submit" class="btn btn-primary btn-block">Masuk</button>
+                <button type="submit" class="btn btn-primary" style="width:100%;padding:14px;">Masuk</button>
             </form>
-            <p id="loginError" class="login-error" style="color: var(--danger); margin-top: 12px; display: none;">Email atau password salah!</p>
+            <p id="loginError" style="color:var(--danger);margin-top:12px;display:none;">Email atau password salah!</p>
         </div>
     </div>
 
@@ -299,13 +353,27 @@
         <header class="dashboard-header">
             <div class="header-left">
                 <img src="assets/images/logo-motifkain.png" alt="Logo" class="header-logo">
-                <h1>Dashboard Admin</h1>
             </div>
             <div class="header-right">
                 <button class="btn btn-outline btn-sm" onclick="admin.openCatalog()">Lihat Katalog</button>
                 <button class="btn btn-outline btn-sm" onclick="admin.logout()">Logout</button>
             </div>
         </header>
+
+        <!-- SEARCH BAR -->
+        <div class="search-section">
+            <div class="search-bar">
+                <div class="search-input-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari produk atau portfolio..." oninput="admin.doSearch()">
+                </div>
+                <select class="search-filter" id="searchFilter" onchange="admin.doSearch()">
+                    <option value="all">Semua</option>
+                    <option value="produk">Produk</option>
+                    <option value="portfolio">Portfolio</option>
+                </select>
+            </div>
+        </div>
 
         <!-- MENU TABS -->
         <nav class="menu-tabs">
@@ -319,11 +387,10 @@
                 <div class="section-card">
                     <div class="section-header">
                         <h2>Daftar Produk</h2>
-                        <button class="btn btn-primary btn-sm" onclick="admin.showAddProductModal()">+ Tambah Produk</button>
+                        <button class="btn btn-primary btn-sm" onclick="admin.showAddProductModal()">+ Tambah</button>
                     </div>
-                    <div class="products-grid" id="produkGrid">
-                        <!-- Loaded from PocketBase -->
-                    </div>
+                    <div class="result-count" id="produkCount"></div>
+                    <div class="products-grid" id="produkGrid"></div>
                 </div>
             </div>
 
@@ -332,11 +399,10 @@
                 <div class="section-card">
                     <div class="section-header">
                         <h2>Daftar Portfolio</h2>
-                        <button class="btn btn-primary btn-sm" onclick="admin.showAddPortfolioModal()">+ Tambah Portfolio</button>
+                        <button class="btn btn-primary btn-sm" onclick="admin.showAddPortfolioModal()">+ Tambah</button>
                     </div>
-                    <div class="products-grid" id="portfolioGrid">
-                        <!-- Loaded from PocketBase -->
-                    </div>
+                    <div class="result-count" id="portfolioCount"></div>
+                    <div class="products-grid" id="portfolioGrid"></div>
                 </div>
             </div>
         </div>
@@ -368,26 +434,33 @@
                     <input type="text" id="productKategori" class="form-input" placeholder="Contoh: Batik, Tenun, dll">
                 </div>
                 <div class="form-group">
+                    <label>Sub Kategori</label>
+                    <input type="text" id="productSubkategori" class="form-input" placeholder="Contoh: Motif Bunga, Geometris">
+                </div>
+                <div class="form-group">
+                    <label>Warna</label>
+                    <input type="text" id="productWarna" class="form-input" placeholder="Contoh: Merah, Biru, Hijau">
+                </div>
+                <div class="form-group">
                     <label>Harga</label>
                     <input type="number" id="productHarga" class="form-input" placeholder="Contoh: 150000">
                 </div>
                 <div class="form-group">
-                    <label>Gambar Produk (bisa lebih dari 1)</label>
+                    <label>Gambar (bisa lebih dari 1)</label>
                     <div class="image-upload-area" onclick="document.getElementById('productImagesInput').click()">
                         <div class="icon">📷</div>
-                        <p>Klik untuk upload gambar</p>
+                        <p>Klik untuk upload</p>
                     </div>
                     <input type="file" id="productImagesInput" accept="image/*" multiple style="display:none" onchange="admin.handleProductImageUpload(this)">
                     <div class="uploaded-images" id="uploadedImagesList"></div>
                 </div>
                 <div class="form-group">
                     <label>Deskripsi</label>
-                    <textarea id="productDeskripsi" class="form-input" rows="3" placeholder="Deskripsi produk..."></textarea>
+                    <textarea id="productDeskripsi" class="form-input" rows="2" placeholder="Deskripsi produk..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>WhatsApp (untuk kontak)</label>
-                    <input type="text" id="productWhatsapp" class="form-input" placeholder="Contoh: 6281234567890">
-                    <small>Nomor WhatsApp tanpa tanda + atau spasi</small>
+                    <label>WhatsApp</label>
+                    <input type="text" id="productWhatsapp" class="form-input" placeholder="6281234567890">
                 </div>
             </div>
             <div class="modal-footer">
@@ -412,17 +485,17 @@
                 </div>
                 <div class="form-group">
                     <label>Kategori</label>
-                    <input type="text" id="portfolioKategori" class="form-input" placeholder="Contoh: Batik, Tenun, dll">
+                    <input type="text" id="portfolioKategori" class="form-input" placeholder="Contoh: Batik, Tenun">
                 </div>
                 <div class="form-group">
                     <label>Deskripsi</label>
-                    <textarea id="portfolioDeskripsi" class="form-input" rows="3" placeholder="Deskripsi portfolio..."></textarea>
+                    <textarea id="portfolioDeskripsi" class="form-input" rows="2" placeholder="Deskripsi portfolio..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Gambar Portfolio (bisa lebih dari 1)</label>
+                    <label>Gambar (bisa lebih dari 1)</label>
                     <div class="image-upload-area" onclick="document.getElementById('portfolioImagesInput').click()">
                         <div class="icon">📷</div>
-                        <p>Klik untuk upload gambar</p>
+                        <p>Klik untuk upload</p>
                     </div>
                     <input type="file" id="portfolioImagesInput" accept="image/*" multiple style="display:none" onchange="admin.handlePortfolioImageUpload(this)">
                     <div class="uploaded-images" id="portfolioImagesList"></div>
@@ -454,11 +527,11 @@
                 </div>
                 <div class="form-group">
                     <label>Deskripsi Gambar</label>
-                    <textarea id="imageDeskripsi" class="form-input" rows="2" placeholder="Deskripsi untuk gambar ini..."></textarea>
+                    <textarea id="imageDeskripsi" class="form-input" rows="2"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-danger" onclick="admin.deleteCurrentImage()">Hapus Gambar</button>
+                <button class="btn btn-danger" onclick="admin.deleteCurrentImage()">Hapus</button>
                 <button class="btn btn-primary" onclick="admin.saveImageDetail()">Simpan</button>
             </div>
         </div>
