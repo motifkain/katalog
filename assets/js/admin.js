@@ -873,13 +873,21 @@ class AdminDashboard {
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            this.welcomeBgData = e.target.result;
-            document.getElementById('wsBgPreview').src = e.target.result;
+            const bgData = e.target.result;
+
+            // Update preview image
+            document.getElementById('wsBgPreview').src = bgData;
             document.getElementById('wsBgPreview').style.display = 'block';
             document.getElementById('wsBgPlaceholder').style.display = 'none';
             document.getElementById('wsBgRemoveBtn').style.display = 'inline-block';
-            this.welcomeSettings = this.welcomeSettings || {};
-            this.welcomeSettings.backgroundImage = e.target.result;
+
+            // Store in welcomeSettings for preview
+            if (!this.welcomeSettings) this.welcomeSettings = {};
+            this.welcomeSettings.backgroundImage = bgData;  // base64 data URL
+            this.welcomeSettings.backgroundImageUrl = bgData;
+            this.welcomeBgData = bgData;
+
+            // Update preview
             this.updateWelcomePreview();
         };
         reader.readAsDataURL(file);
@@ -887,12 +895,14 @@ class AdminDashboard {
 
     removeWelcomeBg() {
         this.welcomeBgData = null;
+        if (this.welcomeSettings) {
+            this.welcomeSettings.backgroundImage = null;
+            this.welcomeSettings.backgroundImageUrl = null;
+        }
         document.getElementById('wsBgPreview').style.display = 'none';
         document.getElementById('wsBgPlaceholder').style.display = 'flex';
         document.getElementById('wsBgRemoveBtn').style.display = 'none';
         document.getElementById('wsBgInput').value = '';
-        if (!this.welcomeSettings) this.welcomeSettings = {};
-        this.welcomeSettings.backgroundImage = null;
         this.updateWelcomePreview();
     }
 
@@ -913,24 +923,44 @@ class AdminDashboard {
     }
 
     // Logo handlers
-    updateLogoSize() {
-        const val = document.getElementById('wsLogoSize').value;
-        document.getElementById('logoSizeValue').textContent = val;
-        if (!this.welcomeSettings) this.welcomeSettings = {};
-        this.welcomeSettings.logoSize = parseInt(val);
-        this.updateWelcomePreview();
+    handleWelcomeLogoUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const logoData = e.target.result;
+
+            // Update preview image
+            document.getElementById('wsLogoPreview').src = logoData;
+            document.getElementById('wsLogoPreview').style.display = 'block';
+            document.getElementById('wsLogoPlaceholder').style.display = 'none';
+            document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
+
+            // Store in welcomeSettings for preview
+            if (!this.welcomeSettings) this.welcomeSettings = {};
+            this.welcomeSettings.logo = logoData;  // base64 data URL
+            this.welcomeSettings.logoUrl = logoData;
+            this.welcomeLogoData = logoData;
+
+            // Update preview
+            this.updateWelcomePreview();
+        };
+        reader.readAsDataURL(file);
     }
 
-    setLogoPosition(position) {
-        document.querySelectorAll('.pos-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.position === position);
-        });
-        if (!this.welcomeSettings) this.welcomeSettings = {};
-        this.welcomeSettings.logoPosition = position;
+    removeWelcomeLogo() {
+        this.welcomeLogoData = null;
+        if (this.welcomeSettings) {
+            this.welcomeSettings.logo = null;
+            this.welcomeSettings.logoUrl = null;
+        }
+        document.getElementById('wsLogoPreview').style.display = 'none';
+        document.getElementById('wsLogoPlaceholder').style.display = 'flex';
+        document.getElementById('wsLogoRemoveBtn').style.display = 'none';
+        document.getElementById('wsLogoInput').value = '';
         this.updateWelcomePreview();
     }
-
-    getThemeColors(themeId) {
         const themes = {
             'elegant-gold': {
                 primary: '#5D4037',
