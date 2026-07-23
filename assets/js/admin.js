@@ -16,6 +16,8 @@ class AdminDashboard {
         this.currentKategori = null;
         this.currentProduk = null;
         this.currentUser = null;
+        this.productImages = []; // Array untuk gambar produk dengan metadata
+        this.currentImageIndex = null;
         this.pocketbaseToken = '';
         this.pocketbaseUrl = '';
         this.init();
@@ -1315,6 +1317,7 @@ class AdminDashboard {
     }
 
     setupTabs() {
+        var self = this;
         var tabs = document.querySelectorAll('.tab-btn');
         for (var i = 0; i < tabs.length; i++) {
             tabs[i].addEventListener('click', (function(tab) {
@@ -1325,6 +1328,11 @@ class AdminDashboard {
                 for (var k = 0; k < contents.length; k++) contents[k].classList.remove('active');
                 var target = document.getElementById('tab-' + tabName);
                 if (target) target.classList.add('active');
+
+                // Refresh dropdowns when switching to produk tab
+                if (tabName === 'produk') {
+                    self.populateKategoriDropdown();
+                }
             }).bind(null, tabs[i]));
         }
     }
@@ -1532,16 +1540,17 @@ class AdminDashboard {
 
     showAddProductModal() {
         this.currentProduk = null;
+        this.productImages = []; // Reset images array
         document.getElementById('productModalTitle').textContent = 'Tambah Produk';
         var fields = ['productName', 'productKategori', 'productSubkategori', 'productDeskripsi', 'productWarna'];
         for (var i = 0; i < fields.length; i++) {
             var f = document.getElementById(fields[i]);
             if (f) f.value = '';
         }
-        var upload = document.getElementById('productImageUpload');
-        var preview = document.getElementById('productImagePreview');
-        if (upload) upload.classList.remove('has-image');
-        if (preview) { preview.src = ''; preview.style.display = 'none'; }
+        // Render empty images container
+        this.renderProductImages();
+        // Refresh kategori dropdown
+        this.populateKategoriDropdown();
         document.getElementById('productModal').classList.add('active');
     }
 
@@ -1553,6 +1562,8 @@ class AdminDashboard {
         if (!p) return;
 
         this.currentProduk = p;
+        // Load existing images with metadata
+        this.productImages = this.loadProductImages(p);
         document.getElementById('productModalTitle').textContent = 'Edit Produk';
         document.getElementById('productName').value = p.nama || '';
         document.getElementById('productKategori').value = p.kategori || '';
@@ -1560,27 +1571,157 @@ class AdminDashboard {
         document.getElementById('productDeskripsi').value = p.deskripsi || '';
         document.getElementById('productWarna').value = p.warna || '';
 
-        // Handle multiple images
-        this.renderProductImages(p);
+        this.renderProductImages();
+        this.populateKategoriDropdown();
 
         document.getElementById('productModal').classList.add('active');
     }
 
-    renderProductImages(product) {
+    // Load product images from PocketBase format
+    loadProductImages(product) {
+        var images = product.image || product.foto || [];
+        if (!Array.isArray(images)) images = images ? [images] : [];
+        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
+        var baseUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + product.id + '/';
+
+        return images.map(function(img, index) {
+            // Check if it's already an object (from metadata) or just a string
+            if (typeof img === 'object' && img !== null) {
+                return {
+                    id: Date.now() + '_' + index,
+                    url: baseUrl + img.name,
+                    warna: img.warna || '',
+                    bagian: img.bagian || '',
+                    deskripsi: img.deskripsi || '',
+                    isNew: false
+                };
+            } else {
+                return {
+                    id: Date.now() + '_' + index,
+                    url: baseUrl + img,
+                    warna: '',
+                    bagian: '',
+                    deskripsi: '',
+                    isNew: false
+                };
+            }
+        });
+    }
+
+    // Render product images grid
+    renderProductImages() {
+        var container = document.getElementById('productImagesContainer');
+        if (!container) return;
+
+        if (!this.productImages || this.productImages.length === 0) {
+            container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Belum ada gambar. Klik "Tambah Gambar" di bawah.</p>';
+            return;
+        }
+
+        var bagianLabels = { 'muka': 'Muka', 'samping': 'Samping', 'belakang': 'Belakang', 'bentangan': 'Bentangan' };
+        var html = '';
+        for (var i = 0; i < this.productImages.length; i++) {
+            var img = this.productImages[i];
+            var label = img.bagian ? (bagianLabels[img.bagian] || img.bagian) : '';
+            var warna = img.warna || '';
+
+            html += '<div class="product-image-card" onclick="admin.openImageDetail(' + i + ')">';
+            html += '<img src="' + img.url + '" alt="Gambar ' + (i + 1) + '">';
+            if (label || warna) {
+                html += '<div class="image-overlay">' + (warna ? warna : label) + '</div>';
+            }
+            if (label) {
+                html += '<div class="image-badge">' + label + '</div>';
+            }
+            html += '</div>';
+        }
+        container.innerHTML = html;
+    }
+
+    // Handle image upload
+    handleProductImageUpload(input) {
+        var files = input.files;
+        if (!files || files.length === 0) return;
+
+        if (!this.productImages) this.productImages = [];
+        var self = this;
+
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            var reader = new FileReader();
+            var index = this.productImages.length;
+
+            reader.onload = (function(f, idx) {
+                return function(e) {
+                    self.productImages.push({
+                        id: Date.now() + '_' + idx,
+                        url: e.target.result,
+                        warna: '',
+                        bagian: '',
+                        deskripsi: '',
+                        isNew: true,
+                        file: f
+                    });
+                    self.renderProductImages();
+                };
+            })(file, index);
+
+            reader.readAsDataURL(file);
+        }
+
+        input.value = '';
+    }
+
+    // Open image detail modal
+    openImageDetail(index) {
+        this.currentImageIndex = index;
+        var img = this.productImages[index];
+        if (!img) return;
+
+        document.getElementById('imageDetailPreview').src = img.url;
+        document.getElementById('imageWarna').value = img.warna || '';
+        document.getElementById('imageBagian').value = img.bagian || '';
+        document.getElementById('imageDeskripsi').value = img.deskripsi || '';
+        document.getElementById('imageDetailModal').classList.add('show');
+    }
+
+    // Save image detail
+    saveImageDetail() {
+        var index = this.currentImageIndex;
+        if (index === null || index === undefined) return;
+
+        this.productImages[index].warna = document.getElementById('imageWarna').value.trim();
+        this.productImages[index].bagian = document.getElementById('imageBagian').value;
+        this.productImages[index].deskripsi = document.getElementById('imageDeskripsi').value.trim();
+
+        this.closeImageDetail();
+        this.renderProductImages();
+    }
+
+    // Close image detail
+    closeImageDetail() {
+        document.getElementById('imageDetailModal').classList.remove('show');
+        this.currentImageIndex = null;
+    }
+
+    // Delete current image
+    deleteCurrentImage() {
+        var index = this.currentImageIndex;
+        if (index === null || index === undefined) return;
+
+        if (!confirm('Hapus gambar ini?')) return;
+
+        this.productImages.splice(index, 1);
+        this.closeImageDetail();
+        this.renderProductImages();
+    }
+
+    renderProductImagesOld(product) {
         var container = document.getElementById('productImageList');
         if (!container) return;
 
         var images = product.image || product.foto || [];
         if (!Array.isArray(images)) images = images ? [images] : [];
-
-        if (images.length === 0) {
-            container.innerHTML = '';
-            return;
-        }
-
-        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
-        var html = '';
-        for (var i = 0; i < images.length; i++) {
             var imgUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + product.id + '/' + images[i];
             html += '<div class="product-image-item" data-index="' + i + '">';
             html += '<img src="' + imgUrl + '" alt="Image ' + (i + 1) + '">';
@@ -1659,7 +1800,6 @@ class AdminDashboard {
         var kategori = document.getElementById('productKategori').value;
         var subkategori = document.getElementById('productSubkategori').value.trim();
         var deskripsi = document.getElementById('productDeskripsi').value.trim();
-        var warna = document.getElementById('productWarna').value.trim();
 
         if (!nama) {
             this.showNotification('Nama produk wajib diisi!', 'error');
@@ -1671,13 +1811,14 @@ class AdminDashboard {
         if (kategori) formData.append('kategori', kategori);
         if (subkategori) formData.append('subkategori', subkategori);
         if (deskripsi) formData.append('deskripsi', deskripsi);
-        if (warna) formData.append('warna', warna);
 
-        // Handle multiple images
-        if (this.currentProduk && this.currentProduk._newImages) {
-            for (var i = 0; i < this.currentProduk._newImages.length; i++) {
-                var blob = this.dataURLtoBlob(this.currentProduk._newImages[i]);
-                formData.append('image', blob, 'image_' + i + '.jpg');
+        // Handle images - upload new ones as files
+        if (this.productImages) {
+            for (var i = 0; i < this.productImages.length; i++) {
+                var img = this.productImages[i];
+                if (img.isNew && img.file) {
+                    formData.append('image', img.file, 'image_' + i + '.jpg');
+                }
             }
         }
 
