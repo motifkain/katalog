@@ -8,7 +8,8 @@ const CONFIG = window.MOTIFKAIN_CONFIG || {
     pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
     welcomeCollection: 'welcome_settings',
     produkCollection: 'produk',
-    kategoriCollection: 'kategori'
+    kategoriCollection: 'kategori',
+    userCollection: 'users'
 };
 
 // ===== STATE =====
@@ -23,6 +24,7 @@ let welcomeSettings = window.WELCOME_SETTINGS || {
 let products = [];
 let filteredProducts = [];
 let categories = [];
+let users = [];
 let productCarousels = {};
 let currentImageIndex = 0;
 let currentCategory = 'desain-motif';
@@ -35,9 +37,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadWelcomeSettings();
     await loadCategories();
     await loadProducts();
+    await loadUsers();
     setupSearch();
     renderWelcomeScreen();
 });
+
+// ===== LOAD USERS =====
+async function loadUsers() {
+    try {
+        const res = await fetch(`${CONFIG.pocketbaseUrl}/api/collections/${CONFIG.userCollection}/records?sort=+role`);
+        if (res.ok) {
+            const data = await res.json();
+            users = data.items || [];
+        }
+    } catch (e) {
+        users = [];
+    }
+}
 
 // ===== WELCOME SCREEN =====
 async function loadWelcomeSettings() {
@@ -958,3 +974,83 @@ function applyZoom() {
     zoomImage.style.transform = `scale(${zoomLevel}) translate(${translateX / zoomLevel}px, ${translateY / zoomLevel}px)`;
     zoomImage.classList.toggle('zoomed', zoomLevel > 1);
 }
+
+// ===== WHATSAPP CONTACT =====
+function toggleWaMenu() {
+    const dropdown = document.getElementById('waDropdown');
+    const list = document.getElementById('waDropdownList');
+
+    if (dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+        return;
+    }
+
+    // Render user options
+    const designers = users.filter(u => u.role === 'designer');
+    const marketings = users.filter(u => u.role === 'pemasaran');
+
+    let html = '';
+
+    if (designers.length > 0) {
+        html += '<div class="wa-group-title">Desainer</div>';
+        designers.forEach(u => {
+            html += `<button class="wa-option" onclick="openWaChat('${u.whatsapp || ''}', '${u.nama || ''}', 'designer')">
+                <span class="wa-option-icon">🎨</span>
+                <span class="wa-option-name">${u.nama || '-'}</span>
+            </button>`;
+        });
+    }
+
+    if (marketings.length > 0) {
+        html += '<div class="wa-group-title">Pemasaran</div>';
+        marketings.forEach(u => {
+            html += `<button class="wa-option" onclick="openWaChat('${u.whatsapp || ''}', '${u.nama || ''}', 'pemasaran')">
+                <span class="wa-option-icon">📢</span>
+                <span class="wa-option-name">${u.nama || '-'}</span>
+            </button>`;
+        });
+    }
+
+    if (designers.length === 0 && marketings.length === 0) {
+        html += '<div class="wa-empty">Belum ada kontak WA</div>';
+    }
+
+    list.innerHTML = html;
+    dropdown.classList.add('show');
+}
+
+function openWaChat(whatsapp, nama, role) {
+    if (!whatsapp) {
+        alert('Nomor WhatsApp belum diset');
+        return;
+    }
+
+    // Format nomor
+    let phone = whatsapp.replace(/[^0-9]/g, '');
+    if (!phone.startsWith('62')) {
+        phone = '62' + phone.substring(1);
+    }
+
+    // Pesan dengan nama produk
+    let message = `Halo ${nama}, saya ingin konsultasi tentang produk *${selectedProduct?.nama || 'MotifKain'}*`;
+    if (role === 'designer') {
+        message = `Halo Desainer ${nama}, saya ingin konsultasi desain tentang *${selectedProduct?.nama || 'produk'}*`;
+    } else if (role === 'pemasaran') {
+        message = `Halo ${nama}, saya ingin info produk *${selectedProduct?.nama || 'MotifKain'}*`;
+    }
+
+    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+
+    // Close dropdown
+    document.getElementById('waDropdown').classList.remove('show');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('waDropdown');
+    const btn = document.querySelector('.wa-button');
+    if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+        dropdown.classList.remove('show');
+    }
+});

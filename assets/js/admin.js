@@ -6,14 +6,16 @@ class AdminDashboard {
         this.layanan = [];
         this.kategori = [];
         this.produk = [];
+        this.users = [];
         this.welcomeSettings = null;
         this.welcomeLogoData = null;
         this.welcomeBgData = null;
-        this.allWelcomeScreens = []; // Array untuk menyimpan semua welcome screen
-        this.activeWelcomeScreenId = null; // ID welcome screen yang aktif ditampilkan
+        this.allWelcomeScreens = [];
+        this.activeWelcomeScreenId = null;
         this.currentLayanan = null;
         this.currentKategori = null;
         this.currentProduk = null;
+        this.currentUser = null;
         this.pocketbaseToken = '';
         this.pocketbaseUrl = '';
         this.init();
@@ -215,6 +217,7 @@ class AdminDashboard {
         await this.loadAllWelcomeScreens();
         await this.loadKategori();
         await this.loadProduk();
+        await this.loadUsers();
     }
 
     // ===== MULTIPLE WELCOME SCREENS =====
@@ -1712,6 +1715,119 @@ class AdminDashboard {
             this.showNotification('Gagal menghapus: ' + e.message, 'error');
         }
         await this.loadProduk();
+    }
+
+    // ===== USER CRUD (Desainer & Pemasaran) =====
+    async loadUsers() {
+        const col = window.MOTIFKAIN_CONFIG?.userCollection || 'users';
+        try {
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+role');
+            if (res.ok) {
+                const data = await res.json();
+                this.users = data.items || [];
+            } else {
+                this.users = [];
+            }
+        } catch (e) {
+            this.users = [];
+        }
+        this.renderUsers();
+    }
+
+    renderUsers() {
+        const container = document.getElementById('userList');
+        if (!container) return;
+
+        if (this.users.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada user. Tambahkan desainer atau pemasaran baru.</p>';
+            return;
+        }
+
+        const roleLabels = { 'designer': 'Desainer', 'pemasaran': 'Pemasaran' };
+        let html = '';
+
+        for (let i = 0; i < this.users.length; i++) {
+            const u = this.users[i];
+            const roleLabel = roleLabels[u.role] || u.role || '-';
+            const roleClass = u.role === 'designer' ? 'role-designer' : 'role-pemasaran';
+
+            html += '<div class="user-item">';
+            html += '<div class="user-avatar">' + (u.nama ? u.nama.charAt(0).toUpperCase() : '?') + '</div>';
+            html += '<div class="user-info">';
+            html += '<div class="user-name">' + (u.nama || '-') + '</div>';
+            html += '<div class="user-role"><span class="role-badge ' + roleClass + '">' + roleLabel + '</span></div>';
+            html += '<div class="user-wa">WA: ' + (u.whatsapp || '-') + '</div>';
+            html += '</div>';
+            html += '<div class="user-actions">';
+            html += '<button class="btn btn-sm" onclick="admin.editUser(\'' + u.id + '\')">Edit</button> ';
+            html += '<button class="btn btn-sm btn-danger" onclick="admin.deleteUser(\'' + u.id + '\')">Hapus</button>';
+            html += '</div></div>';
+        }
+        container.innerHTML = html;
+    }
+
+    showAddUserModal() {
+        this.currentUser = null;
+        document.getElementById('userModalTitle').textContent = 'Tambah User';
+        document.getElementById('userName').value = '';
+        document.getElementById('userRole').value = '';
+        document.getElementById('userWhatsapp').value = '';
+        document.getElementById('userModal').classList.add('active');
+    }
+
+    editUser(id) {
+        const u = this.users.find(u => u.id === id);
+        if (!u) return;
+
+        this.currentUser = u;
+        document.getElementById('userModalTitle').textContent = 'Edit User';
+        document.getElementById('userName').value = u.nama || '';
+        document.getElementById('userRole').value = u.role || '';
+        document.getElementById('userWhatsapp').value = u.whatsapp || '';
+        document.getElementById('userModal').classList.add('active');
+    }
+
+    async saveUser() {
+        const nama = document.getElementById('userName').value.trim();
+        const role = document.getElementById('userRole').value;
+        const whatsapp = document.getElementById('userWhatsapp').value.trim();
+
+        if (!nama || !role) {
+            this.showNotification('Nama dan role wajib diisi!', 'error');
+            return;
+        }
+
+        const data = { nama, role, whatsapp };
+
+        const col = window.MOTIFKAIN_CONFIG?.userCollection || 'users';
+
+        try {
+            if (this.currentUser) {
+                await this.fetchAPI('/api/collections/' + col + '/records/' + this.currentUser.id, { method: 'PATCH', body: JSON.stringify(data) });
+                this.showNotification('Berhasil disimpan!', 'success');
+            } else {
+                await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: JSON.stringify(data) });
+                this.showNotification('Berhasil ditambahkan!', 'success');
+            }
+        } catch (e) {
+            this.showNotification('Gagal menyimpan: ' + e.message, 'error');
+        }
+
+        this.closeModal('userModal');
+        await this.loadUsers();
+    }
+
+    async deleteUser(id) {
+        if (!confirm('Yakin ingin menghapus user ini?')) return;
+
+        const col = window.MOTIFKAIN_CONFIG?.userCollection || 'users';
+        try {
+            await this.fetchAPI('/api/collections/' + col + '/records/' + id, { method: 'DELETE' });
+            this.showNotification('Berhasil dihapus!', 'success');
+        } catch (e) {
+            this.showNotification('Gagal menghapus: ' + e.message, 'error');
+        }
+        await this.loadUsers();
     }
 
     closeModal(id) {

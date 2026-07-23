@@ -18,12 +18,15 @@ window.MOTIFKAIN_CONFIG = {
     // Collection untuk produk
     produkCollection: 'produk',
 
+    // Collection untuk user (designer & pemasaran)
+    userCollection: 'users',
+
+    // WhatsApp number default (jika tidak ada user)
+    whatsappNumber: '',
+
     // Catalog settings
     catalogTitle: 'MotifKain Katalog',
     websiteUrl: 'https://motifkain.com',
-
-    // WhatsApp number untuk kontak (contoh: '6281234567890')
-    whatsappNumber: '',
 
     // Debug mode
     debug: true
