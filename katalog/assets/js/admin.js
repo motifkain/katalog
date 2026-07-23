@@ -1019,14 +1019,23 @@ class AdminDashboard {
         this.updateWelcomePreview();
     }
 
-    updateBtnPosition() {
-        const xVal = document.getElementById('wsBtnX').value;
-        const yVal = document.getElementById('wsBtnY').value;
-        document.getElementById('btnXValue').textContent = xVal;
-        document.getElementById('btnYValue').textContent = yVal;
+    updateBtnStyle() {
+        const xVal = document.getElementById('wsBtnX')?.value || '50';
+        const yVal = document.getElementById('wsBtnY')?.value || '90';
+        const bgColor = document.getElementById('wsBtnBgColor')?.value || '#1B5E20';
+        const textColor = document.getElementById('wsBtnTextColor')?.value || '#FFFFFF';
+        const fontSize = document.getElementById('wsBtnFontSize')?.value || '14';
+
+        if (document.getElementById('btnXValue')) document.getElementById('btnXValue').textContent = xVal;
+        if (document.getElementById('btnYValue')) document.getElementById('btnYValue').textContent = yVal;
+        if (document.getElementById('btnFontSizeValue')) document.getElementById('btnFontSizeValue').textContent = fontSize;
+
         if (!this.welcomeSettings) this.welcomeSettings = {};
         this.welcomeSettings.btnX = parseInt(xVal);
         this.welcomeSettings.btnY = parseInt(yVal);
+        this.welcomeSettings.btnBgColor = bgColor;
+        this.welcomeSettings.btnTextColor = textColor;
+        this.welcomeSettings.btnFontSize = parseInt(fontSize);
         this.updateWelcomePreview();
     }
 
@@ -1035,7 +1044,8 @@ class AdminDashboard {
         const y = ws.btnY || 90;
         const bgColor = ws.btnBgColor || '#1B5E20';
         const textColor = ws.btnTextColor || '#FFFFFF';
-        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);background:${bgColor};color:${textColor};padding:12px 32px;border:none;border-radius:6px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
+        const fontSize = ws.btnFontSize || 14;
+        return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);background:${bgColor};color:${textColor};padding:12px 32px;border:none;border-radius:6px;font-size:${fontSize}px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
     }
 
     // Logo handlers

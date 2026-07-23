@@ -301,7 +301,8 @@ function getBtnStyleWelcome(ws) {
     const y = ws.btnY || 90;
     const bgColor = ws.btnBgColor || '#1B5E20';
     const textColor = ws.btnTextColor || '#FFFFFF';
-    return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);background:${bgColor};color:${textColor};padding:12px 32px;border:none;border-radius:6px;font-size:0.9rem;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
+    const fontSize = ws.btnFontSize || 14;
+    return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);background:${bgColor};color:${textColor};padding:12px 32px;border:none;border-radius:6px;font-size:${fontSize}px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
 }
 
 function renderWelcomeDark(ws, theme) {
