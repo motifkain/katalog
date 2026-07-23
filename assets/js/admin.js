@@ -86,7 +86,7 @@ class AdminDashboard {
     }
 
     openCatalog() {
-        window.open('index.html', '_blank');
+        window.open('https://katalog.motifkain.com', '_blank');
     }
 
     setupForms() {
