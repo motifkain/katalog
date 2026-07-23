@@ -13,7 +13,7 @@ const CONFIG = window.MOTIFKAIN_CONFIG || {
 
 // ===== STATE =====
 let welcomeSettings = window.WELCOME_SETTINGS || {
-    logoUrl: '',
+    logoUrl: 'assets/images/logo-motifkain.png',
     leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
     title: 'CATALOG',
     subtitle: 'Company Profile',
