@@ -41,18 +41,30 @@
 
         <!-- Tabs -->
         <nav class="dashboard-tabs">
-            <button class="tab-btn active" data-tab="kategori">Kategori</button>
+            <button class="tab-btn active" data-tab="layanan">Layanan</button>
+            <button class="tab-btn" data-tab="kategori">Kategori</button>
             <button class="tab-btn" data-tab="produk">Produk</button>
             <button class="tab-btn" data-tab="welcome">Welcome Screen</button>
         </nav>
 
+        <!-- Tab Content: Layanan -->
+        <div id="tab-layanan" class="tab-content active">
+            <div class="content-header">
+                <h2>Pengaturan Layanan</h2>
+                <button class="btn btn-primary btn-sm" onclick="admin.showAddLayananModal()">+ Tambah Layanan</button>
+            </div>
+            <div class="layanan-list" id="layananList">
+                <!-- Layanan items will be loaded here -->
+            </div>
+        </div>
+
         <!-- Tab Content: Kategori -->
-        <div id="tab-kategori" class="tab-content active">
+        <div id="tab-kategori" class="tab-content">
             <div class="content-header">
                 <h2>Pengaturan Kategori</h2>
                 <button class="btn btn-primary btn-sm" onclick="admin.showAddKategoriModal()">+ Tambah Kategori</button>
             </div>
-            <div class="kategori-list" id="kategoriList">
+            <div class="filter-bar"><select id="filterKategoriLayanan" onchange="admin.filterKategoriByLayanan()"><option value="">Semua Layanan</option></select></div><div class="kategori-list" id="kategoriList">
                 <!-- Kategori items -->
             </div>
         </div>
@@ -76,6 +88,18 @@
 
         <!-- Tab Content: Welcome Screen -->
         <div id="tab-welcome" class="tab-content">
+            <!-- Data Tersimpan Info -->
+            <div class="saved-data-info" id="savedDataInfo">
+                <div class="saved-badge" id="savedBadge">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                    <span id="savedStatus">Memuat...</span>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="admin.refreshWelcomeData()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                    Refresh
+                </button>
+            </div>
+
             <div class="content-header">
                 <h2>Welcome Screen Editor</h2>
                 <div class="header-actions">
@@ -267,6 +291,31 @@
         </div>
     </div>
 
+    <!-- Modal: Tambah/Edit Layanan -->
+    <div id="layananModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="layananModalTitle">Tambah Layanan</h3>
+                <button class="modal-close" onclick="admin.closeModal('layananModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nama Layanan</label>
+                    <input type="text" id="layananName" placeholder="Contoh: Desain Motif">
+                </div>
+                <div class="form-group">
+                    <label>Icon (emoji)</label>
+                    <input type="text" id="layananIcon" placeholder="Contoh: 🎨">
+                    <small>Gunakan emoji sebagai icon layanan</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="admin.closeModal('layananModal')">Batal</button>
+                <button class="btn btn-primary" onclick="admin.saveLayanan()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Tambah/Edit Kategori -->
     <div id="kategoriModal" class="modal">
         <div class="modal-content">
@@ -276,12 +325,19 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
+                    <label>Layanan</label>
+                    <select id="kategoriLayanan" class="form-input">
+                        <option value="">Pilih Layanan (opsional)</option>
+                    </select>
+                    <small>Kategori akan muncul di dalam layanan yang dipilih</small>
+                </div>
+                <div class="form-group">
                     <label>Nama Kategori</label>
-                    <input type="text" id="kategoriName" placeholder="Contoh: Desain Motif">
+                    <input type="text" id="kategoriName" placeholder="Contoh: Panel Atasan Wanita">
                 </div>
                 <div class="form-group">
                     <label>Slug (ID)</label>
-                    <input type="text" id="kategoriSlug" placeholder="contoh: desain-motif">
+                    <input type="text" id="kategoriSlug" placeholder="contoh: panel-atasan-wanita">
                     <small>ID unik untuk kategori (tanpa spasi)</small>
                 </div>
                 <div class="form-group">
@@ -341,15 +397,18 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Gambar</label>
-                    <div class="image-upload" id="productImageUpload" onclick="document.getElementById('productImageInput').click()">
-                        <div class="upload-placeholder">
-                            <span class="upload-icon">📷</span>
-                            <span>Klik untuk upload gambar</span>
+                    <label>Gambar Produk (Bisa upload banyak)</label>
+                    <div class="multi-image-upload" id="productMultiImageUpload">
+                        <div class="image-upload-list" id="productImageList">
+                            <!-- Existing images will be shown here -->
                         </div>
-                        <img id="productImagePreview" style="display:none;">
+                        <div class="image-upload-btn" onclick="document.getElementById('productImageInput').click()">
+                            <span class="upload-icon">+</span>
+                            <span>Tambah Gambar</span>
+                        </div>
+                        <input type="file" id="productImageInput" accept="image/*" multiple style="display:none" onchange="admin.handleMultiImageUpload(this)">
                     </div>
-                    <input type="file" id="productImageInput" accept="image/*" style="display:none" onchange="admin.handleImageUpload(this)">
+                    <small style="color:var(--text-light);font-size:0.75rem;margin-top:4px;display:block;">Klik untuk menambahkan beberapa gambar</small>
                 </div>
             </div>
             <div class="modal-footer">

@@ -290,20 +290,19 @@ function renderWelcomeNumbered(ws, theme) {
 
     return `
     <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:5%;left:5%;width:40px;height:40px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
+        <div style="position:absolute;bottom:5%;right:5%;width:40px;height:40px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
         ${logoHtml}
-        <div style="display:flex;align-items:flex-start;gap:5%;flex:1;margin-top:20px;">
-            <div style="width:30%;display:flex;flex-direction:column;justify-content:center;">
-                <h2 style="font-family:'${ws.fontFamily}',serif;font-size:3rem;color:#fff;font-weight:700;line-height:1;margin-bottom:15px;">01</h2>
-                <div style="width:40px;height:1px;background:${theme.accent};"></div>
-            </div>
-            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
-                <p style="color:${theme.accent};font-size:0.8rem;letter-spacing:0.3em;margin-bottom:10px;">${ws.title}</p>
-                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.8rem;color:#fff;margin-bottom:15px;">${ws.subtitle}</h1>
-                <div style="width:30px;height:1px;background:${theme.accent};margin-bottom:15px;"></div>
-                ${ws.description ? `<p style="color:rgba(255,255,255,0.4);font-size:0.85rem;line-height:1.8;">${ws.description}</p>` : ''}
-            </div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+            <h1 style="font-family:'${ws.fontFamily}',serif;font-size:2.5rem;color:#fff;margin-bottom:15px;letter-spacing:0.05em;">${ws.title}</h1>
+            <p style="color:${theme.accent};font-size:0.9rem;letter-spacing:0.3em;margin-bottom:20px;">${ws.subtitle}</p>
+            <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${theme.accent},transparent);margin:0 auto;"></div>
+            ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.9rem;margin-top:20px;line-height:1.6;max-width:80%;">${ws.description}</p>` : ''}
         </div>
-        <button class="welcome-btn" onclick="openKatalog()" style="align-self:center;margin-top:auto;">Lihat Katalog</button>
+        <div style="background:rgba(255,255,255,0.95);border-radius:12px;padding:20px;text-align:center;margin-top:auto;">
+            <p style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
+        </div>
+        <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>
     </div>`;
 }
 

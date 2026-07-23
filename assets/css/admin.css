@@ -215,6 +215,43 @@ input, textarea, select { font-family: inherit; outline: none; }
     height: 16px;
 }
 
+/* ===== SAVED DATA INFO ===== */
+.saved-data-info {
+    background: var(--bg);
+    padding: 12px 16px;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--divider);
+}
+
+.saved-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.saved-badge.has-data {
+    color: var(--success);
+}
+
+.saved-badge.no-data {
+    color: var(--warning);
+}
+
+.saved-badge svg {
+    flex-shrink: 0;
+}
+
+/* ===== NOTIFICATION ===== */
+.notification.info {
+    background: var(--info);
+}
+
 /* ===== KATEGORI LIST ===== */
 .kategori-list {
     display: grid;
@@ -267,11 +304,75 @@ input, textarea, select { font-family: inherit; outline: none; }
     color: white;
 }
 
+/* ===== LAYANAN LIST ===== */
+.layanan-list {
+    display: grid;
+    gap: 12px;
+}
+
+.layanan-item {
+    background: var(--card);
+    padding: 16px 20px;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px var(--shadow);
+    border-left: 4px solid var(--primary);
+}
+
+.layanan-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--border-radius-sm);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+.layanan-info { flex: 1; }
+.layanan-name { font-weight: 600; font-size: 1.1rem; margin-bottom: 4px; color: var(--text-primary); }
+.layanan-count { font-size: 0.8rem; color: var(--text-secondary); }
+
+.layanan-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.layanan-actions button {
+    padding: 8px 16px;
+    border-radius: var(--border-radius-sm);
+    border: none;
+    background: var(--bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.layanan-actions button:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.layanan-actions .btn-danger {
+    background: rgba(244, 67, 54, 0.1);
+    color: var(--error);
+}
+
+.layanan-actions .btn-danger:hover {
+    background: var(--error);
+    color: white;
+}
+
 /* ===== FILTER BAR ===== */
 .filter-bar {
     display: flex;
     gap: 12px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .filter-bar select,
@@ -283,7 +384,9 @@ input, textarea, select { font-family: inherit; outline: none; }
     background: white;
 }
 
-.filter-bar input { flex: 1; }
+.filter-bar input { flex: 1; min-width: 150px; }
+
+.filter-bar select { min-width: 150px; }
 
 /* ===== PRODUK GRID ===== */
 .produk-grid {
@@ -817,6 +920,94 @@ input, textarea, select { font-family: inherit; outline: none; }
 }
 
 .image-upload.has-image { padding: 12px; }
+
+/* ===== MULTI IMAGE UPLOAD ===== */
+.multi-image-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.image-upload-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+}
+
+.image-upload-list:empty {
+    display: none;
+}
+
+.image-upload-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    border: 2px solid var(--divider);
+    background: var(--bg);
+}
+
+.image-upload-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-upload-item .remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.image-upload-item:hover .remove-btn {
+    opacity: 1;
+}
+
+.image-upload-item .remove-btn:hover {
+    background: var(--error);
+}
+
+.image-upload-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    border: 2px dashed var(--divider);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--bg);
+}
+
+.image-upload-btn:hover {
+    border-color: var(--primary);
+    background: rgba(27, 94, 32, 0.05);
+}
+
+.image-upload-btn .upload-icon {
+    font-size: 1.5rem;
+    opacity: 0.5;
+}
+
+.image-upload-btn span:last-child {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
 
 /* ===== NOTIFICATION ===== */
 .notification {

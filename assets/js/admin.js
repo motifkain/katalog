@@ -3,11 +3,13 @@
  */
 class AdminDashboard {
     constructor() {
+        this.layanan = [];
         this.kategori = [];
         this.produk = [];
         this.welcomeSettings = null;
         this.welcomeLogoData = null;
         this.welcomeBgData = null;
+        this.currentLayanan = null;
         this.currentKategori = null;
         this.currentProduk = null;
         this.pocketbaseToken = '';
@@ -185,9 +187,170 @@ class AdminDashboard {
     }
 
     async loadData() {
+        await this.loadLayanan();
         await this.loadWelcomeSettings();
         await this.loadKategori();
         await this.loadProduk();
+    }
+
+    // ===== LAYANAN CRUD =====
+    async loadLayanan() {
+        const col = window.MOTIFKAIN_CONFIG?.layananCollection || 'layanan';
+        try {
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=order');
+            if (res.ok) {
+                const data = await res.json();
+                this.layanan = data.items || [];
+            }
+        } catch (e) {
+            this.layanan = [];
+        }
+        this.renderLayanan();
+        this.populateLayananDropdowns();
+    }
+
+    renderLayanan() {
+        var container = document.getElementById('layananList');
+        if (!container) return;
+
+        if (this.layanan.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada layanan. Tambahkan layanan baru.</p>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < this.layanan.length; i++) {
+            var l = this.layanan[i];
+            var icon = l.icon || '📁';
+            var itemCount = this.getKategoriCountByLayanan(l.id);
+            html += '<div class="layanan-item">';
+            html += '<div class="layanan-icon">' + icon + '</div>';
+            html += '<div class="layanan-info">';
+            html += '<div class="layanan-name">' + l.name + '</div>';
+            html += '<div class="layanan-count">' + itemCount + ' kategori</div>';
+            html += '</div>';
+            html += '<div class="layanan-actions">';
+            html += '<button class="btn btn-sm" onclick="admin.editLayanan(\'' + l.id + '\')">Edit</button> ';
+            html += '<button class="btn btn-sm btn-danger" onclick="admin.deleteLayanan(\'' + l.id + '\')">Hapus</button>';
+            html += '</div></div>';
+        }
+        container.innerHTML = html;
+    }
+
+    getKategoriCountByLayanan(layananId) {
+        return this.kategori.filter(k => k.layanan === layananId || k.layanan_id === layananId).length;
+    }
+
+    populateLayananDropdowns() {
+        var selects = ['filterKategoriLayanan', 'filterProdukLayanan'];
+        selects.forEach(function(selectId) {
+            var select = document.getElementById(selectId);
+            if (!select) return;
+            var currentVal = select.value;
+            select.innerHTML = '<option value="">Semua Layanan</option>';
+            for (var i = 0; i < admin.layanan.length; i++) {
+                var l = admin.layanan[i];
+                select.innerHTML += '<option value="' + l.id + '">' + l.name + '</option>';
+            }
+            select.value = currentVal;
+        });
+    }
+
+    showAddLayananModal() {
+        this.currentLayanan = null;
+        document.getElementById('layananModalTitle').textContent = 'Tambah Layanan';
+        document.getElementById('layananName').value = '';
+        document.getElementById('layananIcon').value = '';
+        document.getElementById('layananModal').classList.add('active');
+    }
+
+    editLayanan(id) {
+        var l = null;
+        for (var i = 0; i < this.layanan.length; i++) {
+            if (this.layanan[i].id === id) { l = this.layanan[i]; break; }
+        }
+        if (!l) return;
+
+        this.currentLayanan = l;
+        document.getElementById('layananModalTitle').textContent = 'Edit Layanan';
+        document.getElementById('layananName').value = l.name || '';
+        document.getElementById('layananIcon').value = l.icon || '';
+        document.getElementById('layananModal').classList.add('active');
+    }
+
+    async saveLayanan() {
+        var name = document.getElementById('layananName').value.trim();
+        var icon = document.getElementById('layananIcon').value.trim();
+
+        if (!name) {
+            this.showNotification('Nama layanan wajib diisi!', 'error');
+            return;
+        }
+
+        var data = { name: name, icon: icon || '📁' };
+
+        var col = window.MOTIFKAIN_CONFIG?.layananCollection || 'layanan';
+
+        try {
+            if (this.currentLayanan) {
+                await this.fetchAPI('/api/collections/' + col + '/records/' + this.currentLayanan.id, { method: 'PATCH', body: JSON.stringify(data) });
+                this.showNotification('Berhasil disimpan!', 'success');
+            } else {
+                await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: JSON.stringify(data) });
+                this.showNotification('Berhasil ditambahkan!', 'success');
+            }
+        } catch (e) {
+            this.showNotification('Gagal menyimpan: ' + e.message, 'error');
+        }
+
+        this.closeModal('layananModal');
+        await this.loadLayanan();
+    }
+
+    async deleteLayanan(id) {
+        if (!confirm('Yakin ingin menghapus layanan ini? Kategori di dalamnya tidak akan terhapus.')) return;
+        var col = window.MOTIFKAIN_CONFIG?.layananCollection || 'layanan';
+        try {
+            await this.fetchAPI('/api/collections/' + col + '/records/' + id, { method: 'DELETE' });
+            this.showNotification('Berhasil dihapus!', 'success');
+        } catch (e) {
+            this.showNotification('Gagal menghapus: ' + e.message, 'error');
+        }
+        await this.loadLayanan();
+    }
+
+    filterKategoriByLayanan() {
+        var layananId = document.getElementById('filterKategoriLayanan').value;
+        this.renderKategori(layananId);
+    }
+
+    filterProductsByLayanan() {
+        var layananId = document.getElementById('filterProdukLayanan').value;
+        var kategoriId = document.getElementById('filterKategori').value;
+        // Update kategori dropdown based on layanan
+        this.updateKategoriDropdown(layananId);
+        this.filterProducts();
+    }
+
+    updateKategoriDropdown(layananId) {
+        var select = document.getElementById('filterKategori');
+        if (!select) return;
+        var currentVal = select.value;
+        select.innerHTML = '<option value="">Semua Kategori</option>';
+
+        if (layananId) {
+            var filteredKategori = this.kategori.filter(k => k.layanan === layananId || k.layanan_id === layananId);
+            for (var i = 0; i < filteredKategori.length; i++) {
+                var k = filteredKategori[i];
+                select.innerHTML += '<option value="' + k.id + '">' + k.name + '</option>';
+            }
+        } else {
+            for (var i = 0; i < this.kategori.length; i++) {
+                var k = this.kategori[i];
+                select.innerHTML += '<option value="' + k.id + '">' + k.name + '</option>';
+            }
+        }
+        select.value = currentVal;
     }
 
     // ===== WELCOME SCREEN SETTINGS =====
@@ -199,14 +362,36 @@ class AdminDashboard {
                 const data = await res.json();
                 if (data.items && data.items.length > 0) {
                     this.welcomeSettings = data.items[0];
+                    this.updateSavedStatus(true);
                 } else {
                     this.welcomeSettings = this.getDefaultWelcomeSettings();
+                    this.updateSavedStatus(false);
                 }
             }
         } catch (e) {
             this.welcomeSettings = this.getDefaultWelcomeSettings();
+            this.updateSavedStatus(false);
         }
         this.renderWelcomeSettings();
+    }
+
+    updateSavedStatus(hasData) {
+        const badge = document.getElementById('savedBadge');
+        const status = document.getElementById('savedStatus');
+        if (badge && status) {
+            if (hasData) {
+                badge.className = 'saved-badge has-data';
+                status.textContent = 'Data tersimpan di PocketBase';
+            } else {
+                badge.className = 'saved-badge no-data';
+                status.textContent = 'Belum ada data tersimpan';
+            }
+        }
+    }
+
+    refreshWelcomeData() {
+        this.showNotification('Memuat ulang data...', 'info');
+        this.loadWelcomeSettings();
     }
 
     getDefaultWelcomeSettings() {
@@ -647,22 +832,21 @@ class AdminDashboard {
         if (logoUrl) {
             logoHtml = `<img src="${logoUrl}" style="${logoStyle}">`;
         } else {
-            logoHtml = `<div style="width:40px;height:40px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;">📷</div>`;
+            logoHtml = `<div style="width:60px;height:60px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;font-size:1.5rem;">📷</div>`;
         }
         return `
-        <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;">
+        <div style="width:100%;height:100%;${bgStyle}padding:10%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
             ${logoHtml}
-            <div style="display:flex;align-items:flex-start;gap:8%;flex:1;margin-top:20px;">
-                <div style="width:30%;display:flex;flex-direction:column;justify-content:center;">
-                    <h2 style="font-family:'${ws.fontFamily}',serif;font-size:1.4rem;color:#fff;font-weight:bold;line-height:1;margin-bottom:15px;">01</h2>
-                    <div style="width:40px;height:1px;background:${theme.accent};"></div>
-                </div>
-                <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
-                    <p style="color:${theme.accent};font-size:0.8rem;letter-spacing:0.3em;margin-bottom:10px;">${ws.title}</p>
-                    <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1.8rem;color:#fff;margin-bottom:15px;">${ws.subtitle}</h1>
-                    <div style="width:30px;height:1px;background:${theme.accent};margin-bottom:15px;"></div>
-                    ${ws.description ? `<p style="color:rgba(255,255,255,0.4);font-size:0.85rem;line-height:1.8;">${ws.description}</p>` : ''}
-                </div>
+            <div style="position:absolute;top:5%;left:5%;width:30px;height:30px;border-top:2px solid ${theme.accent};border-left:2px solid ${theme.accent};opacity:0.4;"></div>
+            <div style="position:absolute;bottom:5%;right:5%;width:30px;height:30px;border-bottom:2px solid ${theme.accent};border-right:2px solid ${theme.accent};opacity:0.4;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+                <h1 style="font-family:'${ws.fontFamily}',serif;font-size:1rem;color:#fff;margin-bottom:10px;letter-spacing:0.1em;">${ws.title}</h1>
+                <p style="color:${theme.accent};font-size:0.5rem;letter-spacing:0.3em;margin-bottom:15px;">${ws.subtitle}</p>
+                <div style="width:40px;height:1px;background:${theme.accent};margin-bottom:15px;"></div>
+                ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.45rem;line-height:1.5;max-width:80%;">${ws.description}</p>` : ''}
+            </div>
+            <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.95);border-radius:8px;">
+                <p style="font-size:0.45rem;color:${theme.textMuted};line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
             </div>
         </div>`;
     }
@@ -814,13 +998,53 @@ class AdminDashboard {
             }
         } catch (e) {
             this.kategori = [
-                { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif' },
-                { id: 'printing', name: 'Printing Kain', slug: 'printing' },
-                { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian' },
-                { id: 'asesoris', name: 'Asesoris', slug: 'asesoris' }
+                { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif', layanan: null },
+                { id: 'printing', name: 'Printing Kain', slug: 'printing', layanan: null },
+                { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian', layanan: null },
+                { id: 'asesoris', name: 'Asesoris', slug: 'asesoris', layanan: null }
             ];
         }
         this.renderKategori();
+        this.populateLayananDropdowns();
+    }
+
+    renderKategori(layananFilter) {
+        var container = document.getElementById('kategoriList');
+        if (!container) return;
+
+        var filtered = this.kategori;
+        if (layananFilter) {
+            filtered = this.kategori.filter(function(k) {
+                return k.layanan === layananFilter || k.layanan_id === layananFilter;
+            });
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada kategori' + (layananFilter ? ' di layanan ini' : '') + '</p>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < filtered.length; i++) {
+            var k = filtered[i];
+            var layananName = '';
+            if (k.layanan || k.layanan_id) {
+                var layanan = this.layanan.find(function(l) { return l.id === (k.layanan || k.layanan_id); });
+                if (layanan) layananName = '<span class="kategori-layanan-badge">' + layanan.name + '</span>';
+            }
+            html += '<div class="kategori-item">';
+            html += '<div class="kategori-icon">' + (k.name.charAt ? k.name.charAt(0).toUpperCase() : '?') + '</div>';
+            html += '<div class="kategori-info">';
+            html += '<div class="kategori-name">' + k.name + '</div>';
+            html += '<div class="kategori-slug">' + k.slug + '</div>';
+            if (layananName) html += '<div>' + layananName + '</div>';
+            html += '</div>';
+            html += '<div class="kategori-actions">';
+            html += '<button class="btn btn-sm" onclick="admin.editKategori(\'' + k.id + '\')">Edit</button> ';
+            html += '<button class="btn btn-sm btn-danger" onclick="admin.deleteKategori(\'' + k.id + '\')">Hapus</button>';
+            html += '</div></div>';
+        }
+        container.innerHTML = html;
     }
 
     async loadProduk() {
@@ -900,6 +1124,15 @@ class AdminDashboard {
         document.getElementById('kategoriName').value = '';
         document.getElementById('kategoriSlug').value = '';
         document.getElementById('kategoriOrder').value = this.kategori.length;
+        // Populate layanan dropdown
+        var select = document.getElementById('kategoriLayanan');
+        if (select) {
+            select.innerHTML = '<option value="">Pilih Layanan (opsional)</option>';
+            for (var i = 0; i < this.layanan.length; i++) {
+                var l = this.layanan[i];
+                select.innerHTML += '<option value="' + l.id + '">' + l.name + '</option>';
+            }
+        }
         document.getElementById('kategoriModal').classList.add('active');
     }
 
@@ -915,6 +1148,16 @@ class AdminDashboard {
         document.getElementById('kategoriName').value = k.name || '';
         document.getElementById('kategoriSlug').value = k.slug || '';
         document.getElementById('kategoriOrder').value = k.order || 0;
+        // Populate layanan dropdown
+        var select = document.getElementById('kategoriLayanan');
+        if (select) {
+            select.innerHTML = '<option value="">Pilih Layanan (opsional)</option>';
+            for (var i = 0; i < this.layanan.length; i++) {
+                var l = this.layanan[i];
+                var selected = (k.layanan === l.id || k.layanan_id === l.id) ? ' selected' : '';
+                select.innerHTML += '<option value="' + l.id + '"' + selected + '>' + l.name + '</option>';
+            }
+        }
         document.getElementById('kategoriModal').classList.add('active');
     }
 
@@ -922,6 +1165,7 @@ class AdminDashboard {
         var name = document.getElementById('kategoriName').value.trim();
         var slug = document.getElementById('kategoriSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
         var order = parseInt(document.getElementById('kategoriOrder').value) || 0;
+        var layanan = document.getElementById('kategoriLayanan').value;
 
         if (!name || !slug) {
             this.showNotification('Nama dan slug wajib diisi!', 'error');
@@ -929,6 +1173,7 @@ class AdminDashboard {
         }
 
         var data = { name: name, slug: slug, order: order };
+        if (layanan) data.layanan = layanan;
 
         var col = window.MOTIFKAIN_CONFIG?.kategoriCollection || 'kategori';
         var self = this;
@@ -936,10 +1181,11 @@ class AdminDashboard {
         try {
             if (this.currentKategori) {
                 await this.fetchAPI('/api/collections/' + col + '/records/' + this.currentKategori.id, { method: 'PATCH', body: JSON.stringify(data) });
+                this.showNotification('Berhasil disimpan!', 'success');
             } else {
                 await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: JSON.stringify(data) });
+                this.showNotification('Berhasil ditambahkan!', 'success');
             }
-            this.showNotification('Berhasil disimpan!', 'success');
         } catch (e) {
             this.showNotification('Gagal menyimpan: ' + e.message, 'error');
         }

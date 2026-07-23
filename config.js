@@ -6,6 +6,9 @@ window.MOTIFKAIN_CONFIG = {
     // URL PocketBase API - Railway Production
     pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
 
+    // Collection untuk layanan
+    layananCollection: 'layanan',
+
     // Collection untuk welcome screen settings
     welcomeCollection: 'welcome_settings',
 
@@ -29,7 +32,7 @@ window.MOTIFKAIN_CONFIG = {
 // Default Welcome Screen Settings (bisa diedit dari admin)
 window.WELCOME_SETTINGS = {
     // Left side - Logo area
-    logoUrl: '',
+    logoUrl: 'assets/images/logo-motifkain.png',
     leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
 
     // Right side - Text area
