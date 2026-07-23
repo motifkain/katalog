@@ -493,7 +493,8 @@ class AdminDashboard {
 
                 const formDataWarna = new FormData();
                 formDataWarna.append('nama', warna.nama);
-                formDataWarna.append('produk', produkId);
+                // PocketBase relation fields need to be sent as JSON array string
+                formDataWarna.append('produk', JSON.stringify([produkId]));
 
                 let warnaId = warna.id;
                 let warnaMethod = 'POST';
@@ -511,7 +512,11 @@ class AdminDashboard {
                     body: formDataWarna
                 });
 
-                if (!warnaRes.ok) throw new Error('Gagal menyimpan warna');
+                if (!warnaRes.ok) {
+                    const errorData = await warnaRes.json();
+                    console.error('Warna save error:', errorData);
+                    throw new Error('Gagal menyimpan warna: ' + JSON.stringify(errorData));
+                }
 
                 if (!warnaId) {
                     const warnaData = await warnaRes.json();
