@@ -1,3 +1,4 @@
+$js = @'
 /**
  * MOTIFKAIN KATALOG - MAIN APP
  */
@@ -288,3 +289,7 @@ document.addEventListener('click', function(e) {
         dropdown.classList.remove('show');
     }
 });
+'@
+
+$js | Out-File -FilePath 'c:\motifkain\Katalog desain\assets\js\app.js' -Encoding UTF8
+Write-Host "app.js rewritten successfully"
