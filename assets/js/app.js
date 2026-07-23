@@ -238,15 +238,31 @@ function renderItems() {
     grid.innerHTML = filteredItems.map(item => {
         const isPortfolio = item.type === 'portfolio';
         const name = isPortfolio ? (item.judul || '') : (item.nama || '');
-        const imgCount = item.warnaList?.length || item.images?.length || 0;
+
+        // Build thumbnail images
+        let thumbnailsHtml = '';
+        if (!isPortfolio && item.warnaList?.length > 0) {
+            const thumbImages = [];
+            for (const warna of item.warnaList) {
+                if (warna.image) thumbImages.push(warna.image);
+                if (thumbImages.length >= 4) break;
+            }
+            if (thumbImages.length > 1) {
+                thumbnailsHtml = `
+                    <div class="card-thumbnails">
+                        ${thumbImages.map((img, i) => `<div class="card-thumb ${i === 0 ? 'active' : ''}"><img src="${img}" alt=""></div>`).join('')}
+                    </div>
+                `;
+            }
+        }
 
         return `
             <div class="product-card" onclick="showDetail('${item.id}')">
                 <div class="card-img">
                     <img src="${item.image || 'https://via.placeholder.com/400'}" alt="${name}">
-                    ${imgCount > 0 ? `<span class="img-count">${imgCount} warna</span>` : ''}
                     ${isPortfolio ? '<span class="type-badge">Portfolio</span>' : ''}
                 </div>
+                ${thumbnailsHtml}
                 <div class="card-info">
                     <h4>${name}</h4>
                     ${item.harga ? `<p class="price">${formatRupiah(item.harga)}</p>` : ''}
@@ -277,7 +293,7 @@ function showDetail(id) {
         : [];
 
     // Build warna selector HTML
-    const warnaSelectorHtml = buildWarnaSelector(selectedItem);
+    const warnaSelectorHtml = buildWarnaDots(selectedItem);
 
     // Portfolio images
     const portfolioImages = [selectedItem.image, ...(selectedItem.images || [])].filter(Boolean);
@@ -312,15 +328,7 @@ function showDetail(id) {
                 ` : ''}
             </div>
 
-            ${!isPortfolio && selectedItem.warnaList?.length > 0 ? `
-            <div class="warna-bar" id="warnaBar">
-                <span class="warna-label">Warna:</span>
-                <span class="warna-selected" id="warnaSelected">${selectedItem.warnaList[selectedWarnaIndex]?.nama || ''}</span>
-                <button class="warna-arrow" onclick="showWarnaList()">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M7 10l5 5 5-5z"/></svg>
-                </button>
-            </div>
-            ` : ''}
+            ${!isPortfolio && selectedItem.warnaList?.length > 0 ? warnaSelectorHtml : ''}
 
             <div class="modal-body">
                 <h2>${name}</h2>
@@ -362,9 +370,40 @@ function showDetail(id) {
     initTouchSwipe();
 }
 
-function buildWarnaSelector(item) {
-    // Not used anymore - using showWarnaList dropdown instead
-    return '';
+function buildWarnaDots(item) {
+    if (!item.warnaList || item.warnaList.length <= 1) return '';
+
+    return `
+        <div class="warna-bar">
+            <span class="warna-label">Warna:</span>
+            <div class="warna-dots">
+                ${item.warnaList.map((warna, i) => `
+                    <div class="warna-dot ${i === selectedWarnaIndex ? 'active' : ''}"
+                         style="background: ${getColorCode(warna.nama)}"
+                         onclick="selectWarna(${i}); showWarnaList();">
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function getColorCode(colorName) {
+    const name = (colorName || '').toLowerCase();
+    if (name.includes('merah') || name.includes('maroon') || name.includes('burgundy')) return '#800020';
+    if (name.includes('biru') || name.includes('navy') || name.includes('blue')) return '#000080';
+    if (name.includes('hijau') || name.includes('green')) return '#228B22';
+    if (name.includes('kuning') || name.includes('yellow')) return '#FFD700';
+    if (name.includes('oranye') || name.includes('orange')) return '#FF8C00';
+    if (name.includes('ungu') || name.includes('purple')) return '#800080';
+    if (name.includes('pink') || name.includes('magenta')) return '#FF69B4';
+    if (name.includes('coklat') || name.includes('brown')) return '#8B4513';
+    if (name.includes('abu') || name.includes('grey') || name.includes('gray')) return '#808080';
+    if (name.includes('hitam') || name.includes('black')) return '#1a1a1a';
+    if (name.includes('putih') || name.includes('white')) return '#f5f5f5';
+    if (name.includes('emas') || name.includes('gold')) return '#FFD700';
+    if (name.includes('silver')) return '#C0C0C0';
+    return '#D4C4B0';
 }
 
 function showWarnaList() {
@@ -415,9 +454,11 @@ function selectWarna(index) {
     const nav = document.querySelector('.gallery-nav');
     if (nav) nav.style.display = allImages.length > 1 ? 'flex' : 'none';
 
-    // Update selected warna text
-    const warnaSelected = document.getElementById('warnaSelected');
-    if (warnaSelected) warnaSelected.textContent = warna.nama || '';
+    // Update selected warna dots
+    const dots = document.querySelectorAll('.warna-dot');
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+    });
 
     // Update deskripsi
     const descSection = document.getElementById('gambarDescSection');
