@@ -26,12 +26,12 @@ const ColorThemes = {
             secondary: '#B22222',
             accent: '#CD5C5C',
             accentAlt: '#DC143C',
-            textDark: '#1a1a1a',
-            textLight: '#4A0404',
+            textDark: '#4A0000',
+            textLight: '#FFF0F0',
             textMuted: '#8B0000',
-            bgLight: '#FFF0F0',
+            bgLight: '#FFF5F5',
             bgDark: '#4A0000',
-            bgCard: '#FFFFFF',
+            bgCard: '#FFF8F8',
             bgMuted: '#FFE4E1'
         },
         'elegant-cream': {

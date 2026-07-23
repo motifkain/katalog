@@ -18,7 +18,10 @@ let welcomeSettings = window.WELCOME_SETTINGS || {
     leftText: 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
     title: 'CATALOG',
     subtitle: 'Company Profile',
-    description: 'Koleksi produk eksklusif kami'
+    description: 'Koleksi produk eksklusif kami',
+    colorTheme: 'elegant-cream',
+    backgroundOpacity: 50,
+    leftPanelOpacity: 50
 };
 
 let products = [];
@@ -65,8 +68,8 @@ async function loadWelcomeSettings() {
                 const item = data.items[0];
                 welcomeSettings = {
                     id: item.id,
-                    template: item.template || 'cover-dark',
-                    colorTheme: item.colorTheme || 'elegant-gold',
+                    template: item.template || 'cover-split',
+                    colorTheme: item.colorTheme || 'elegant-cream',
                     fontFamily: item.fontFamily || 'Playfair Display',
                     logoUrl: item.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${item.id}/${item.logo}` : '',
                     backgroundImage: item.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${item.id}/${item.backgroundImage}` : '',
@@ -196,9 +199,20 @@ function renderWelcomeScreen() {
     welcomeScreen.innerHTML = html;
 }
 
+function hexToRgb(hex) {
+    // Remove # if present
+    hex = hex.replace('#', '');
+    // Parse hex
+    var r = parseInt(hex.substring(0, 2), 16);
+    var g = parseInt(hex.substring(2, 4), 16);
+    var b = parseInt(hex.substring(4, 6), 16);
+    return r + ',' + g + ',' + b;
+}
+
 function renderWelcomeDark(ws, theme) {
-    const bgStyle = ws.backgroundImage
-        ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover no-repeat;`
+    const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
+    const bgStyle = bgImg
+        ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${bgImg}') center/cover no-repeat;`
         : `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
     const logoStyle = getLogoStyleWelcome(ws);
     const titleStyle = getTitleStyleWelcome(ws);
@@ -206,6 +220,7 @@ function renderWelcomeDark(ws, theme) {
     const logoHtml = ws.logoUrl
         ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
         : `<div style="width:${ws.logoSize || 60}px;height:${ws.logoSize || 60}px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
+    const panelOpacity = (ws.bottomPanelOpacity || 95) / 100;
 
     return `
     <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
@@ -220,7 +235,7 @@ function renderWelcomeDark(ws, theme) {
             <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${theme.accent},transparent);margin:0 auto;"></div>
             ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.9rem;margin-top:20px;line-height:1.6;">${ws.description}</p>` : ''}
         </div>
-        <div style="background:rgba(255,255,255,0.95);border-radius:12px;padding:24px;text-align:center;margin-top:auto;">
+        <div style="background:rgba(255,255,255,${panelOpacity});border-radius:12px;padding:24px;text-align:center;margin-top:auto;">
             <p style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
         </div>
         <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>
@@ -249,13 +264,15 @@ function getSubtitleStyleWelcome(ws) {
 }
 
 function renderWelcomeLight(ws, theme) {
-    const bgStyle = ws.backgroundImage
-        ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover no-repeat;`
+    const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
+    const bgStyle = bgImg
+        ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgImg}') center/cover no-repeat;`
         : `background:${theme.bgLight};`;
     const logoStyle = getLogoStyleWelcome(ws);
     const logoHtml = ws.logoUrl
         ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
         : `<div style="width:${ws.logoSize || 60}px;height:${ws.logoSize || 60}px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;"><span style="font-size:1.5rem;">📷</span></div>`;
+    const panelOpacity = (ws.bottomPanelOpacity || 95) / 100;
 
     return `
     <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
@@ -269,7 +286,7 @@ function renderWelcomeLight(ws, theme) {
             <div style="width:50px;height:2px;background:${theme.accent};margin:0 auto;"></div>
             ${ws.description ? `<p style="color:${theme.textMuted};font-size:0.9rem;margin-top:20px;line-height:1.6;">${ws.description}</p>` : ''}
         </div>
-        <div style="background:${theme.bgDark};border-radius:12px;padding:24px;text-align:center;margin-top:auto;">
+        <div style="background:rgba(${hexToRgb(theme.bgDark)},${panelOpacity});border-radius:12px;padding:24px;text-align:center;margin-top:auto;">
             <p style="font-size:0.85rem;color:rgba(255,255,255,0.8);line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
         </div>
         <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>
@@ -280,10 +297,11 @@ function renderWelcomeSplit(ws, theme) {
     const logoStyle = getLogoStyleWelcome(ws);
     const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
 
-    // Background image for right side (white area)
-    const rightBgStyle = ws.backgroundImage
-        ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`
-        : `background:${theme.bgCard};`;
+    // Background image for right side - check both ws.backgroundImage and ws.backgroundImageUrl
+    const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
+    const rightBgStyle = bgImg
+        ? `background: linear-gradient(rgba(255,255,255,${(100 - (ws.backgroundOpacity || 50))/100}), rgba(255,255,255,${(100 - (ws.backgroundOpacity || 50))/100})), url('${bgImg}') center/cover;`
+        : `background:${theme.bgCard || '#FFFAF0'};`;
 
     return `
     <div style="width:100%;height:100%;display:flex;">
@@ -303,11 +321,13 @@ function renderWelcomeSplit(ws, theme) {
 }
 
 function renderWelcomeNumbered(ws, theme) {
-    const bgStyle = ws.backgroundImage
-        ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover no-repeat;`
+    const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
+    const bgStyle = bgImg
+        ? `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${bgImg}') center/cover no-repeat;`
         : `background:${theme.bgDark};`;
     const logoStyle = getLogoStyleWelcome(ws);
     const logoHtml = ws.logoUrl ? `<img src="${ws.logoUrl}" style="${logoStyle}">` : '';
+    const panelOpacity = (ws.bottomPanelOpacity || 95) / 100;
 
     return `
     <div style="width:100%;height:100%;${bgStyle}padding:8%;display:flex;flex-direction:column;position:relative;overflow:hidden;">
@@ -320,7 +340,7 @@ function renderWelcomeNumbered(ws, theme) {
             <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,${theme.accent},transparent);margin:0 auto;"></div>
             ${ws.description ? `<p style="color:rgba(255,255,255,0.5);font-size:0.9rem;margin-top:20px;line-height:1.6;max-width:80%;">${ws.description}</p>` : ''}
         </div>
-        <div style="background:rgba(255,255,255,0.95);border-radius:12px;padding:20px;text-align:center;margin-top:auto;">
+        <div style="background:rgba(255,255,255,${panelOpacity});border-radius:12px;padding:20px;text-align:center;margin-top:auto;">
             <p style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;">${ws.leftText.replace(/\n/g, '<br>')}</p>
         </div>
         <button class="welcome-btn" onclick="openKatalog()" style="margin-top:20px;align-self:center;">Lihat Katalog</button>

@@ -120,14 +120,15 @@ class AdminDashboard {
     previewWelcomeScreen() {
         // Ambil data terbaru dari form
         const ws = {
-            template: document.querySelector('.template-btn.active')?.dataset.template || 'cover-dark',
-            colorTheme: document.querySelector('.theme-btn.active')?.dataset.theme || 'elegant-gold',
+            template: document.querySelector('.template-btn.active')?.dataset.template || 'cover-split',
+            colorTheme: document.querySelector('.theme-btn.active')?.dataset.theme || 'elegant-cream',
             fontFamily: document.getElementById('wsFont').value || 'Playfair Display',
             title: document.getElementById('wsTitle').value || 'CATALOG',
             subtitle: document.getElementById('wsSubtitle').value || 'Company Profile',
             description: document.getElementById('wsDescription').value || 'Koleksi produk eksklusif kami',
             leftText: document.getElementById('wsLeftText').value || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
             backgroundOpacity: parseInt(document.getElementById('wsBgOpacity').value) || 50,
+            bottomPanelOpacity: parseInt(document.getElementById('wsBottomPanelOpacity').value) || 95,
             logoSize: parseInt(document.getElementById('wsLogoSize').value) || 60,
             logoX: parseInt(document.getElementById('wsLogoX').value) || 50,
             logoY: parseInt(document.getElementById('wsLogoY').value) || 10,
@@ -722,6 +723,12 @@ class AdminDashboard {
             document.getElementById('bgOpacityValue').textContent = ws.backgroundOpacity;
         }
 
+        // Load bottom panel opacity
+        if (ws.bottomPanelOpacity) {
+            document.getElementById('wsBottomPanelOpacity').value = ws.bottomPanelOpacity;
+            document.getElementById('bottomPanelOpacityValue').textContent = ws.bottomPanelOpacity;
+        }
+
         // Load position values
         if (ws.logoSize) {
             document.getElementById('wsLogoSize').value = ws.logoSize;
@@ -792,6 +799,7 @@ class AdminDashboard {
         ws.leftText = document.getElementById('wsLeftText').value;
         ws.fontFamily = document.getElementById('wsFont').value;
         ws.backgroundOpacity = parseInt(document.getElementById('wsBgOpacity').value) || 50;
+        ws.bottomPanelOpacity = parseInt(document.getElementById('wsBottomPanelOpacity').value) || 95;
         ws.logoSize = parseInt(document.getElementById('wsLogoSize').value) || 60;
         ws.logoX = parseInt(document.getElementById('wsLogoX').value) || 50;
         ws.logoY = parseInt(document.getElementById('wsLogoY').value) || 10;
@@ -893,6 +901,14 @@ class AdminDashboard {
         document.getElementById('bgOpacityValue').textContent = val;
         if (!this.welcomeSettings) this.welcomeSettings = {};
         this.welcomeSettings.backgroundOpacity = parseInt(val);
+        this.updateWelcomePreview();
+    }
+
+    updateBottomPanelOpacity() {
+        const val = document.getElementById('wsBottomPanelOpacity').value;
+        document.getElementById('bottomPanelOpacityValue').textContent = val;
+        if (!this.welcomeSettings) this.welcomeSettings = {};
+        this.welcomeSettings.bottomPanelOpacity = parseInt(val);
         this.updateWelcomePreview();
     }
 
@@ -1170,14 +1186,15 @@ class AdminDashboard {
 
         // Get form values
         const data = {
-            template: this.welcomeSettings?.template || 'cover-dark',
-            colorTheme: this.welcomeSettings?.colorTheme || 'elegant-gold',
+            template: this.welcomeSettings?.template || 'cover-split',
+            colorTheme: this.welcomeSettings?.colorTheme || 'elegant-cream',
             fontFamily: document.getElementById('wsFont').value,
             title: document.getElementById('wsTitle').value,
             subtitle: document.getElementById('wsSubtitle').value,
             description: document.getElementById('wsDescription').value,
             leftText: document.getElementById('wsLeftText').value,
             backgroundOpacity: parseInt(document.getElementById('wsBgOpacity').value) || 50,
+            bottomPanelOpacity: parseInt(document.getElementById('wsBottomPanelOpacity').value) || 95,
             logoSize: parseInt(document.getElementById('wsLogoSize').value) || 60,
             logoX: parseInt(document.getElementById('wsLogoX').value) || 50,
             logoY: parseInt(document.getElementById('wsLogoY').value) || 10,
