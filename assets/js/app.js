@@ -438,12 +438,6 @@ function selectWarna(index) {
     if (nav) nav.style.display = allImages.length > 1 ? 'flex' : 'none';
     if (newCounter) newCounter.style.display = allImages.length > 1 ? 'block' : 'none';
 
-    // Update warna selector active state
-    document.querySelectorAll('.warna-chip').forEach((chip, i) => {
-        chip.classList.toggle('active', i === index);
-    });
-}
-
     // Update deskripsi
     const descSection = document.getElementById('gambarDescSection');
     const descText = document.getElementById('gambarDescText');
