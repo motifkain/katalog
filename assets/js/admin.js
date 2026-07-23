@@ -1357,17 +1357,23 @@ class AdminDashboard {
             subtitle: document.getElementById('wsSubtitle').value,
             description: document.getElementById('wsDescription').value,
             leftText: document.getElementById('wsLeftText').value,
-            backgroundOpacity: parseInt(document.getElementById('wsBgOpacity').value) || 50,
-            logoSize: parseInt(document.getElementById('wsLogoSize').value) || 60,
-            logoX: parseInt(document.getElementById('wsLogoX').value) || 50,
-            logoY: parseInt(document.getElementById('wsLogoY').value) || 10,
-            titleSize: parseInt(document.getElementById('wsTitleSize').value) || 32,
-            titleX: parseInt(document.getElementById('wsTitleX').value) || 50,
-            titleY: parseInt(document.getElementById('wsTitleY').value) || 50,
-            subtitleSize: parseInt(document.getElementById('wsSubtitleSize').value) || 14,
-            subtitleX: parseInt(document.getElementById('wsSubtitleX').value) || 50,
-            subtitleY: parseInt(document.getElementById('wsSubtitleY').value) || 70
-        };
+            // Use nullish coalescing ?? to handle 0 values correctly
+        data.backgroundOpacity = parseInt(document.getElementById('wsBgOpacity')?.value) ?? 50;
+        data.logoSize = parseInt(document.getElementById('wsLogoSize')?.value) ?? 60;
+        data.logoX = parseInt(document.getElementById('wsLogoX')?.value) ?? 50;
+        data.logoY = parseInt(document.getElementById('wsLogoY')?.value) ?? 10;
+        data.titleSize = parseInt(document.getElementById('wsTitleSize')?.value) ?? 32;
+        data.titleX = parseInt(document.getElementById('wsTitleX')?.value) ?? 50;
+        data.titleY = parseInt(document.getElementById('wsTitleY')?.value) ?? 50;
+        data.subtitleSize = parseInt(document.getElementById('wsSubtitleSize')?.value) ?? 14;
+        data.subtitleX = parseInt(document.getElementById('wsSubtitleX')?.value) ?? 50;
+        data.subtitleY = parseInt(document.getElementById('wsSubtitleY')?.value) ?? 70;
+        // Button styles
+        data.btnX = parseInt(document.getElementById('wsBtnX')?.value) ?? 50;
+        data.btnY = parseInt(document.getElementById('wsBtnY')?.value) ?? 90;
+        data.btnBgColor = document.getElementById('wsBtnBgColor')?.value ?? '#1B5E20';
+        data.btnTextColor = document.getElementById('wsBtnTextColor')?.value ?? '#FFFFFF';
+        data.btnFontSize = parseInt(document.getElementById('wsBtnFontSize')?.value) ?? 14;
 
         try {
             const formData = new FormData();

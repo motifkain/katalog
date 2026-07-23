@@ -266,23 +266,23 @@ function hexToRgb(hex) {
 }
 
 function getLogoStyleWelcome(ws) {
-    const size = ws.logoSize || 60;
-    const x = ws.logoX || 50;
-    const y = ws.logoY || 10;
+    const size = ws.logoSize ?? 60;
+    const x = ws.logoX ?? 50;
+    const y = ws.logoY ?? 10;
     return `height:${size}px;max-width:150px;object-fit:contain;position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, 0);`;
 }
 
 function getTitleStyleWelcome(ws) {
-    const x = ws.titleX || 50;
-    const y = ws.titleY || 50;
-    const size = ws.titleSize || 32;
+    const x = ws.titleX ?? 50;
+    const y = ws.titleY ?? 50;
+    const size = ws.titleSize ?? 32;
     return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;color:#fff;`;
 }
 
 function getSubtitleStyleWelcome(ws) {
-    const x = ws.subtitleX || 50;
-    const y = ws.subtitleY || 70;
-    const size = ws.subtitleSize || 14;
+    const x = ws.subtitleX ?? 50;
+    const y = ws.subtitleY ?? 70;
+    const size = ws.subtitleSize ?? 14;
     return `position:absolute;left:${x}%;top:${y}%;transform:translate(-50%, -50%);text-align:center;width:90%;font-size:${size}px;`;
 }
 
@@ -297,8 +297,8 @@ function getTaglineStyleWelcome(ws) {
 }
 
 function getBtnStyleWelcome(ws) {
-    const x = ws.btnX || 50;
-    const y = ws.btnY || 90;
+    const x = ws.btnX ?? 50;
+    const y = ws.btnY ?? 90;
     const bgColor = ws.btnBgColor || '#1B5E20';
     const textColor = ws.btnTextColor || '#FFFFFF';
     const fontSize = ws.btnFontSize || 14;
@@ -1275,15 +1275,15 @@ async function selectWelcomeScreen(id) {
         logoUrl: ws.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${ws.id}/${ws.logo}` : '',
         backgroundImage: ws.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${ws.id}/${ws.backgroundImage}` : '',
         backgroundOpacity: ws.backgroundOpacity || 50,
-        logoSize: ws.logoSize || 60,
-        logoX: ws.logoX || 50,
-        logoY: ws.logoY || 10,
-        titleSize: ws.titleSize || 32,
-        titleX: ws.titleX || 50,
-        titleY: ws.titleY || 50,
-        subtitleSize: ws.subtitleSize || 14,
-        subtitleX: ws.subtitleX || 50,
-        subtitleY: ws.subtitleY || 70,
+        logoSize: ws.logoSize ?? 60,
+        logoX: ws.logoX ?? 50,
+        logoY: ws.logoY ?? 10,
+        titleSize: ws.titleSize ?? 32,
+        titleX: ws.titleX ?? 50,
+        titleY: ws.titleY ?? 50,
+        subtitleSize: ws.subtitleSize ?? 14,
+        subtitleX: ws.subtitleX ?? 50,
+        subtitleY: ws.subtitleY ?? 70,
         leftText: ws.leftText || ws.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
         title: ws.title || 'CATALOG',
         subtitle: ws.subtitle || 'Company Profile',
