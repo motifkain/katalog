@@ -117,68 +117,6 @@
             font-size: 18px; color: var(--primary);
         }
 
-        /* LAYANAN CHIPS */
-        .layanan-chips {
-            display: flex; flex-wrap: wrap; gap: 10px;
-        }
-        .layanan-chip {
-            padding: 10px 20px; border-radius: 25px;
-            background: var(--surface); border: 1px solid var(--divider);
-            color: var(--text-secondary); cursor: pointer;
-            font-size: 14px; transition: all 0.2s;
-        }
-        .layanan-chip:hover { border-color: var(--primary); }
-        .layanan-chip.active {
-            background: var(--primary); border-color: var(--primary);
-            color: white;
-        }
-
-        /* KATEGORI & SUB KATEGORI */
-        .kategori-row {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-        }
-        .kategori-box, .subkategori-box {
-            background: #FAF8F5; padding: 16px; border-radius: 12px;
-        }
-        .kategori-box h4, .subkategori-box h4 {
-            font-size: 14px; color: var(--text-secondary);
-            margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .kategori-list, .subkategori-list {
-            display: flex; flex-wrap: wrap; gap: 8px;
-        }
-        .kategori-item, .subkategori-item {
-            padding: 8px 16px; background: var(--surface);
-            border: 1px solid var(--divider); border-radius: 20px;
-            font-size: 13px; cursor: pointer; display: flex;
-            align-items: center; gap: 8px;
-        }
-        .kategori-item:hover, .subkategori-item:hover {
-            border-color: var(--primary);
-        }
-        .kategori-item.active {
-            background: var(--primary); border-color: var(--primary);
-            color: white;
-        }
-        .item-delete {
-            background: none; border: none; color: inherit;
-            cursor: pointer; opacity: 0.6; font-size: 16px;
-        }
-        .item-delete:hover { opacity: 1; }
-
-        .add-item-input {
-            display: flex; gap: 8px; margin-top: 12px;
-        }
-        .add-item-input input {
-            flex: 1; padding: 10px 14px;
-            border: 1px dashed var(--divider);
-            border-radius: 20px; font-size: 13px;
-            background: transparent;
-        }
-        .add-item-input input:focus {
-            outline: none; border-style: solid; border-color: var(--primary);
-        }
-
         /* PRODUCTS GRID */
         .products-grid {
             display: grid;
@@ -315,16 +253,6 @@
             font-size: 12px;
         }
 
-        /* IMAGE DETAIL FORM */
-        .image-detail-section {
-            background: #FAF8F5; padding: 16px;
-            border-radius: 12px; margin-top: 12px;
-        }
-        .image-detail-section h4 {
-            font-size: 13px; color: var(--text-secondary);
-            margin-bottom: 12px;
-        }
-
         /* NOTIFICATION */
         .notification {
             position: fixed; bottom: 24px; right: 24px;
@@ -377,50 +305,10 @@
         </header>
 
         <div class="dashboard-content">
-            <!-- LAYANAN -->
-            <div class="section-card">
-                <div class="section-header">
-                    <h2>Layanan</h2>
-                </div>
-                <div class="layanan-chips" id="layananChips">
-                    <!-- Loaded from config -->
-                </div>
-            </div>
-
-            <!-- KATEGORI & SUB KATEGORI -->
-            <div class="section-card">
-                <div class="section-header">
-                    <h2>Kategori & Sub Kategori</h2>
-                    <button class="btn btn-outline btn-sm" onclick="admin.showAddKategoriModal()">+ Tambah Kategori</button>
-                </div>
-                <div class="kategori-row">
-                    <div class="kategori-box">
-                        <h4>Kategori</h4>
-                        <div class="kategori-list" id="kategoriList">
-                            <!-- Loaded from PocketBase -->
-                        </div>
-                        <div class="add-item-input">
-                            <input type="text" id="newKategoriInput" placeholder="Ketik nama kategori baru...">
-                            <button class="btn btn-primary btn-sm" onclick="admin.addKategori()">Tambah</button>
-                        </div>
-                    </div>
-                    <div class="subkategori-box">
-                        <h4>Sub Kategori</h4>
-                        <div class="subkategori-list" id="subkategoriList">
-                            <!-- Loaded based on selected kategori -->
-                        </div>
-                        <div class="add-item-input">
-                            <input type="text" id="newSubkategoriInput" placeholder="Ketik nama sub kategori...">
-                            <button class="btn btn-primary btn-sm" onclick="admin.addSubkategori()">Tambah</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- PRODUK -->
             <div class="section-card">
                 <div class="section-header">
-                    <h2>Produk</h2>
+                    <h2>Daftar Produk</h2>
                     <button class="btn btn-primary btn-sm" onclick="admin.showAddProductModal()">+ Tambah Produk</button>
                 </div>
                 <div class="products-grid" id="productsGrid">
@@ -445,14 +333,15 @@
                 <div class="form-group">
                     <label>Layanan</label>
                     <select id="productLayanan" class="form-input">
-                        <option value="">Pilih Layanan</option>
+                        <option value="Jasa Desain">Jasa Desain</option>
+                        <option value="Kain Printing">Kain Printing</option>
+                        <option value="Pakaian Jadi">Pakaian Jadi</option>
+                        <option value="Asesoris">Asesoris</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Kategori</label>
-                    <select id="productKategori" class="form-input">
-                        <option value="">Pilih Kategori</option>
-                    </select>
+                    <input type="text" id="productKategori" class="form-input" placeholder="Contoh: Batik, Tenun, dll">
                 </div>
                 <div class="form-group">
                     <label>Harga</label>
@@ -481,32 +370,6 @@
                 <button class="btn btn-outline" onclick="admin.closeModal('productModal')">Batal</button>
                 <button class="btn btn-danger" id="deleteProductBtn" onclick="admin.deleteProduct()" style="display:none;">Hapus</button>
                 <button class="btn btn-primary" onclick="admin.saveProduct()">Simpan</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: ADD/EDIT KATEGORI -->
-    <div id="kategoriModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="kategoriModalTitle">Tambah Kategori</h3>
-                <button class="modal-close" onclick="admin.closeModal('kategoriModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Nama Kategori</label>
-                    <input type="text" id="kategoriNameInput" class="form-input" placeholder="Contoh: Batik">
-                </div>
-                <div class="form-group">
-                    <label>Layanan</label>
-                    <select id="kategoriLayananSelect" class="form-input">
-                        <option value="">Pilih Layanan</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="admin.closeModal('kategoriModal')">Batal</button>
-                <button class="btn btn-primary" onclick="admin.saveKategori()">Simpan</button>
             </div>
         </div>
     </div>
