@@ -56,16 +56,31 @@ async function loadWelcomeSettings() {
                     backgroundImage: item.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${item.id}/${item.backgroundImage}` : '',
                     backgroundOpacity: item.backgroundOpacity || 50,
                     logoSize: item.logoSize || 60,
-                    logoPosition: item.logoPosition || 'top-center',
+                    logoX: item.logoX || 50,
+                    logoY: item.logoY || 10,
+                    titleX: item.titleX || 50,
+                    titleY: item.titleY || 50,
+                    subtitleX: item.subtitleX || 50,
+                    subtitleY: item.subtitleY || 70,
                     leftText: item.leftText || item.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
                     title: item.title || 'CATALOG',
                     subtitle: item.subtitle || 'Company Profile',
                     description: item.description || 'Koleksi produk eksklusif kami'
                 };
+                // Update favicon dari logo
+                updateFavicon(welcomeSettings.logoUrl);
             }
         }
     } catch (e) {
         console.log('Welcome settings from config file');
+    }
+}
+
+function updateFavicon(logoUrl) {
+    if (!logoUrl) return;
+    const favicon = document.getElementById('faviconLink');
+    if (favicon) {
+        favicon.href = logoUrl;
     }
 }
 
