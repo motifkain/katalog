@@ -34,6 +34,9 @@
 
 html, body {
     height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 body {
@@ -42,6 +45,10 @@ body {
     color: var(--text-primary);
     line-height: 1.5;
     overflow-x: hidden;
+}
+
+.hidden {
+    display: none !important;
 }
 
 a {
@@ -111,143 +118,34 @@ img {
     to { transform: rotate(360deg); }
 }
 
-/* ===== WELCOME SCREEN - SIMPEL SPLIT LAYOUT ===== */
+/* ===== WELCOME SCREEN - FULLSCREEN (Rendered via JS) ===== */
 .welcome-screen {
-    display: flex;
-    min-height: 100vh;
-}
-
-.welcome-left {
-    width: 45%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
     background: #1a2a3a;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 40px;
-    position: relative;
-    overflow: hidden;
-}
-
-.welcome-left-content {
-    width: 100%;
-    max-width: 280px;
-    text-align: center;
-}
-
-.welcome-logo-area {
-    width: 100%;
-    min-height: 200px;
-    border: 3px dashed rgba(255,255,255,0.3);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255,255,255,0.4);
-    font-size: 0.85rem;
-    padding: 20px;
-    margin-bottom: 30px;
-}
-
-.welcome-logo-area img {
-    max-width: 100%;
-    max-height: 180px;
-    object-fit: contain;
-    border-radius: 4px;
-}
-
-.welcome-left-text {
-    color: rgba(255,255,255,0.5);
-    font-size: 0.9rem;
-    line-height: 1.8;
-}
-
-.welcome-right {
-    width: 55%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 60px 80px;
-    background: #fff;
-    position: relative;
-    overflow: hidden;
-}
-
-.welcome-right::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 100%;
-    height: 180px;
-    background: linear-gradient(135deg, #fce4ec 25%, transparent 25%) -20px 0,
-        linear-gradient(225deg, #fce4ec 25%, transparent 25%) -20px 0,
-        linear-gradient(315deg, #e1bee7 25%, transparent 25%),
-        linear-gradient(45deg, #e1bee7 25%, transparent 25%);
-    background-size: 40px 40px;
-    background-color: #fff8e1;
-    opacity: 0.5;
-}
-
-.welcome-header {
-    position: relative;
-    z-index: 1;
-}
-
-.welcome-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #1a2a3a;
-    margin-bottom: 8px;
-    letter-spacing: 0.02em;
-}
-
-.welcome-subtitle {
-    font-size: 0.9rem;
-    color: #4CAF50;
-    letter-spacing: 0.2em;
-    margin-bottom: 20px;
-    text-transform: uppercase;
-}
-
-.welcome-divider {
-    width: 50px;
-    height: 2px;
-    background: #1a2a3a;
-    margin-bottom: 20px;
-}
-
-.welcome-description {
-    font-size: 0.85rem;
-    color: #888;
-    line-height: 1.8;
-    max-width: 320px;
-    position: relative;
-    z-index: 1;
 }
 
 .welcome-btn {
-    margin-top: 30px;
     padding: 12px 32px;
     background: #1B5E20;
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
     box-shadow: 0 4px 12px rgba(27, 94, 32, 0.3);
-    position: relative;
-    z-index: 1;
-    width: fit-content;
+    font-family: 'Inter', sans-serif;
 }
 
 .welcome-btn:hover {
     background: #2E7D32;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
 }
 
 /* Back button in dashboard */
@@ -323,7 +221,12 @@ img {
     display: none;
     flex-direction: column;
     min-height: 100vh;
+    width: 100vw;
     background: var(--bg);
+}
+
+.app-screen.active {
+    display: flex;
 }
 
 .app-screen.active {

@@ -463,7 +463,7 @@ function renderWelcomeMinimal(ws, theme) {
 
 // ===== NAVIGATION =====
 function openKatalog() {
-    document.getElementById('welcomeScreen').style.display = 'none';
+    document.getElementById('welcomeScreen').classList.add('hidden');
     document.getElementById('appScreen').classList.add('active');
     document.getElementById('backToWelcomeBtn').style.display = 'flex';
     document.getElementById('backBtnContainer').style.display = 'block';
@@ -471,7 +471,7 @@ function openKatalog() {
 
 function backToWelcome() {
     document.getElementById('appScreen').classList.remove('active');
-    document.getElementById('welcomeScreen').style.display = 'flex';
+    document.getElementById('welcomeScreen').classList.remove('hidden');
     document.getElementById('backToWelcomeBtn').style.display = 'none';
     document.getElementById('backBtnContainer').style.display = 'none';
 }
