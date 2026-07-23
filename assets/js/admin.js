@@ -6,16 +6,14 @@ class AdminDashboard {
         this.layanan = [];
         this.kategori = [];
         this.produk = [];
-        this.users = [];
         this.welcomeSettings = null;
         this.welcomeLogoData = null;
         this.welcomeBgData = null;
-        this.allWelcomeScreens = [];
-        this.activeWelcomeScreenId = null;
+        this.allWelcomeScreens = []; // Array untuk menyimpan semua welcome screen
+        this.activeWelcomeScreenId = null; // ID welcome screen yang aktif ditampilkan
         this.currentLayanan = null;
         this.currentKategori = null;
         this.currentProduk = null;
-        this.currentUser = null;
         this.pocketbaseToken = '';
         this.pocketbaseUrl = '';
         this.init();
@@ -76,31 +74,12 @@ class AdminDashboard {
                 sessionStorage.setItem('motifkain_admin_email', email);
                 document.getElementById('userEmail').textContent = email;
                 this.showDashboard();
-
-                // Test API access after login
-                this.testApiAccess();
-
                 this.loadData();
             } else {
                 this.showNotification('Email atau password salah!', 'error');
             }
         } catch (e) {
             this.showNotification('Tidak dapat terhubung ke server', 'error');
-        }
-    }
-
-    async testApiAccess() {
-        // Test collection list endpoint
-        try {
-            const res = await fetch(this.pocketbaseUrl + '/api/collections', {
-                headers: { 'Authorization': 'Bearer ' + this.pocketbaseToken }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                // Collections loaded successfully
-            }
-        } catch (e) {
-            // Silent fail
         }
     }
 
@@ -214,7 +193,6 @@ class AdminDashboard {
         await this.loadAllWelcomeScreens();
         await this.loadKategori();
         await this.loadProduk();
-        await this.loadUsers();
     }
 
     // ===== MULTIPLE WELCOME SCREENS =====
@@ -416,10 +394,14 @@ class AdminDashboard {
             if (res.ok) {
                 const data = await res.json();
                 this.layanan = data.items || [];
-            } else {
+            } else if (res.status === 400) {
+                // Collection doesn't exist or bad request - ignore
+                console.log('Collection "' + col + '" not available yet');
                 this.layanan = [];
             }
         } catch (e) {
+            // Collection might not exist - ignore error
+            console.log('Collection "' + col + '" not available:', e.message);
             this.layanan = [];
         }
         this.renderLayanan();
@@ -1244,11 +1226,14 @@ class AdminDashboard {
             if (res.ok) {
                 const data = await res.json();
                 this.kategori = data.items || [];
-            } else {
-                this.kategori = [];
             }
         } catch (e) {
-            this.kategori = [];
+            this.kategori = [
+                { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif', layanan: null },
+                { id: 'printing', name: 'Printing Kain', slug: 'printing', layanan: null },
+                { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian', layanan: null },
+                { id: 'asesoris', name: 'Asesoris', slug: 'asesoris', layanan: null }
+            ];
         }
         this.renderKategori();
         this.populateLayananDropdowns();
@@ -1296,7 +1281,7 @@ class AdminDashboard {
     async loadProduk() {
         const col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
         try {
-            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=500&sort=+order');
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=500&sort=-created');
             if (res.ok) {
                 const data = await res.json();
                 this.produk = data.items || [];
@@ -1308,7 +1293,6 @@ class AdminDashboard {
     }
 
     setupTabs() {
-        var self = this;
         var tabs = document.querySelectorAll('.tab-btn');
         for (var i = 0; i < tabs.length; i++) {
             tabs[i].addEventListener('click', (function(tab) {
@@ -1319,10 +1303,6 @@ class AdminDashboard {
                 for (var k = 0; k < contents.length; k++) contents[k].classList.remove('active');
                 var target = document.getElementById('tab-' + tabName);
                 if (target) target.classList.add('active');
-                // Refresh dropdown when switching to produk tab
-                if (tabName === 'produk') {
-                    self.populateKategoriDropdown();
-                }
             }).bind(null, tabs[i]));
         }
     }
@@ -1491,14 +1471,14 @@ class AdminDashboard {
         var html = '';
         for (var k = 0; k < filtered.length; k++) {
             var prod = filtered[k];
-            var imgField = prod.image || prod.foto || null;
-            var imgUrl = imgField ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + prod.id + '/' + imgField : 'https://via.placeholder.com/300x300?text=No+Image';
+            var imgUrl = prod.image ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + prod.id + '/' + prod.image : 'https://via.placeholder.com/300x300?text=No+Image';
+            var harga = prod.harga ? 'Rp ' + prod.harga.toLocaleString('id-ID') : 'Hubungi Kami';
             html += '<div class="produk-item">';
             html += '<div class="produk-image"><img src="' + imgUrl + '" alt="' + (prod.nama || '') + '"></div>';
             html += '<div class="produk-info">';
             html += '<div class="produk-name">' + (prod.nama || '-') + '</div>';
-            if (prod.warna) html += '<div class="produk-warna">Warna: ' + prod.warna + '</div>';
-            html += '<div class="produk-meta">' + (prod.kategori || '-') + (prod.subkategori ? ' / ' + prod.subkategori : '') + '</div>';
+            html += '<div class="produk-price">' + harga + '</div>';
+            html += '<div class="produk-meta">' + (prod.kategori || '-') + ' / ' + (prod.subkategori || '-') + '</div>';
             html += '<div class="produk-actions">';
             html += '<button class="edit-btn" onclick="admin.editProduk(\'' + prod.id + '\')">Edit</button> ';
             html += '<button class="delete-btn" onclick="admin.deleteProduk(\'' + prod.id + '\')">Hapus</button>';
@@ -1527,10 +1507,10 @@ class AdminDashboard {
     showAddProductModal() {
         this.currentProduk = null;
         document.getElementById('productModalTitle').textContent = 'Tambah Produk';
-        var fields = ['productName', 'productKategori', 'productSubkategori', 'productDeskripsi', 'productWarna'];
+        var fields = ['productName', 'productKategori', 'productSubkategori', 'productHarga', 'productDeskripsi', 'productToko', 'productDaerah'];
         for (var i = 0; i < fields.length; i++) {
             var f = document.getElementById(fields[i]);
-            if (f) f.value = '';
+            if (f) f.value = fields[i] === 'productToko' ? 'MotifKain' : '';
         }
         var upload = document.getElementById('productImageUpload');
         var preview = document.getElementById('productImagePreview');
@@ -1547,88 +1527,23 @@ class AdminDashboard {
         if (!p) return;
 
         this.currentProduk = p;
-        document.getElementById('productModalTitle').textContent = 'Edit Produk';
+        document.getElementById('prodModalTitle').textContent = 'Edit Produk';
         document.getElementById('productName').value = p.nama || '';
         document.getElementById('productKategori').value = p.kategori || '';
         document.getElementById('productSubkategori').value = p.subkategori || '';
+        document.getElementById('productHarga').value = p.harga || '';
         document.getElementById('productDeskripsi').value = p.deskripsi || '';
-        document.getElementById('productWarna').value = p.warna || '';
+        document.getElementById('productToko').value = p.namatoko || 'MotifKain';
+        document.getElementById('productDaerah').value = p.daerah || '';
 
-        // Handle multiple images
-        this.renderProductImages(p);
+        if (p.image) {
+            var imgUrl = this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + p.id + '/' + p.image;
+            document.getElementById('productImagePreview').src = imgUrl;
+            document.getElementById('productImagePreview').style.display = 'block';
+            document.getElementById('productImageUpload').classList.add('has-image');
+        }
 
         document.getElementById('productModal').classList.add('active');
-    }
-
-    renderProductImages(product) {
-        var container = document.getElementById('productImageList');
-        if (!container) return;
-
-        var images = product.image || product.foto || [];
-        if (!Array.isArray(images)) images = images ? [images] : [];
-
-        if (images.length === 0) {
-            container.innerHTML = '';
-            return;
-        }
-
-        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
-        var html = '';
-        for (var i = 0; i < images.length; i++) {
-            var imgUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + product.id + '/' + images[i];
-            html += '<div class="product-image-item" data-index="' + i + '">';
-            html += '<img src="' + imgUrl + '" alt="Image ' + (i + 1) + '">';
-            html += '<button class="remove-image-btn" onclick="admin.removeProductImage(' + i + ')">&times;</button>';
-            html += '</div>';
-        }
-        container.innerHTML = html;
-    }
-
-    removeProductImage(index) {
-        if (!this.currentProduk) return;
-        var images = this.currentProduk.image || [];
-        if (!Array.isArray(images)) images = images ? [images] : [];
-        images.splice(index, 1);
-        this.currentProduk.image = images;
-        this.renderProductImages(this.currentProduk);
-    }
-
-    async handleMultiImageUpload(input) {
-        var files = input.files;
-        if (!files || files.length === 0) return;
-
-        var container = document.getElementById('productImageList');
-        if (!this.currentProduk) this.currentProduk = {};
-        if (!this.currentProduk.image) this.currentProduk.image = [];
-
-        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
-        var html = container.innerHTML;
-
-        for (var i = 0; i < files.length; i++) {
-            var reader = new FileReader();
-            var file = files[i];
-            var index = this.currentProduk.image.length;
-            var self = this;
-
-            reader.onload = (function(f, idx) {
-                return function(e) {
-                    var imgUrl = e.target.result;
-                    var newHtml = '<div class="product-image-item" data-index="' + idx + '">';
-                    newHtml += '<img src="' + imgUrl + '" alt="Image">';
-                    newHtml += '<button class="remove-image-btn" onclick="admin.removeProductImage(' + idx + ')">&times;</button>';
-                    newHtml += '</div>';
-                    container.innerHTML += newHtml;
-                    // Store as base64 for upload
-                    if (!self.currentProduk._newImages) self.currentProduk._newImages = [];
-                    self.currentProduk._newImages.push(f);
-                };
-            })(file, index);
-
-            this.currentProduk.image.push('_pending_' + index);
-            reader.readAsDataURL(file);
-        }
-
-        input.value = '';
     }
 
     handleImageUpload(input) {
@@ -1652,8 +1567,12 @@ class AdminDashboard {
         var nama = document.getElementById('productName').value.trim();
         var kategori = document.getElementById('productKategori').value;
         var subkategori = document.getElementById('productSubkategori').value.trim();
+        var harga = parseInt(document.getElementById('productHarga').value) || 0;
         var deskripsi = document.getElementById('productDeskripsi').value.trim();
-        var warna = document.getElementById('productWarna').value.trim();
+        var namatoko = document.getElementById('productToko').value.trim() || 'MotifKain';
+        var daerah = document.getElementById('productDaerah').value.trim();
+        var imgEl = document.getElementById('productImagePreview');
+        var imgData = imgEl && imgEl.src && imgEl.style.display !== 'none' ? imgEl.src : null;
 
         if (!nama) {
             this.showNotification('Nama produk wajib diisi!', 'error');
@@ -1664,15 +1583,14 @@ class AdminDashboard {
         formData.append('nama', nama);
         if (kategori) formData.append('kategori', kategori);
         if (subkategori) formData.append('subkategori', subkategori);
+        if (harga) formData.append('harga', harga);
         if (deskripsi) formData.append('deskripsi', deskripsi);
-        if (warna) formData.append('warna', warna);
+        formData.append('namatoko', namatoko);
+        if (daerah) formData.append('daerah', daerah);
 
-        // Handle multiple images
-        if (this.currentProduk && this.currentProduk._newImages) {
-            for (var i = 0; i < this.currentProduk._newImages.length; i++) {
-                var blob = this.dataURLtoBlob(this.currentProduk._newImages[i]);
-                formData.append('image', blob, 'image_' + i + '.jpg');
-            }
+        if (imgData && imgData.startsWith('data:')) {
+            var blob = this.dataURLtoBlob(imgData);
+            formData.append('image', blob, 'image.jpg');
         }
 
         var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
@@ -1702,119 +1620,6 @@ class AdminDashboard {
             this.showNotification('Gagal menghapus: ' + e.message, 'error');
         }
         await this.loadProduk();
-    }
-
-    // ===== USER CRUD (Desainer & Pemasaran) =====
-    async loadUsers() {
-        const col = window.MOTIFKAIN_CONFIG?.userCollection || 'users';
-        try {
-            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+role');
-            if (res.ok) {
-                const data = await res.json();
-                this.users = data.items || [];
-            } else {
-                this.users = [];
-            }
-        } catch (e) {
-            this.users = [];
-        }
-        this.renderUsers();
-    }
-
-    renderUsers() {
-        const container = document.getElementById('userList');
-        if (!container) return;
-
-        if (this.users.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada user. Tambahkan desainer atau pemasaran baru.</p>';
-            return;
-        }
-
-        const roleLabels = { 'designer': 'Desainer', 'pemasaran': 'Pemasaran' };
-        let html = '';
-
-        for (let i = 0; i < this.users.length; i++) {
-            const u = this.users[i];
-            const roleLabel = roleLabels[u.role] || u.role || '-';
-            const roleClass = u.role === 'designer' ? 'role-designer' : 'role-pemasaran';
-
-            html += '<div class="user-item">';
-            html += '<div class="user-avatar">' + (u.nama ? u.nama.charAt(0).toUpperCase() : '?') + '</div>';
-            html += '<div class="user-info">';
-            html += '<div class="user-name">' + (u.nama || '-') + '</div>';
-            html += '<div class="user-role"><span class="role-badge ' + roleClass + '">' + roleLabel + '</span></div>';
-            html += '<div class="user-wa">WA: ' + (u.whatsapp || '-') + '</div>';
-            html += '</div>';
-            html += '<div class="user-actions">';
-            html += '<button class="btn btn-sm" onclick="admin.editUser(\'' + u.id + '\')">Edit</button> ';
-            html += '<button class="btn btn-sm btn-danger" onclick="admin.deleteUser(\'' + u.id + '\')">Hapus</button>';
-            html += '</div></div>';
-        }
-        container.innerHTML = html;
-    }
-
-    showAddUserModal() {
-        this.currentUser = null;
-        document.getElementById('userModalTitle').textContent = 'Tambah User';
-        document.getElementById('userName').value = '';
-        document.getElementById('userRole').value = '';
-        document.getElementById('userWhatsapp').value = '';
-        document.getElementById('userModal').classList.add('active');
-    }
-
-    editUser(id) {
-        const u = this.users.find(u => u.id === id);
-        if (!u) return;
-
-        this.currentUser = u;
-        document.getElementById('userModalTitle').textContent = 'Edit User';
-        document.getElementById('userName').value = u.nama || '';
-        document.getElementById('userRole').value = u.role || '';
-        document.getElementById('userWhatsapp').value = u.whatsapp || '';
-        document.getElementById('userModal').classList.add('active');
-    }
-
-    async saveUser() {
-        const nama = document.getElementById('userName').value.trim();
-        const role = document.getElementById('userRole').value;
-        const whatsapp = document.getElementById('userWhatsapp').value.trim();
-
-        if (!nama || !role) {
-            this.showNotification('Nama dan role wajib diisi!', 'error');
-            return;
-        }
-
-        const data = { nama, role, whatsapp };
-
-        const col = window.MOTIFKAIN_CONFIG?.userCollection || 'users';
-
-        try {
-            if (this.currentUser) {
-                await this.fetchAPI('/api/collections/' + col + '/records/' + this.currentUser.id, { method: 'PATCH', body: JSON.stringify(data) });
-                this.showNotification('Berhasil disimpan!', 'success');
-            } else {
-                await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: JSON.stringify(data) });
-                this.showNotification('Berhasil ditambahkan!', 'success');
-            }
-        } catch (e) {
-            this.showNotification('Gagal menyimpan: ' + e.message, 'error');
-        }
-
-        this.closeModal('userModal');
-        await this.loadUsers();
-    }
-
-    async deleteUser(id) {
-        if (!confirm('Yakin ingin menghapus user ini?')) return;
-
-        const col = window.MOTIFKAIN_CONFIG?.userCollection || 'users';
-        try {
-            await this.fetchAPI('/api/collections/' + col + '/records/' + id, { method: 'DELETE' });
-            this.showNotification('Berhasil dihapus!', 'success');
-        } catch (e) {
-            this.showNotification('Gagal menghapus: ' + e.message, 'error');
-        }
-        await this.loadUsers();
     }
 
     closeModal(id) {
