@@ -118,8 +118,19 @@ input { font-family: inherit; }
 .gallery-container {
     width: 100%; height: 280px; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
+    cursor: zoom-in;
 }
-.gallery-img { width: 100%; height: 100%; object-fit: contain; }
+.gallery-container.zoomed {
+    cursor: zoom-out;
+}
+.gallery-img {
+    width: 100%; height: 100%; object-fit: contain;
+    transition: transform 0.3s ease;
+}
+.gallery-img.zoomed {
+    transform: scale(2);
+    object-fit: contain;
+}
 
 .gallery-nav {
     position: absolute; bottom: 0; left: 0; right: 0;
@@ -158,10 +169,13 @@ input { font-family: inherit; }
 .modal-body { padding: 24px; }
 .modal-body h2 {
     font-size: 22px; font-weight: 700; color: #3E2723;
-    margin-bottom: 12px; font-family: 'Playfair Display', serif;
+    margin-bottom: 8px; font-family: 'Playfair Display', serif;
 }
-.modal-body .harga { font-size: 20px; font-weight: 700; color: #8B5A2B; margin-bottom: 8px; }
-.badge {
+.modal-body .harga { font-size: 20px; font-weight: 700; color: #8B5A2B; margin-bottom: 4px; }
+.modal-body .kategori-info {
+    font-size: 13px; color: #8B7355; margin-bottom: 12px;
+}
+.modal-body .badge {
     display: inline-block; padding: 6px 12px;
     background: rgba(139,90,43,0.1); color: #8B5A2B;
     font-size: 12px; font-weight: 500; border-radius: 20px; margin-bottom: 16px;
@@ -184,10 +198,16 @@ input { font-family: inherit; }
 .desc p { font-size: 14px; color: #5D4037; line-height: 1.6; }
 
 /* === WA BUTTON === */
+.wa-section { margin-bottom: 20px; }
+.wa-label {
+    font-size: 14px; font-weight: 600; color: #3E2723;
+    margin-bottom: 10px;
+}
+.wa-buttons { display: flex; gap: 10px; }
 .wa-btn {
-    width: 100%; height: 54px; background: #25D366; color: white;
-    border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    flex: 1; height: 54px; background: #25D366; color: white;
+    border: none; border-radius: 12px; font-size: 14px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
 }
 .wa-btn:hover { background: #20BD5A; }
 

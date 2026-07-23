@@ -7,9 +7,9 @@
 │   produk    │ 1 ─── n │    warna    │ 1 ─── n │    gambar    │
 └─────────────┘         └─────────────┘         └─────────────┘
 
-┌─────────────┐
-│  portfolio  │ (standalone)
-└─────────────┘
+┌─────────────┐         ┌─────────────┐
+│  portfolio  │         │   kontak    │
+└─────────────┘         └─────────────┘
 ```
 
 ---
@@ -151,6 +151,31 @@
    - **image**: Type `file`
    - **images**: Type `file`, MaxSelect `50`
 3. Set API Rules: Same as above
+4. Save
+
+### Step 5: Buat Collection `kontak`
+Collection untuk menyimpan kontak WhatsApp Desainer & Pemasaran:
+
+1. New Collection → Name: `kontak`
+2. Type: **Base** (bukan Auth)
+3. Add fields:
+   - **nama**: Type `text` - Nama lengkap
+   - **role**: Type `select`, Options: `desainer`, `pemasaran`
+   - **whatsapp**: Type `text` - Nomor WA dengan kode negara (contoh: `6281234567890`)
+4. Set API Rules:
+   - List rule: (kosongkan) - agar semua orang bisa lihat kontak
+   - Create rule: `@request.auth.id != ""` (Admin only)
+   - Update rule: `@request.auth.id != ""` (Admin only)
+   - Delete rule: `@request.auth.id != ""` (Admin only)
+5. Save
+
+### Isi Data Kontak:
+1. PocketBase → Collections → **kontak** → View Records
+2. Klik **"+ New record"**
+3. Isi data kontak kamu:
+   - `nama`: "Nama Desainer" atau "Nama Pemasaran"
+   - `role`: pilih "desainer" atau "pemasaran"
+   - `whatsapp`: nomor dengan kode negara, contoh: `6281234567890`
 4. Save
 
 ---
