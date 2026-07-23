@@ -1323,11 +1323,13 @@ class AdminDashboard {
             }
 
             if (this.welcomeSettings && this.welcomeSettings.id) {
+                // Update existing record
                 await this.fetchAPI('/api/collections/' + col + '/records/' + this.welcomeSettings.id, {
                     method: 'PATCH',
                     body: formData
                 });
             } else {
+                // Create new record
                 const createRes = await this.fetchAPI('/api/collections/' + col + '/records', {
                     method: 'POST',
                     body: formData
