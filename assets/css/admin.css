@@ -215,36 +215,68 @@ input, textarea, select { font-family: inherit; outline: none; }
     height: 16px;
 }
 
-/* ===== SAVED DATA INFO ===== */
-.saved-data-info {
-    background: var(--bg);
-    padding: 12px 16px;
-    border-radius: var(--border-radius-sm);
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid var(--divider);
+/* ===== SAVED WELCOME SCREEN CARD ===== */
+.saved-ws-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #E0E0E0;
 }
 
-.saved-badge {
+.saved-ws-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    gap: 12px;
 }
 
-.saved-badge.has-data {
-    color: var(--success);
-}
-
-.saved-badge.no-data {
-    color: var(--warning);
-}
-
-.saved-badge svg {
+.saved-ws-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #1B5E20, #4CAF50);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+}
+
+.saved-ws-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: white;
+}
+
+.saved-ws-info {
+    flex: 1;
+}
+
+.saved-ws-info h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom 2px;
+    color: #212121;
+}
+
+.saved-ws-info p {
+    font-size: 0.8rem;
+    color: #757575;
+}
+
+.saved-ws-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #E0E0E0;
+    flex-wrap: wrap;
+}
+
+.saved-ws-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 /* ===== NOTIFICATION ===== */

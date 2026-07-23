@@ -382,21 +382,53 @@ class AdminDashboard {
     }
 
     updateSavedStatus(hasData) {
-        const badge = document.getElementById('savedBadge');
-        const status = document.getElementById('savedStatus');
-        if (badge && status) {
-            if (hasData) {
-                badge.className = 'saved-badge has-data';
-                status.textContent = 'Data tersimpan di PocketBase';
+        const card = document.getElementById('savedWsCard');
+        const status = document.getElementById('savedWsStatus');
+        const actions = document.getElementById('savedWsActions');
+
+        if (status) {
+            if (hasData && this.welcomeSettings) {
+                const ws = this.welcomeSettings;
+                const templateNames = {
+                    'cover-dark': 'Gelap',
+                    'cover-light': 'Terang',
+                    'cover-split': 'Split',
+                    'cover-numbered': 'Nomor',
+                    'cover-minimal': 'Minimal'
+                };
+                const templateName = templateNames[ws.template] || ws.template || 'Default';
+                status.textContent = `Template: ${templateName} | Theme: ${ws.colorTheme || 'elegant-gold'} | Judul: ${ws.title || '-'}`;
+
+                if (actions) {
+                    actions.innerHTML = `
+                        <button class="btn btn-sm" onclick="admin.editSavedWelcome()">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            Edit Data Tersimpan
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="admin.previewWelcomeScreen()">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                            Lihat Preview
+                        </button>
+                    `;
+                }
             } else {
-                badge.className = 'saved-badge no-data';
-                status.textContent = 'Belum ada data tersimpan';
+                status.textContent = 'Belum ada data tersimpan di PocketBase. Buat baru dengan mengisi form di bawah.';
+                if (actions) {
+                    actions.innerHTML = `<button class="btn btn-outline btn-sm" onclick="admin.showNotification('Isi form di bawah, lalu klik Simpan untuk membuat data baru', 'info')">+ Buat Data Baru</button>`;
+                }
             }
         }
     }
 
+    editSavedWelcome() {
+        if (this.welcomeSettings) {
+            this.showNotification('Data welcome screen sudah diload ke form editor. Edit langsung dan simpan.', 'success');
+            // Scroll to editor form
+            document.querySelector('.welcome-settings')?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
     refreshWelcomeData() {
-        this.showNotification('Memuat ulang data...', 'info');
         this.loadWelcomeSettings();
     }
 
