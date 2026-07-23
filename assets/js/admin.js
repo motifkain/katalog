@@ -142,23 +142,41 @@ class AdminDashboard {
     // ========== PRODUK ==========
     async loadProduk() {
         try {
-            // Load produk + expand warna + expand gambar
+            // Load all produk
             const res = await this.fetchAPI(
-                '/api/collections/produk/records?per-page=500&sort=-created&expand=warna'
+                '/api/collections/produk/records?per-page=500&sort=-created'
             );
             this.produk = res.items || [];
 
-            // Load all warna with their gambar
+            // Load all warna
+            const warnaRes = await this.fetchAPI(
+                '/api/collections/warna/records?per-page=500'
+            );
+            const allWarna = warnaRes.items || [];
+
+            // Load all gambar
+            const gambarRes = await this.fetchAPI(
+                '/api/collections/gambar/records?per-page=1000'
+            );
+            const allGambar = gambarRes.items || [];
+
+            // Match warna to produk
             for (const p of this.produk) {
-                if (p.expand && p.expand.warna) {
-                    const warnaIds = Array.isArray(p.expand.warna)
-                        ? p.expand.warna.map(w => w.id)
-                        : [p.expand.warna.id];
-                    p.warnaList = p.expand.warna;
-                } else {
-                    // Try to load warna separately
-                    p.warnaList = [];
-                }
+                // Find all warna for this produk
+                const produkWarna = allWarna.filter(w => w.produk === p.id);
+
+                // For each warna, find its gambar
+                p.warnaList = produkWarna.map(warna => {
+                    const warnaGambar = allGambar.filter(g => g.warna === warna.id);
+                    return {
+                        ...warna,
+                        images: warnaGambar.map(g => ({
+                            id: g.id,
+                            gambar: g.gambar,
+                            deskripsi: g.deskripsi
+                        }))
+                    };
+                });
             }
 
             this.filteredProduk = [...this.produk];
@@ -193,13 +211,13 @@ class AdminDashboard {
             let totalImages = 0;
             if (p.warnaList && p.warnaList.length > 0) {
                 for (const warna of p.warnaList) {
-                    if (warna.gambar) {
-                        imgUrl = `${this.pocketbaseUrl}/api/files/warna/${warna.id}/${warna.gambar}`;
+                    if (warna.images && warna.images.length > 0) {
+                        imgUrl = `${this.pocketbaseUrl}/api/files/gambar/${warna.images[0].id}/${warna.images[0].gambar}`;
                         break;
                     }
                 }
                 for (const warna of p.warnaList) {
-                    totalImages += (warna.gambar ? 1 : 0) + (warna.images?.length || 0);
+                    totalImages += warna.images?.length || 0;
                 }
             }
             const warnaCount = p.warnaList?.length || 0;

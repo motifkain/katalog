@@ -102,39 +102,53 @@ function toggleFilter(f) {
 
 async function loadProducts() {
     try {
-        // Load produk with expanded warna
+        // Load all produk
         const res = await fetch(
             CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.produkCollection +
-            '/records?per-page=500&sort=-created&expand=warna'
+            '/records?per-page=500&sort=-created'
         );
         if (res.ok) {
             const data = await res.json();
             products = data.items.map(item => {
                 const p = { ...item, type: 'produk' };
 
-                // Process warna list with gambar
-                if (p.expand && p.expand.warna) {
-                    const warnaList = Array.isArray(p.expand.warna)
-                        ? p.expand.warna
-                        : [p.expand.warna];
+                // Load all warna for this produk
+                return p;
+            });
 
-                    p.warnaList = warnaList.map(warna => {
-                        const w = { ...warna };
-                        // Get image URL
-                        if (w.gambar) {
-                            w.image = CONFIG.pocketbaseUrl + '/api/files/warna/' + w.id + '/' + w.gambar;
-                        }
-                        // Images array (for additional images from 'images' field)
-                        w.images = (w.images || []).map(img =>
-                            CONFIG.pocketbaseUrl + '/api/files/warna/' + w.id + '/' + img
-                        );
-                        return w;
-                    });
-                } else {
-                    p.warnaList = [];
-                }
+            // Load all warna
+            const warnaRes = await fetch(
+                CONFIG.pocketbaseUrl + '/api/collections/warna/records?per-page=500'
+            );
+            const allWarna = warnaRes.ok ? await warnaRes.json() : { items: [] };
+            const produkIds = products.map(p => p.id);
+            const filteredWarna = allWarna.items.filter(w => produkIds.includes(w.produk));
 
-                // Fallback: get first image from first warna
+            // Load all gambar
+            const gambarRes = await fetch(
+                CONFIG.pocketbaseUrl + '/api/collections/gambar/records?per-page=1000'
+            );
+            const allGambar = gambarRes.ok ? await gambarRes.json() : { items: [] };
+
+            // Match warna and gambar to produk
+            for (const p of products) {
+                const produkWarna = filteredWarna.filter(w => w.produk === p.id);
+                p.warnaList = produkWarna.map(warna => {
+                    const warnaGambar = allGambar.items.filter(g => g.warna === warna.id);
+                    const images = warnaGambar.map(g => ({
+                        id: g.id,
+                        gambar: CONFIG.pocketbaseUrl + '/api/files/gambar/' + g.id + '/' + g.gambar,
+                        deskripsi: g.deskripsi
+                    }));
+                    return {
+                        id: warna.id,
+                        nama: warna.nama,
+                        image: images.length > 0 ? images[0].gambar : '',
+                        images: images
+                    };
+                });
+
+                // Set first image as produk image
                 if (p.warnaList && p.warnaList.length > 0) {
                     for (const w of p.warnaList) {
                         if (w.image) {
@@ -143,9 +157,7 @@ async function loadProducts() {
                         }
                     }
                 }
-
-                return p;
-            });
+            }
         }
     } catch (e) { console.error(e); }
     if (!products.length) products = getSampleProducts();
