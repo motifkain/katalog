@@ -69,17 +69,39 @@ class AdminDashboard {
             if (response.ok) {
                 const data = await response.json();
                 this.pocketbaseToken = data.token;
+                console.log('Admin logged in, token prefix:', data.token?.substring(0, 20) + '...');
                 sessionStorage.setItem('motifkain_admin_token', data.token);
                 sessionStorage.setItem('motifkain_admin_url', this.pocketbaseUrl);
                 sessionStorage.setItem('motifkain_admin_email', email);
                 document.getElementById('userEmail').textContent = email;
                 this.showDashboard();
+
+                // Test API access after login
+                this.testApiAccess();
+
                 this.loadData();
             } else {
                 this.showNotification('Email atau password salah!', 'error');
             }
         } catch (e) {
             this.showNotification('Tidak dapat terhubung ke server', 'error');
+        }
+    }
+
+    async testApiAccess() {
+        // Test collection list endpoint
+        try {
+            const res = await fetch(this.pocketbaseUrl + '/api/collections', {
+                headers: { 'Authorization': 'Bearer ' + this.pocketbaseToken }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                console.log('Collections accessible:', data.items?.map(c => c.name).join(', '));
+            } else {
+                console.error('Collections access denied:', res.status);
+            }
+        } catch (e) {
+            console.error('Collections test error:', e);
         }
     }
 
