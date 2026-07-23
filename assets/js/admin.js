@@ -197,7 +197,7 @@ class AdminDashboard {
     async loadLayanan() {
         const col = window.MOTIFKAIN_CONFIG?.layananCollection || 'layanan';
         try {
-            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=order');
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+order');
             if (res.ok) {
                 const data = await res.json();
                 this.layanan = data.items || [];
@@ -991,7 +991,7 @@ class AdminDashboard {
     async loadKategori() {
         const col = window.MOTIFKAIN_CONFIG?.kategoriCollection || 'kategori';
         try {
-            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=order');
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+order');
             if (res.ok) {
                 const data = await res.json();
                 this.kategori = data.items || [];
