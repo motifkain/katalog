@@ -1558,16 +1558,81 @@ class AdminDashboard {
         document.getElementById('productDeskripsi').value = p.deskripsi || '';
         document.getElementById('productWarna').value = p.warna || '';
 
-        if (p.image || p.foto) {
-            var imgField = p.image || p.foto;
-            var imgUrl = this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + p.id + '/' + imgField;
-            document.getElementById('productImagePreview').src = imgUrl;
-            document.getElementById('productImagePreview').style.display = 'block';
-            document.getElementById('productImageUpload').classList.add('has-image');
-        }
-        }
+        // Handle multiple images
+        this.renderProductImages(p);
 
         document.getElementById('productModal').classList.add('active');
+    }
+
+    renderProductImages(product) {
+        var container = document.getElementById('productImageList');
+        if (!container) return;
+
+        var images = product.image || product.foto || [];
+        if (!Array.isArray(images)) images = images ? [images] : [];
+
+        if (images.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
+        var html = '';
+        for (var i = 0; i < images.length; i++) {
+            var imgUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + product.id + '/' + images[i];
+            html += '<div class="product-image-item" data-index="' + i + '">';
+            html += '<img src="' + imgUrl + '" alt="Image ' + (i + 1) + '">';
+            html += '<button class="remove-image-btn" onclick="admin.removeProductImage(' + i + ')">&times;</button>';
+            html += '</div>';
+        }
+        container.innerHTML = html;
+    }
+
+    removeProductImage(index) {
+        if (!this.currentProduk) return;
+        var images = this.currentProduk.image || [];
+        if (!Array.isArray(images)) images = images ? [images] : [];
+        images.splice(index, 1);
+        this.currentProduk.image = images;
+        this.renderProductImages(this.currentProduk);
+    }
+
+    async handleMultiImageUpload(input) {
+        var files = input.files;
+        if (!files || files.length === 0) return;
+
+        var container = document.getElementById('productImageList');
+        if (!this.currentProduk) this.currentProduk = {};
+        if (!this.currentProduk.image) this.currentProduk.image = [];
+
+        var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
+        var html = container.innerHTML;
+
+        for (var i = 0; i < files.length; i++) {
+            var reader = new FileReader();
+            var file = files[i];
+            var index = this.currentProduk.image.length;
+            var self = this;
+
+            reader.onload = (function(f, idx) {
+                return function(e) {
+                    var imgUrl = e.target.result;
+                    var newHtml = '<div class="product-image-item" data-index="' + idx + '">';
+                    newHtml += '<img src="' + imgUrl + '" alt="Image">';
+                    newHtml += '<button class="remove-image-btn" onclick="admin.removeProductImage(' + idx + ')">&times;</button>';
+                    newHtml += '</div>';
+                    container.innerHTML += newHtml;
+                    // Store as base64 for upload
+                    if (!self.currentProduk._newImages) self.currentProduk._newImages = [];
+                    self.currentProduk._newImages.push(f);
+                };
+            })(file, index);
+
+            this.currentProduk.image.push('_pending_' + index);
+            reader.readAsDataURL(file);
+        }
+
+        input.value = '';
     }
 
     handleImageUpload(input) {
@@ -1593,8 +1658,6 @@ class AdminDashboard {
         var subkategori = document.getElementById('productSubkategori').value.trim();
         var deskripsi = document.getElementById('productDeskripsi').value.trim();
         var warna = document.getElementById('productWarna').value.trim();
-        var imgEl = document.getElementById('productImagePreview');
-        var imgData = imgEl && imgEl.src && imgEl.style.display !== 'none' ? imgEl.src : null;
 
         if (!nama) {
             this.showNotification('Nama produk wajib diisi!', 'error');
@@ -1608,9 +1671,12 @@ class AdminDashboard {
         if (deskripsi) formData.append('deskripsi', deskripsi);
         if (warna) formData.append('warna', warna);
 
-        if (imgData && imgData.startsWith('data:')) {
-            var blob = this.dataURLtoBlob(imgData);
-            formData.append('image', blob, 'image.jpg');
+        // Handle multiple images
+        if (this.currentProduk && this.currentProduk._newImages) {
+            for (var i = 0; i < this.currentProduk._newImages.length; i++) {
+                var blob = this.dataURLtoBlob(this.currentProduk._newImages[i]);
+                formData.append('image', blob, 'image_' + i + '.jpg');
+            }
         }
 
         var col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
