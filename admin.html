@@ -41,31 +41,51 @@
 
         <!-- Tabs -->
         <nav class="dashboard-tabs">
-            <button class="tab-btn active" data-tab="layanan">Layanan</button>
-            <button class="tab-btn" data-tab="kategori">Kategori</button>
+            <button class="tab-btn active" data-tab="kategori">Kategori</button>
             <button class="tab-btn" data-tab="produk">Produk</button>
-            <button class="tab-btn" data-tab="welcome">Welcome Screen</button>
+            <button class="tab-btn" data-tab="welcomelist">Welcome Screens</button>
         </nav>
 
-        <!-- Tab Content: Layanan -->
-        <div id="tab-layanan" class="tab-content active">
+        <!-- Tab Content: Welcome Screens List -->
+        <div id="tab-welcomelist" class="tab-content">
             <div class="content-header">
-                <h2>Pengaturan Layanan</h2>
-                <button class="btn btn-primary btn-sm" onclick="admin.showAddLayananModal()">+ Tambah Layanan</button>
+                <h2>Daftar Welcome Screen</h2>
+                <button class="btn btn-primary btn-sm" onclick="admin.showWelcomeListEditor()">+ Welcome Screen Baru</button>
             </div>
-            <div class="layanan-list" id="layananList">
-                <!-- Layanan items will be loaded here -->
+            <div class="welcome-screens-grid" id="welcomeScreensGrid">
+                <!-- Welcome screens list will be loaded here -->
             </div>
         </div>
 
-        <!-- Tab Content: Kategori -->
-        <div id="tab-kategori" class="tab-content">
+        <!-- Tab Content: Kategori (Gabungan Layanan + Kategori) -->
+        <div id="tab-kategori" class="tab-content active">
             <div class="content-header">
-                <h2>Pengaturan Kategori</h2>
-                <button class="btn btn-primary btn-sm" onclick="admin.showAddKategoriModal()">+ Tambah Kategori</button>
+                <h2>Kategori & Layanan</h2>
+                <div class="header-actions">
+                    <button class="btn btn-outline btn-sm" onclick="admin.showAddKategoriModal()">+ Tambah Kategori</button>
+                    <button class="btn btn-outline btn-sm" onclick="admin.showAddLayananModal()">+ Tambah Layanan</button>
+                </div>
             </div>
-            <div class="filter-bar"><select id="filterKategoriLayanan" onchange="admin.filterKategoriByLayanan()"><option value="">Semua Layanan</option></select></div><div class="kategori-list" id="kategoriList">
-                <!-- Kategori items -->
+
+            <!-- Layanan Section -->
+            <div class="kategori-section">
+                <h3 class="section-title">Layanan</h3>
+                <div class="layanan-list" id="layananList">
+                    <!-- Layanan items will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Kategori Section -->
+            <div class="kategori-section">
+                <h3 class="section-title">Kategori</h3>
+                <div class="filter-bar">
+                    <select id="filterKategoriLayanan" onchange="admin.filterKategoriByLayanan()">
+                        <option value="">Semua Layanan</option>
+                    </select>
+                </div>
+                <div class="kategori-list" id="kategoriList">
+                    <!-- Kategori items -->
+                </div>
             </div>
         </div>
 
@@ -86,7 +106,7 @@
             </div>
         </div>
 
-        <!-- Tab Content: Welcome Screen -->
+        <!-- Tab Content: Welcome Screen Editor -->
         <div id="tab-welcome" class="tab-content">
             <!-- Saved Data Status -->
             <div class="saved-ws-card" id="savedWsCard">

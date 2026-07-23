@@ -9,6 +9,8 @@ class AdminDashboard {
         this.welcomeSettings = null;
         this.welcomeLogoData = null;
         this.welcomeBgData = null;
+        this.allWelcomeScreens = []; // Array untuk menyimpan semua welcome screen
+        this.activeWelcomeScreenId = null; // ID welcome screen yang aktif ditampilkan
         this.currentLayanan = null;
         this.currentKategori = null;
         this.currentProduk = null;
@@ -174,7 +176,7 @@ class AdminDashboard {
 
     async fetchAPI(endpoint, options) {
         options = options || {};
-        const headers = { 'Authorization': this.pocketbaseToken };
+        const headers = { 'Authorization': 'Bearer ' + this.pocketbaseToken };
         if (options.headers) Object.assign(headers, options.headers);
         if (options.body && !(options.body instanceof FormData)) {
             headers['Content-Type'] = 'application/json';
@@ -188,9 +190,200 @@ class AdminDashboard {
 
     async loadData() {
         await this.loadLayanan();
-        await this.loadWelcomeSettings();
+        await this.loadAllWelcomeScreens();
         await this.loadKategori();
         await this.loadProduk();
+    }
+
+    // ===== MULTIPLE WELCOME SCREENS =====
+    async loadAllWelcomeScreens() {
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+        try {
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=500&sort=-created');
+            if (res.ok) {
+                const data = await res.json();
+                this.allWelcomeScreens = data.items || [];
+            } else {
+                this.allWelcomeScreens = [];
+            }
+        } catch (e) {
+            this.allWelcomeScreens = [];
+        }
+        this.renderWelcomeScreensList();
+    }
+
+    renderWelcomeScreensList() {
+        const container = document.getElementById('welcomeScreensGrid');
+        if (!container) return;
+
+        if (this.allWelcomeScreens.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Belum ada welcome screen. Klik tombol "+ Welcome Screen Baru" untuk membuat.</p>';
+            return;
+        }
+
+        const templateNames = {
+            'cover-dark': 'Gelap',
+            'cover-light': 'Terang',
+            'cover-split': 'Split',
+            'cover-numbered': 'Nomor',
+            'cover-minimal': 'Minimal'
+        };
+
+        let html = '<div class="ws-grid">';
+        for (let i = 0; i < this.allWelcomeScreens.length; i++) {
+            const ws = this.allWelcomeScreens[i];
+            const templateName = templateNames[ws.template] || 'Default';
+            const isActive = ws.id === this.activeWelcomeScreenId;
+            const bgUrl = ws.backgroundImage ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + ws.id + '/' + ws.backgroundImage : null;
+            const logoUrl = ws.logo ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + ws.id + '/' + ws.logo : null;
+
+            html += '<div class="ws-card ' + (isActive ? 'ws-card-active' : '') + '">';
+            html += '<div class="ws-card-preview">';
+            if (bgUrl) {
+                html += '<div class="ws-card-bg" style="background-image:url(' + bgUrl + ')"></div>';
+            } else {
+                html += '<div class="ws-card-bg ws-card-bg-default"></div>';
+            }
+            if (logoUrl) {
+                html += '<img src="' + logoUrl + '" class="ws-card-logo" alt="Logo">';
+            }
+            html += '<div class="ws-card-title">' + (ws.title || 'Untitled') + '</div>';
+            html += '</div>';
+            html += '<div class="ws-card-info">';
+            html += '<div class="ws-card-template"><span class="ws-badge">' + templateName + '</span></div>';
+            html += '<div class="ws-card-name">' + (ws.title || 'Tanpa Judul') + '</div>';
+            html += '<div class="ws-card-date">' + (ws.created ? new Date(ws.created).toLocaleDateString('id-ID') : '') + '</div>';
+            html += '</div>';
+            html += '<div class="ws-card-actions">';
+            html += '<button class="btn btn-sm" onclick="admin.editWelcomeScreen(\'' + ws.id + '\')">Edit</button> ';
+            html += '<button class="btn btn-sm btn-outline" onclick="admin.duplicateWelcomeScreen(\'' + ws.id + '\')">Duplikat</button> ';
+            if (!isActive) {
+                html += '<button class="btn btn-sm" onclick="admin.setActiveWelcomeScreen(\'' + ws.id + '\')">Aktifkan</button> ';
+            } else {
+                html += '<span class="ws-active-badge">Aktif</span> ';
+            }
+            html += '<button class="btn btn-sm btn-danger" onclick="admin.deleteWelcomeScreen(\'' + ws.id + '\')">Hapus</button>';
+            html += '</div></div>';
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    showWelcomeListEditor() {
+        this.switchTab('welcome');
+    }
+
+    editWelcomeScreen(id) {
+        const ws = this.allWelcomeScreens.find(w => w.id === id);
+        if (!ws) return;
+
+        this.welcomeSettings = ws;
+        this.welcomeLogoData = null;
+        this.welcomeBgData = null;
+
+        this.switchTab('welcome');
+
+        setTimeout(() => {
+            this.renderWelcomeSettings();
+            document.querySelector('.welcome-settings')?.scrollIntoView({ behavior: 'smooth' });
+            this.showNotification('Welcome screen loaded. Edit dan simpan.', 'success');
+        }, 100);
+    }
+
+    async duplicateWelcomeScreen(id) {
+        const ws = this.allWelcomeScreens.find(w => w.id === id);
+        if (!ws) return;
+
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+        const data = { ...ws };
+        delete data.id;
+        delete data.created;
+        delete data.updated;
+        data.title = (data.title || 'Welcome') + ' (Copy)';
+
+        try {
+            await this.fetchAPI('/api/collections/' + col + '/records', { method: 'POST', body: JSON.stringify(data) });
+            this.showNotification('Berhasil diduplikat!', 'success');
+            await this.loadAllWelcomeScreens();
+        } catch (e) {
+            this.showNotification('Gagal menduplikat: ' + e.message, 'error');
+        }
+    }
+
+    async setActiveWelcomeScreen(id) {
+        this.activeWelcomeScreenId = id;
+        localStorage.setItem('motifkain_active_ws', id);
+        this.showNotification('Welcome screen berhasil diaktifkan!', 'success');
+        await this.loadAllWelcomeScreens();
+    }
+
+    async deleteWelcomeScreen(id) {
+        if (!confirm('Yakin ingin menghapus welcome screen ini?')) return;
+
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+        try {
+            await this.fetchAPI('/api/collections/' + col + '/records/' + id, { method: 'DELETE' });
+            this.showNotification('Berhasil dihapus!', 'success');
+
+            if (this.activeWelcomeScreenId === id) {
+                this.activeWelcomeScreenId = null;
+                localStorage.removeItem('motifkain_active_ws');
+            }
+
+            await this.loadAllWelcomeScreens();
+        } catch (e) {
+            this.showNotification('Gagal menghapus: ' + e.message, 'error');
+        }
+    }
+
+    switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.toggle('active', content.id === 'tab-' + tabName);
+        });
+    }
+
+    backToWelcomeList() {
+        this.switchTab('welcomelist');
+    }
+
+    // ===== WELCOME SCREEN SETTINGS =====
+    async loadWelcomeSettings() {
+        const savedActiveId = localStorage.getItem('motifkain_active_ws');
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
+
+        try {
+            if (savedActiveId) {
+                const res = await this.fetchAPI('/api/collections/' + col + '/records/' + savedActiveId);
+                if (res.ok) {
+                    const ws = await res.json();
+                    this.welcomeSettings = ws;
+                    this.activeWelcomeScreenId = savedActiveId;
+                    this.updateSavedStatus(true);
+                    this.renderWelcomeSettings();
+                    return;
+                }
+            }
+
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=1&sort=-created');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.items && data.items.length > 0) {
+                    this.welcomeSettings = data.items[0];
+                    this.activeWelcomeScreenId = this.welcomeSettings.id;
+                    this.updateSavedStatus(true);
+                } else {
+                    this.welcomeSettings = this.getDefaultWelcomeSettings();
+                    this.updateSavedStatus(false);
+                }
+            }
+        } catch (e) {
+            this.welcomeSettings = this.getDefaultWelcomeSettings();
+            this.updateSavedStatus(false);
+        }
+        this.renderWelcomeSettings();
     }
 
     // ===== LAYANAN CRUD =====
@@ -1228,7 +1421,7 @@ class AdminDashboard {
             this.showNotification('Gagal menyimpan: ' + e.message, 'error');
         }
 
-        this.closeModal('katModal');
+        this.closeModal('kategoriModal');
         await this.loadKategori();
     }
 
