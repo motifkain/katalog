@@ -224,6 +224,7 @@ class AdminDashboard {
     renderWelcomeSettings() {
         if (!this.welcomeSettings) return;
         const ws = this.welcomeSettings;
+        const col = window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings';
 
         // Set form values
         document.getElementById('wsTitle').value = ws.title || '';
@@ -242,30 +243,36 @@ class AdminDashboard {
             btn.classList.toggle('active', btn.dataset.theme === ws.colorTheme);
         });
 
-        // Load logo if exists
+        // Load logo if exists - build full URL
         if (ws.logo) {
-            const logoUrl = this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + ws.id + '/' + ws.logo;
+            const logoUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.logo;
             document.getElementById('wsLogoPreview').src = logoUrl;
             document.getElementById('wsLogoPreview').style.display = 'block';
             document.getElementById('wsLogoPlaceholder').style.display = 'none';
             document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
+            // Simpan URL lengkap untuk preview
+            ws.logoUrl = logoUrl;
         } else {
             document.getElementById('wsLogoPreview').style.display = 'none';
             document.getElementById('wsLogoPlaceholder').style.display = 'flex';
             document.getElementById('wsLogoRemoveBtn').style.display = 'none';
+            ws.logoUrl = null;
         }
 
-        // Load background image if exists
+        // Load background image if exists - build full URL
         if (ws.backgroundImage) {
-            const bgUrl = this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.welcomeCollection || 'welcome_settings') + '/' + ws.id + '/' + ws.backgroundImage;
+            const bgUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.backgroundImage;
             document.getElementById('wsBgPreview').src = bgUrl;
             document.getElementById('wsBgPreview').style.display = 'block';
             document.getElementById('wsBgPlaceholder').style.display = 'none';
             document.getElementById('wsBgRemoveBtn').style.display = 'inline-block';
+            // Simpan URL lengkap untuk preview
+            ws.backgroundImageUrl = bgUrl;
         } else {
             document.getElementById('wsBgPreview').style.display = 'none';
             document.getElementById('wsBgPlaceholder').style.display = 'flex';
             document.getElementById('wsBgRemoveBtn').style.display = 'none';
+            ws.backgroundImageUrl = null;
         }
 
         // Load background opacity
@@ -311,6 +318,9 @@ class AdminDashboard {
             document.getElementById('wsSubtitleY').value = ws.subtitleY;
             document.getElementById('subtitleYValue').textContent = ws.subtitleY;
         }
+
+        // Initial preview render
+        this.updateWelcomePreview();
     }
 
     selectTemplate(templateId) {
@@ -350,6 +360,10 @@ class AdminDashboard {
         ws.subtitleSize = parseInt(document.getElementById('wsSubtitleSize').value) || 14;
         ws.subtitleX = parseInt(document.getElementById('wsSubtitleX').value) || 50;
         ws.subtitleY = parseInt(document.getElementById('wsSubtitleY').value) || 70;
+
+        // Use URL from PocketBase or from upload (base64)
+        ws.backgroundImageUrl = ws.backgroundImageUrl || ws.backgroundImage;
+        ws.logoUrl = ws.logoUrl || ws.logo;
 
         const preview = document.getElementById('wsPreviewArea');
         if (!preview) return;
@@ -514,16 +528,11 @@ class AdminDashboard {
     }
 
     renderPreviewDark(ws, theme) {
-        // Handle background image - bisa dari upload (base64) atau dari PocketBase (URL)
+        // Use URL from PocketBase or from upload (base64)
+        const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
         let bgStyle;
-        if (ws.backgroundImage) {
-            if (ws.backgroundImage.startsWith('data:')) {
-                // Dari upload
-                bgStyle = `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`;
-            } else {
-                // Dari PocketBase
-                bgStyle = `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`;
-            }
+        if (bgUrl) {
+            bgStyle = `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover;`;
         } else {
             bgStyle = `background:linear-gradient(180deg,${theme.bgDark} 0%,${theme.primary} 100%);`;
         }
@@ -533,10 +542,10 @@ class AdminDashboard {
         const subtitleStyle = this.getSubtitleStyle(ws);
 
         // Handle logo - bisa dari upload (base64) atau dari PocketBase (URL)
+        const logoUrl = ws.logoUrl || ws.logo;
         let logoHtml;
-        if (ws.logo) {
-            const logoSrc = ws.logo.startsWith('data:') ? ws.logo : ws.logo;
-            logoHtml = `<img src="${logoSrc}" style="${logoStyle}" class="preview-logo">`;
+        if (logoUrl) {
+            logoHtml = `<img src="${logoUrl}" style="${logoStyle}" class="preview-logo">`;
         } else {
             logoHtml = `<div style="${logoStyle}" class="preview-logo-placeholder">📷</div>`;
         }
@@ -559,16 +568,19 @@ class AdminDashboard {
     }
 
     renderPreviewLight(ws, theme) {
+        // Use URL from PocketBase or from upload (base64)
+        const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
         let bgStyle;
-        if (ws.backgroundImage) {
-            bgStyle = `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`;
+        if (bgUrl) {
+            bgStyle = `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover;`;
         } else {
             bgStyle = `background:${theme.bgLight};`;
         }
         const logoStyle = this.getLogoStyle(ws);
+        const logoUrl = ws.logoUrl || ws.logo;
         let logoHtml;
-        if (ws.logo) {
-            logoHtml = `<img src="${ws.logo}" style="${logoStyle}" class="preview-logo">`;
+        if (logoUrl) {
+            logoHtml = `<img src="${logoUrl}" style="${logoStyle}" class="preview-logo">`;
         } else {
             logoHtml = `<div class="preview-logo-placeholder">📷</div>`;
         }
@@ -591,16 +603,27 @@ class AdminDashboard {
     }
 
     renderPreviewSplit(ws, theme) {
+        // Use URL from PocketBase or from upload (base64)
+        const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
+        let leftBgStyle = theme.bgDark;
+        let rightBgStyle = theme.bgCard;
+
+        if (bgUrl) {
+            // For split, use background on right side
+            rightBgStyle = `linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover`;
+        }
+
         const logoStyle = this.getLogoStyle(ws);
-        const logoHtml = ws.logo ? `<img src="${ws.logo}" style="${logoStyle}">` : '';
+        const logoUrl = ws.logoUrl || ws.logo;
+        const logoHtml = logoUrl ? `<img src="${logoUrl}" style="${logoStyle}">` : '';
         return `
         <div style="width:100%;height:100%;display:flex;">
-            <div style="width:35%;height:100%;background:${theme.bgDark};padding:8%;display:flex;flex-direction:column;justify-content:center;">
+            <div style="width:35%;height:100%;background:${leftBgStyle};padding:8%;display:flex;flex-direction:column;justify-content:center;">
                 ${logoHtml}
                 <div style="width:30px;height:1px;background:${theme.accent};margin:12% 0;"></div>
                 <p style="color:rgba(255,255,255,0.5);font-size:0.4rem;line-height:1.4;">${ws.leftText.replace(/\n/g, '<br>')}</p>
             </div>
-            <div style="width:65%;height:100%;background:${theme.bgCard};padding:10%;display:flex;flex-direction:column;justify-content:center;">
+            <div style="width:65%;height:100%;background:${rightBgStyle};padding:10%;display:flex;flex-direction:column;justify-content:center;">
                 <h1 style="font-family:'${ws.fontFamily}',serif;font-size:0.9rem;color:${theme.textDark};margin-bottom:4%;">${ws.title}</h1>
                 <p style="color:${theme.accentAlt};font-size:0.4rem;letter-spacing:0.1em;margin-bottom:4%;">${ws.subtitle}</p>
                 <div style="width:25px;height:1px;background:${theme.textDark};margin-bottom:8%;"></div>
@@ -610,16 +633,19 @@ class AdminDashboard {
     }
 
     renderPreviewNumbered(ws, theme) {
+        // Use URL from PocketBase or from upload (base64)
+        const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
         let bgStyle;
-        if (ws.backgroundImage) {
-            bgStyle = `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`;
+        if (bgUrl) {
+            bgStyle = `background: linear-gradient(rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100}), rgba(0,0,0,${1 - (ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover;`;
         } else {
             bgStyle = `background:${theme.bgDark};`;
         }
         const logoStyle = this.getLogoStyle(ws);
+        const logoUrl = ws.logoUrl || ws.logo;
         let logoHtml;
-        if (ws.logo) {
-            logoHtml = `<img src="${ws.logo}" style="${logoStyle}">`;
+        if (logoUrl) {
+            logoHtml = `<img src="${logoUrl}" style="${logoStyle}">`;
         } else {
             logoHtml = `<div style="width:40px;height:40px;border:2px dashed ${theme.accent};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;">📷</div>`;
         }
@@ -642,16 +668,19 @@ class AdminDashboard {
     }
 
     renderPreviewMinimal(ws, theme) {
+        // Use URL from PocketBase or from upload (base64)
+        const bgUrl = ws.backgroundImageUrl || ws.backgroundImage;
         let bgStyle;
-        if (ws.backgroundImage) {
-            bgStyle = `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${ws.backgroundImage}') center/cover;`;
+        if (bgUrl) {
+            bgStyle = `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover;`;
         } else {
             bgStyle = `background:${theme.bgLight};`;
         }
         const logoStyle = this.getLogoStyle(ws);
+        const logoUrl = ws.logoUrl || ws.logo;
         let logoHtml;
-        if (ws.logo) {
-            logoHtml = `<img src="${ws.logo}" style="${logoStyle}">`;
+        if (logoUrl) {
+            logoHtml = `<img src="${logoUrl}" style="${logoStyle}">`;
         } else {
             logoHtml = `<div style="width:40px;height:40px;border:2px dashed ${theme.accentAlt};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5;">📷</div>`;
         }
