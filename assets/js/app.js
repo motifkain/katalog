@@ -287,10 +287,8 @@ function showDetail(id) {
         <div class="modal-sheet">
             <div class="modal-handle"></div>
             <button class="modal-close" onclick="closeDetail()">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
-
-            ${!isPortfolio ? warnaSelectorHtml : ''}
 
             <div class="detail-gallery">
                 <div class="gallery-container" id="galleryContainer">
@@ -311,9 +309,18 @@ function showDetail(id) {
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
                         </button>
                     </div>
-                    <div class="gallery-counter">${currentImageIndex + 1} / ${(isPortfolio ? portfolioImages : allImages).length}</div>
                 ` : ''}
             </div>
+
+            ${!isPortfolio && selectedItem.warnaList?.length > 0 ? `
+            <div class="warna-bar" id="warnaBar">
+                <span class="warna-label">Warna:</span>
+                <span class="warna-selected" id="warnaSelected">${selectedItem.warnaList[selectedWarnaIndex]?.nama || ''}</span>
+                <button class="warna-arrow" onclick="showWarnaList()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M7 10l5 5 5-5z"/></svg>
+                </button>
+            </div>
+            ` : ''}
 
             <div class="modal-body">
                 <h2>${name}</h2>
@@ -338,16 +345,12 @@ function showDetail(id) {
 
                 ${!isPortfolio ? `
                 <div class="wa-section">
-                    <p class="wa-label">Hubungi via WhatsApp</p>
-                    <div class="wa-buttons">
-                        <button class="wa-btn" onclick="openWa('desainer')">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                            Desainer
-                        </button>
-                        <button class="wa-btn" onclick="openWa('pemasaran')">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                            Pemasaran
-                        </button>
+                    <button class="wa-btn-icon" onclick="toggleWaDropdown()">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    </button>
+                    <div class="wa-dropdown" id="waDropdown">
+                        <button onclick="openWa('desainer')">Desainer</button>
+                        <button onclick="openWa('pemasaran')">Pemasaran</button>
                     </div>
                 </div>
                 ` : ''}
@@ -360,48 +363,28 @@ function showDetail(id) {
 }
 
 function buildWarnaSelector(item) {
-    if (!item.warnaList || item.warnaList.length === 0) return '';
-
-    return `
-        <div class="warna-selector">
-            ${item.warnaList.map((warna, i) => `
-                <button class="warna-chip ${i === selectedWarnaIndex ? 'active' : ''}"
-                        onclick="selectWarna(${i})">
-                    <span class="warna-dot" style="background-color: ${getColorFromName(warna.nama)}"></span>
-                    ${warna.nama}
-                </button>
-            `).join('')}
-        </div>
-    `;
+    // Not used anymore - using showWarnaList dropdown instead
+    return '';
 }
 
-function getColorFromName(nama) {
-    const colorMap = {
-        'merah': '#C62828',
-        'maroon': '#800000',
-        'biru': '#1565C0',
-        'navy': '#0D1B4C',
-        'hijau': '#2E7D32',
-        'tosca': '#00695C',
-        'kuning': '#F9A825',
-        'gold': '#FFD700',
-        'emas': '#FFD700',
-        'hitam': '#212121',
-        'putih': '#EEEEEE',
-        'coklat': '#5D4037',
-        'ungu': '#7B1FA2',
-        'pink': '#E91E63',
-        'orange': '#EF6C00',
-        'abu': '#607D8B',
-        'cream': '#FFF8E1',
-        'sage': '#8FBC8F'
-    };
+function showWarnaList() {
+    if (!selectedItem || !selectedItem.warnaList) return;
 
-    const lower = (nama || '').toLowerCase();
-    for (const [key, color] of Object.entries(colorMap)) {
-        if (lower.includes(key)) return color;
-    }
-    return '#8B5A2B';
+    const options = selectedItem.warnaList.map((warna, i) =>
+        `<button onclick="selectWarna(${i}); closeWarnaList();">${warna.nama}</button>`
+    ).join('');
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'warna-dropdown show';
+    dropdown.innerHTML = `<div class="warna-dropdown-content">${options}</div>`;
+    dropdown.id = 'warnaDropdownTemp';
+    dropdown.onclick = (e) => { if (e.target === dropdown) closeWarnaList(); };
+    document.body.appendChild(dropdown);
+}
+
+function closeWarnaList() {
+    const dropdown = document.getElementById('warnaDropdownTemp');
+    if (dropdown) dropdown.remove();
 }
 
 function selectWarna(index) {
@@ -428,15 +411,13 @@ function selectWarna(index) {
     const dotsContainer = document.querySelector('.gallery-dots');
     if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
 
-    // Update counter
-    const counter = document.querySelector('.gallery-counter');
-    if (counter) counter.textContent = `1 / ${allImages.length}`;
-
     // Update gallery nav visibility
     const nav = document.querySelector('.gallery-nav');
-    const newCounter = document.querySelector('.gallery-counter');
     if (nav) nav.style.display = allImages.length > 1 ? 'flex' : 'none';
-    if (newCounter) newCounter.style.display = allImages.length > 1 ? 'block' : 'none';
+
+    // Update selected warna text
+    const warnaSelected = document.getElementById('warnaSelected');
+    if (warnaSelected) warnaSelected.textContent = warna.nama || '';
 
     // Update deskripsi
     const descSection = document.getElementById('gambarDescSection');
@@ -449,11 +430,6 @@ function selectWarna(index) {
             descSection.style.display = 'none';
         }
     }
-
-    // Update warna selector active state
-    document.querySelectorAll('.warna-chip').forEach((chip, i) => {
-        chip.classList.toggle('active', i === index);
-    });
 }
 
 function initTouchSwipe() {
@@ -557,9 +533,28 @@ function openWa(role) {
 
     let wa = person.whatsapp.replace(/\D/g, '');
     if (wa.startsWith('0')) wa = '62' + wa.slice(1);
-    const msg = encodeURIComponent(`Assalamualaikum, saya tertarik dengan produk *${selectedItem?.nama || 'ini'}* dari MotifKain`);
+    const produkName = selectedItem?.nama || 'produk ini';
+    const msg = encodeURIComponent(`Assalamualaikum warahmah. saya tertarik dengan produk ini: *${produkName}*`);
     window.open('https://wa.me/' + wa + '?text=' + msg, '_blank');
+
+    // Close dropdown
+    const dropdown = document.getElementById('waDropdown');
+    if (dropdown) dropdown.classList.remove('show');
 }
+
+function toggleWaDropdown() {
+    const dropdown = document.getElementById('waDropdown');
+    if (dropdown) dropdown.classList.toggle('show');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('waDropdown');
+    const btn = document.querySelector('.wa-btn-icon');
+    if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+        dropdown.classList.remove('show');
+    }
+});
 
 function backToWelcome() {
     const ws = document.getElementById("welcomeScreen");
