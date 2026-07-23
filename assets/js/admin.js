@@ -91,7 +91,7 @@ class AdminDashboard {
     }
 
     openCatalog() {
-        window.location.href = 'index.html';
+        window.open('index.html', '_self');
     }
 
     previewWelcomeScreen() {
@@ -838,8 +838,12 @@ class AdminDashboard {
         ws.splitLeftWidth = parseInt(document.getElementById('wsSplitLeftWidth').value) || 40;
 
         // Use URL from PocketBase or from upload (base64)
-        ws.backgroundImageUrl = ws.backgroundImageUrl || ws.backgroundImage;
-        ws.logoUrl = ws.logoUrl || ws.logo;
+        if (!ws.backgroundImageUrl && ws.backgroundImage && ws.id) {
+            ws.backgroundImageUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.backgroundImage;
+        }
+        if (!ws.logoUrl && ws.logo && ws.id) {
+            ws.logoUrl = this.pocketbaseUrl + '/api/files/' + col + '/' + ws.id + '/' + ws.logo;
+        }
 
         const preview = document.getElementById('wsPreviewArea');
         if (!preview) return;
