@@ -391,17 +391,19 @@ class AdminDashboard {
         const col = window.MOTIFKAIN_CONFIG?.layananCollection || 'layanan';
         try {
             const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+order');
+            console.log('Layanan API Response:', res.status, res.statusText);
             if (res.ok) {
                 const data = await res.json();
+                console.log('Layanan Data:', data);
                 this.layanan = data.items || [];
-            } else if (res.status === 400) {
-                // Collection doesn't exist or bad request - ignore
-                console.log('Collection "' + col + '" not available yet');
+            } else {
+                // Log error details
+                const errorText = await res.text();
+                console.error('Layanan API Error:', res.status, errorText);
                 this.layanan = [];
             }
         } catch (e) {
-            // Collection might not exist - ignore error
-            console.log('Collection "' + col + '" not available:', e.message);
+            console.error('Layanan fetch error:', e);
             this.layanan = [];
         }
         this.renderLayanan();
