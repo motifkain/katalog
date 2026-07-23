@@ -109,7 +109,13 @@ async function loadWelcomeSettings() {
                 leftText: activeWs.leftText || activeWs.left_text || 'Deskripsi singkat tentang\nkoleksi atau perusahaan Anda.',
                 title: activeWs.title || 'CATALOG',
                 subtitle: activeWs.subtitle || 'Company Profile',
-                description: activeWs.description || 'Koleksi produk eksklusif kami'
+                description: activeWs.description || 'Koleksi produk eksklusif kami',
+                // Button styles from PocketBase
+                btnX: activeWs.btnX ?? 50,
+                btnY: activeWs.btnY ?? 90,
+                btnBgColor: activeWs.btnBgColor || '#1B5E20',
+                btnTextColor: activeWs.btnTextColor || '#FFFFFF',
+                btnFontSize: activeWs.btnFontSize ?? 14
             };
             updateFavicon(welcomeSettings.logoUrl);
         }
