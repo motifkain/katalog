@@ -299,6 +299,6 @@ function openWa() {
     if (!wa) { alert('Nomor WhatsApp belum tersedia'); return; }
     let p = wa.replace(/\D/g, '');
     if (p.startsWith('0')) p = '62' + p.slice(1);
-    const msg = encodeURIComponent(`Assalamualaikum, saya tertarik dengan produk *${selectedProduct?.nama || 'ini}* dari MotifKain`);
+    const msg = encodeURIComponent(`Assalamualaikum, saya tertarik dengan produk *${selectedProduct?.nama || 'ini'}* dari MotifKain`);
     window.open('https://wa.me/' + p + '?text=' + msg, '_blank');
 }
