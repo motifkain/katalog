@@ -867,7 +867,7 @@ class AdminDashboard {
 
     showAddProductModal() {
         this.currentProduk = null;
-        document.getElementById('prodModalTitle').textContent = 'Tambah Produk';
+        document.getElementById('productModalTitle').textContent = 'Tambah Produk';
         var fields = ['productName', 'productKategori', 'productSubkategori', 'productHarga', 'productDeskripsi', 'productToko', 'productDaerah'];
         for (var i = 0; i < fields.length; i++) {
             var f = document.getElementById(fields[i]);
