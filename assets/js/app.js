@@ -221,14 +221,6 @@ function renderWelcomeScreen() {
     const theme = getThemeColors(ws.colorTheme || 'elegant-gold');
     const template = ws.template || 'cover-dark';
 
-    // Hide static elements
-    document.getElementById('welcomeTitle').style.display = 'none';
-    document.getElementById('welcomeSubtitle').style.display = 'none';
-    document.getElementById('welcomeDesc').style.display = 'none';
-    document.getElementById('welcomeLeftText').style.display = 'none';
-    document.getElementById('welcomeLogoImg').style.display = 'none';
-    document.getElementById('welcomeLogoPlaceholder').style.display = 'none';
-
     // Render based on template
     const welcomeScreen = document.getElementById('welcomeScreen');
 
