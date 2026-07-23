@@ -127,7 +127,9 @@ class AdminDashboard {
             this.welcomeSettings = this.getDefaultWelcomeSettings();
         }
         this.renderWelcomeSettings();
-        this.updateWelcomePreview();
+        this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
+            this.updateWelcomePreview();
     }
 
     getDefaultWelcomeSettings() {
@@ -240,7 +242,9 @@ class AdminDashboard {
         });
         this.welcomeSettings = this.welcomeSettings || {};
         this.welcomeSettings.template = templateId;
-        this.updateWelcomePreview();
+        this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
+            this.updateWelcomePreview();
     }
 
     selectTheme(themeId) {
@@ -249,7 +253,9 @@ class AdminDashboard {
         });
         this.welcomeSettings = this.welcomeSettings || {};
         this.welcomeSettings.colorTheme = themeId;
-        this.updateWelcomePreview();
+        this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
+            this.updateWelcomePreview();
     }
 
     updateWelcomePreview() {
@@ -336,6 +342,8 @@ class AdminDashboard {
             document.getElementById('wsBgPreview').style.display = 'block';
             document.getElementById('wsBgPlaceholder').style.display = 'none';
             document.getElementById('wsBgRemoveBtn').style.display = 'inline-block';
+            this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
             this.updateWelcomePreview();
         };
         reader.readAsDataURL(file);
@@ -347,20 +355,26 @@ class AdminDashboard {
         document.getElementById('wsBgPlaceholder').style.display = 'flex';
         document.getElementById('wsBgRemoveBtn').style.display = 'none';
         document.getElementById('wsBgInput').value = '';
-        this.updateWelcomePreview();
+        this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
+            this.updateWelcomePreview();
     }
 
     updateBgOpacity() {
         const val = document.getElementById('wsBgOpacity').value;
         document.getElementById('bgOpacityValue').textContent = val;
-        this.updateWelcomePreview();
+        this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
+            this.updateWelcomePreview();
     }
 
     // Logo handlers
     updateLogoSize() {
         const val = document.getElementById('wsLogoSize').value;
         document.getElementById('logoSizeValue').textContent = val;
-        this.updateWelcomePreview();
+        this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
+            this.updateWelcomePreview();
     }
 
     setLogoPosition(position) {
@@ -369,7 +383,9 @@ class AdminDashboard {
         });
         this.welcomeSettings = this.welcomeSettings || {};
         this.welcomeSettings.logoPosition = position;
-        this.updateWelcomePreview();
+        this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
+            this.updateWelcomePreview();
     }
 
     getThemeColors(themeId) {
@@ -549,6 +565,8 @@ class AdminDashboard {
             document.getElementById('wsLogoPreview').style.display = 'block';
             document.getElementById('wsLogoPlaceholder').style.display = 'none';
             document.getElementById('wsLogoRemoveBtn').style.display = 'inline-block';
+            this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
             this.updateWelcomePreview();
         };
         reader.readAsDataURL(file);
@@ -560,7 +578,9 @@ class AdminDashboard {
         document.getElementById('wsLogoPlaceholder').style.display = 'flex';
         document.getElementById('wsLogoRemoveBtn').style.display = 'none';
         document.getElementById('wsLogoInput').value = '';
-        this.updateWelcomePreview();
+        this.welcomeSettings = this.welcomeSettings || {};
+            this.welcomeSettings.backgroundImage = e.target.result;
+            this.updateWelcomePreview();
     }
 
     async saveWelcomeSettings() {
