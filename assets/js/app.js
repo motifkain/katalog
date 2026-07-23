@@ -91,8 +91,8 @@ async function loadWelcomeSettings() {
             activeWelcomeScreenId = activeWs.id;
             welcomeSettings = {
                 id: activeWs.id,
-                template: activeWs.template || 'cover-split',
-                colorTheme: activeWs.colorTheme || 'elegant-cream',
+                template: activeWs.template || 'cover-dark',
+                colorTheme: activeWs.colorTheme || 'elegant-gold',
                 fontFamily: activeWs.fontFamily || 'Playfair Display',
                 logoUrl: activeWs.logo ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${activeWs.id}/${activeWs.logo}` : '',
                 backgroundImage: activeWs.backgroundImage ? `${CONFIG.pocketbaseUrl}/api/files/${CONFIG.welcomeCollection}/${activeWs.id}/${activeWs.backgroundImage}` : '',
@@ -390,7 +390,7 @@ function renderWelcomeSplit(ws, theme) {
 
     const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
     const rightBgStyle = bgImg
-        ? `background: linear-gradient(rgba(255,255,255,${(100 - (ws.backgroundOpacity || 50))/100}), rgba(255,255,255,${(100 - (ws.backgroundOpacity || 50))/100})), url('${bgImg}') center/cover;`
+        ? `background: linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), url('${bgImg}') center/cover;`
         : `background:${theme.bgCard || '#FFFAF0'};`;
 
     const splitLeftWidth = ws.splitLeftWidth || 40;

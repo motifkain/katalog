@@ -1152,7 +1152,7 @@ class AdminDashboard {
         let rightBgStyle = theme.bgCard;
 
         if (bgUrl) {
-            rightBgStyle = `linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100})), url('${bgUrl}') center/cover`;
+            rightBgStyle = `linear-gradient(rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), rgba(255,255,255,${(ws.backgroundOpacity || 50)/100}), url('${bgUrl}') center/cover`;
         }
 
         const logoStyle = this.getLogoStyle(ws);
