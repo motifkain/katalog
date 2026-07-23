@@ -412,7 +412,7 @@ class AdminDashboard {
     async loadLayanan() {
         const col = window.MOTIFKAIN_CONFIG?.layananCollection || 'layanan';
         try {
-            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+number');
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+order');
             console.log('Layanan API Response:', res.status, res.statusText);
             if (res.ok) {
                 const data = await res.json();
@@ -1246,12 +1246,18 @@ class AdminDashboard {
     async loadKategori() {
         const col = window.MOTIFKAIN_CONFIG?.kategoriCollection || 'kategori';
         try {
-            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+number');
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+order');
+            console.log('Kategori API Response:', res.status);
             if (res.ok) {
                 const data = await res.json();
                 this.kategori = data.items || [];
+            } else {
+                const errorText = await res.text();
+                console.error('Kategori API Error:', res.status, errorText);
+                this.kategori = [];
             }
         } catch (e) {
+            console.error('Kategori fetch error:', e);
             this.kategori = [
                 { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif', layanan: null },
                 { id: 'printing', name: 'Printing Kain', slug: 'printing', layanan: null },
