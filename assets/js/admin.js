@@ -734,11 +734,11 @@ class AdminDashboard {
 
     showAddKategoriModal() {
         this.currentKategori = null;
-        document.getElementById('katModalTitle').textContent = 'Tambah Kategori';
-        document.getElementById('katName').value = '';
-        document.getElementById('katSlug').value = '';
-        document.getElementById('katOrder').value = this.kategori.length;
-        document.getElementById('katModal').classList.add('active');
+        document.getElementById('kategoriModalTitle').textContent = 'Tambah Kategori';
+        document.getElementById('kategoriName').value = '';
+        document.getElementById('kategoriSlug').value = '';
+        document.getElementById('kategoriOrder').value = this.kategori.length;
+        document.getElementById('kategoriModal').classList.add('active');
     }
 
     editKategori(id) {
@@ -749,17 +749,17 @@ class AdminDashboard {
         if (!k) return;
 
         this.currentKategori = k;
-        document.getElementById('katModalTitle').textContent = 'Edit Kategori';
-        document.getElementById('katName').value = k.name || '';
-        document.getElementById('katSlug').value = k.slug || '';
-        document.getElementById('katOrder').value = k.order || 0;
-        document.getElementById('katModal').classList.add('active');
+        document.getElementById('kategoriModalTitle').textContent = 'Edit Kategori';
+        document.getElementById('kategoriName').value = k.name || '';
+        document.getElementById('kategoriSlug').value = k.slug || '';
+        document.getElementById('kategoriOrder').value = k.order || 0;
+        document.getElementById('kategoriModal').classList.add('active');
     }
 
     async saveKategori() {
-        var name = document.getElementById('katName').value.trim();
-        var slug = document.getElementById('katSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
-        var order = parseInt(document.getElementById('katOrder').value) || 0;
+        var name = document.getElementById('kategoriName').value.trim();
+        var slug = document.getElementById('kategoriSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
+        var order = parseInt(document.getElementById('kategoriOrder').value) || 0;
 
         if (!name || !slug) {
             this.showNotification('Nama dan slug wajib diisi!', 'error');
