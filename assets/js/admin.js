@@ -412,7 +412,7 @@ class AdminDashboard {
     async loadLayanan() {
         const col = window.MOTIFKAIN_CONFIG?.layananCollection || 'layanan';
         try {
-            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+order');
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+number');
             console.log('Layanan API Response:', res.status, res.statusText);
             if (res.ok) {
                 const data = await res.json();
@@ -1246,7 +1246,7 @@ class AdminDashboard {
     async loadKategori() {
         const col = window.MOTIFKAIN_CONFIG?.kategoriCollection || 'kategori';
         try {
-            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+order');
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?sort=+number');
             if (res.ok) {
                 const data = await res.json();
                 this.kategori = data.items || [];
@@ -1305,7 +1305,7 @@ class AdminDashboard {
     async loadProduk() {
         const col = window.MOTIFKAIN_CONFIG?.produkCollection || 'produk';
         try {
-            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=500&sort=-created');
+            const res = await this.fetchAPI('/api/collections/' + col + '/records?per-page=500&sort=+order');
             if (res.ok) {
                 const data = await res.json();
                 this.produk = data.items || [];
@@ -1495,14 +1495,14 @@ class AdminDashboard {
         var html = '';
         for (var k = 0; k < filtered.length; k++) {
             var prod = filtered[k];
-            var imgUrl = prod.image ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + prod.id + '/' + prod.image : 'https://via.placeholder.com/300x300?text=No+Image';
-            var harga = prod.harga ? 'Rp ' + prod.harga.toLocaleString('id-ID') : 'Hubungi Kami';
+            var imgField = prod.image || prod.foto || null;
+            var imgUrl = imgField ? this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + prod.id + '/' + imgField : 'https://via.placeholder.com/300x300?text=No+Image';
             html += '<div class="produk-item">';
             html += '<div class="produk-image"><img src="' + imgUrl + '" alt="' + (prod.nama || '') + '"></div>';
             html += '<div class="produk-info">';
             html += '<div class="produk-name">' + (prod.nama || '-') + '</div>';
-            html += '<div class="produk-price">' + harga + '</div>';
-            html += '<div class="produk-meta">' + (prod.kategori || '-') + ' / ' + (prod.subkategori || '-') + '</div>';
+            if (prod.warna) html += '<div class="produk-warna">Warna: ' + prod.warna + '</div>';
+            html += '<div class="produk-meta">' + (prod.kategori || '-') + (prod.subkategori ? ' / ' + prod.subkategori : '') + '</div>';
             html += '<div class="produk-actions">';
             html += '<button class="edit-btn" onclick="admin.editProduk(\'' + prod.id + '\')">Edit</button> ';
             html += '<button class="delete-btn" onclick="admin.deleteProduk(\'' + prod.id + '\')">Hapus</button>';
@@ -1531,10 +1531,10 @@ class AdminDashboard {
     showAddProductModal() {
         this.currentProduk = null;
         document.getElementById('productModalTitle').textContent = 'Tambah Produk';
-        var fields = ['productName', 'productKategori', 'productSubkategori', 'productHarga', 'productDeskripsi', 'productToko', 'productDaerah'];
+        var fields = ['productName', 'productKategori', 'productSubkategori', 'productDeskripsi', 'productWarna'];
         for (var i = 0; i < fields.length; i++) {
             var f = document.getElementById(fields[i]);
-            if (f) f.value = fields[i] === 'productToko' ? 'MotifKain' : '';
+            if (f) f.value = '';
         }
         var upload = document.getElementById('productImageUpload');
         var preview = document.getElementById('productImagePreview');
@@ -1551,20 +1551,20 @@ class AdminDashboard {
         if (!p) return;
 
         this.currentProduk = p;
-        document.getElementById('prodModalTitle').textContent = 'Edit Produk';
+        document.getElementById('productModalTitle').textContent = 'Edit Produk';
         document.getElementById('productName').value = p.nama || '';
         document.getElementById('productKategori').value = p.kategori || '';
         document.getElementById('productSubkategori').value = p.subkategori || '';
-        document.getElementById('productHarga').value = p.harga || '';
         document.getElementById('productDeskripsi').value = p.deskripsi || '';
-        document.getElementById('productToko').value = p.namatoko || 'MotifKain';
-        document.getElementById('productDaerah').value = p.daerah || '';
+        document.getElementById('productWarna').value = p.warna || '';
 
-        if (p.image) {
-            var imgUrl = this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + p.id + '/' + p.image;
+        if (p.image || p.foto) {
+            var imgField = p.image || p.foto;
+            var imgUrl = this.pocketbaseUrl + '/api/files/' + (window.MOTIFKAIN_CONFIG?.produkCollection || 'produk') + '/' + p.id + '/' + imgField;
             document.getElementById('productImagePreview').src = imgUrl;
             document.getElementById('productImagePreview').style.display = 'block';
             document.getElementById('productImageUpload').classList.add('has-image');
+        }
         }
 
         document.getElementById('productModal').classList.add('active');
@@ -1591,10 +1591,8 @@ class AdminDashboard {
         var nama = document.getElementById('productName').value.trim();
         var kategori = document.getElementById('productKategori').value;
         var subkategori = document.getElementById('productSubkategori').value.trim();
-        var harga = parseInt(document.getElementById('productHarga').value) || 0;
         var deskripsi = document.getElementById('productDeskripsi').value.trim();
-        var namatoko = document.getElementById('productToko').value.trim() || 'MotifKain';
-        var daerah = document.getElementById('productDaerah').value.trim();
+        var warna = document.getElementById('productWarna').value.trim();
         var imgEl = document.getElementById('productImagePreview');
         var imgData = imgEl && imgEl.src && imgEl.style.display !== 'none' ? imgEl.src : null;
 
@@ -1607,10 +1605,8 @@ class AdminDashboard {
         formData.append('nama', nama);
         if (kategori) formData.append('kategori', kategori);
         if (subkategori) formData.append('subkategori', subkategori);
-        if (harga) formData.append('harga', harga);
         if (deskripsi) formData.append('deskripsi', deskripsi);
-        formData.append('namatoko', namatoko);
-        if (daerah) formData.append('daerah', daerah);
+        if (warna) formData.append('warna', warna);
 
         if (imgData && imgData.startsWith('data:')) {
             var blob = this.dataURLtoBlob(imgData);
