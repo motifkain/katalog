@@ -1,290 +1,380 @@
 /**
- * MOTIFKAIN KATALOG - MAIN APP
+ * MOTIFKAIN KATALOG - ISWARA STYLE
  */
 
 const CONFIG = window.MOTIFKAIN_CONFIG || {
     pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
-    welcomeCollection: 'welcome_settings',
     produkCollection: 'produk',
     kategoriCollection: 'kategori',
     userCollection: 'users'
 };
 
-let welcomeSettings = {};
+// Colors from Iswara theme
+const COLORS = {
+    primary: '#1B5E20',
+    primaryLight: '#4CAF50',
+    primaryDark: '#0D3D12',
+    accent: '#8BC34A',
+    background: '#F5F5F5',
+    card: '#FFFFFF',
+    textPrimary: '#212121',
+    textSecondary: '#757575',
+    textLight: '#BDBDBD',
+    success: '#4CAF50',
+    warning: '#FF9800',
+    error: '#F44336',
+    divider: '#E0E0E0'
+};
+
 let products = [];
 let filteredProducts = [];
-let categories = [];
-let users = [];
-let productCarousels = {};
-let currentImageIndex = 0;
-let currentCategory = 'desain-motif';
-let currentSubcategory = null;
+let currentCategory = null;
+let currentDaerah = null;
+let showFilters = false;
 let selectedProduct = null;
 
+// For MotifKain
+const motifkainKategori = ['Semua', 'Desain Motif', 'Printing Kain', 'Pakaian Jadi', 'Asesoris'];
+const motifkainDaerah = ['Semua', 'Jakarta', 'Solo', 'Bandung', 'Yogyakarta', 'Surabaya'];
+
 document.addEventListener('DOMContentLoaded', async () => {
-    renderWelcomeScreen();
-    await loadCategories();
+    renderHeader();
     await loadProducts();
-    await loadUsers();
-    setupSearch();
+    renderProducts();
 });
 
-// ===== SIMPLE WELCOME SCREEN (NEW - 2026) =====
-
-function renderWelcomeScreen() {
-    const welcomeScreen = document.getElementById("welcomeScreen");
-    if (!welcomeScreen) return;
-    welcomeScreen.innerHTML = '<div class="simple-welcome"><img src="assets/images/KATALOG.png" alt="MotifKain Catalog" class="simple-welcome-image"><button class="simple-welcome-btn" onclick="openKatalog()">Lihat Produk</button></div>';
+function renderHeader() {
+    const appScreen = document.getElementById('appScreen');
+    appScreen.innerHTML = `
+        <header class="katalog-header">
+            <div class="katalog-header-top">
+                <span class="katalog-title">Katalog Produk</span>
+                <button class="filter-toggle-btn" onclick="toggleFilters()">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                </button>
+            </div>
+            <div class="search-bar">
+                <svg viewBox="0 0 24 24" fill="white" class="search-icon"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9 6.5 6.5 0 1 0 9 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9s2.01-5 5-5 5 3.01 5 5-2.01 5-5 5z"/></svg>
+                <input type="text" id="searchInput" placeholder="Cari produk atau toko..." oninput="filterProducts()">
+                <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none;">
+                    <svg viewBox="0 0 24 24" fill="white"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
+            </div>
+        </header>
+        <div class="filter-section" id="filterSection" style="display:none;">
+            <div class="filter-group">
+                <span class="filter-label">Kategori</span>
+                <div class="filter-chips" id="kategoriChips"></div>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Daerah</span>
+                <div class="filter-chips" id="daerahChips"></div>
+            </div>
+        </div>
+        <div class="active-filters" id="activeFilters" style="display:none;"></div>
+        <div class="products-container" id="productsContainer">
+            <div class="products-grid" id="productsGrid"></div>
+            <div class="loading" id="loadingIndicator"><div class="spinner"></div></div>
+        </div>
+        <div class="product-detail-modal" id="productModal"></div>
+        <div class="wa-form-modal" id="waFormModal"></div>
+    `;
+    renderFilterChips();
 }
 
-// ===== NAVIGATION =====
-
-function openKatalog() {
-    document.getElementById('welcomeScreen').classList.add('hidden');
-    document.getElementById('appScreen').classList.add('active');
+function toggleFilters() {
+    showFilters = !showFilters;
+    const filterSection = document.getElementById('filterSection');
+    filterSection.style.display = showFilters ? 'block' : 'none';
 }
 
-function backToWelcome() {
-    document.getElementById('appScreen').classList.remove('active');
-    document.getElementById('welcomeScreen').classList.remove('hidden');
+function renderFilterChips() {
+    const kategoriChips = document.getElementById('kategoriChips');
+    const daerahChips = document.getElementById('daerahChips');
+    if (!kategoriChips || !daerahChips) return;
+
+    kategoriChips.innerHTML = motifkainKategori.map(k => {
+        const isActive = (currentCategory === k) || (k === 'Semua' && !currentCategory);
+        return '<button class="filter-chip ' + (isActive ? 'active' : '') + '" onclick="selectKategori(\'' + k + '\')">' + k + '</button>';
+    }).join('');
+
+    daerahChips.innerHTML = motifkainDaerah.map(d => {
+        const isActive = (currentDaerah === d) || (d === 'Semua' && !currentDaerah);
+        return '<button class="filter-chip filter-chip-daerah ' + (isActive ? 'active' : '') + '" onclick="selectDaerah(\'' + d + '\')">' + d + '</button>';
+    }).join('');
 }
 
-// ===== CATEGORIES =====
-
-async function loadCategories() {
-    categories = [
-        { id: 'desain-motif', name: 'Desain Motif', slug: 'desain-motif' },
-        { id: 'printing', name: 'Printing Kain', slug: 'printing' },
-        { id: 'pakaian', name: 'Pakaian Jadi', slug: 'pakaian' },
-        { id: 'asesoris', name: 'Asesoris', slug: 'asesoris' }
-    ];
-    renderCategoryTabs();
+function selectKategori(kategori) {
+    currentCategory = kategori === 'Semua' ? null : kategori;
+    renderFilterChips();
+    filterProducts();
+    updateActiveFilters();
 }
 
-function renderCategoryTabs() {
-    const tabs = document.getElementById('categoryTabs');
-    if (!tabs) return;
-    tabs.innerHTML = categories.map(cat =>
-        '<button class="category-tab ' + (currentCategory === cat.slug ? 'active' : '') + '" data-category="' + cat.slug + '" onclick="selectCategory(\'' + cat.slug + '\')">' + cat.name + '</button>'
-    ).join('');
+function selectDaerah(daerah) {
+    currentDaerah = daerah === 'Semua' ? null : daerah;
+    renderFilterChips();
+    filterProducts();
+    updateActiveFilters();
 }
 
-function selectCategory(slug) {
-    currentCategory = slug;
-    currentSubcategory = null;
-    renderCategoryTabs();
-    renderSubcategories();
+function updateActiveFilters() {
+    const container = document.getElementById('activeFilters');
+    if (!container) return;
+    if (!currentCategory && !currentDaerah) {
+        container.style.display = 'none';
+        return;
+    }
+    container.style.display = 'flex';
+    let html = '<span class="filter-icon">🔍 Filter aktif:</span>';
+    if (currentCategory) {
+        html += '<span class="filter-tag" onclick="selectKategori(\'' + currentCategory + '\')">' + currentCategory + ' ✕</span>';
+    }
+    if (currentDaerah) {
+        html += '<span class="filter-tag filter-tag-daerah" onclick="selectDaerah(\'' + currentDaerah + '\')">' + currentDaerah + ' ✕</span>';
+    }
+    html += '<button class="reset-btn" onclick="resetFilters()">Reset</button>';
+    container.innerHTML = html;
+}
+
+function resetFilters() {
+    currentCategory = null;
+    currentDaerah = null;
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    renderFilterChips();
+    filterProducts();
+    updateActiveFilters();
+}
+
+function clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    const searchClear = document.getElementById('searchClear');
+    if (searchClear) searchClear.style.display = 'none';
     filterProducts();
 }
 
-function renderSubcategories() {
-    const bar = document.getElementById('subcategoryBar');
-    if (!bar) return;
-    const subs = getSubcategories(currentCategory);
-    if (subs.length === 0) {
-        bar.style.display = 'none';
-        return;
-    }
-    bar.style.display = 'flex';
-    bar.innerHTML = subs.map(sub =>
-        '<button class="subcategory-btn ' + (currentSubcategory === sub.id ? 'active' : '') + '" onclick="selectSubcategory(\'' + sub.id + '\')">' + sub.name + '</button>'
-    ).join('');
-}
-
 async function loadProducts() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (loadingIndicator) loadingIndicator.style.display = 'flex';
     try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + (CONFIG.produkCollection || 'produk') + '/records?per-page=200&sort=-created');
+        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.produkCollection + '/records?per-page=200&sort=-created');
         if (res.ok) {
             const data = await res.json();
-            products = (data.items || []).map(item => ({
+            products = data.items.map(item => ({
                 ...item,
-                image: item.image ? CONFIG.pocketbaseUrl + '/api/files/' + (CONFIG.produkCollection || 'produk') + '/' + item.id + '/' + item.image : '',
-                images: (item.images || []).map(img => CONFIG.pocketbaseUrl + '/api/files/' + (CONFIG.produkCollection || 'produk') + '/' + item.id + '/' + img)
+                image: item.image ? CONFIG.pocketbaseUrl + '/api/files/' + CONFIG.produkCollection + '/' + item.id + '/' + item.image : '',
+                images: (item.images || []).map(img => CONFIG.pocketbaseUrl + '/api/files/' + CONFIG.produkCollection + '/' + item.id + '/' + img)
             }));
         }
     } catch (e) {
-        console.error("Error loading products:", e);
+        console.error('Error loading products:', e);
     }
     if (products.length === 0) {
         products = getSampleProducts();
     }
     filterProducts();
+    if (loadingIndicator) loadingIndicator.style.display = 'none';
 }
 
 function getSampleProducts() {
     return [
-        { id: "1", nama: "Motif Bunga Melati", harga: 150000, kategori: "desain-motif", deskripsi: "Desain motif bunga melati klasik Indonesia", image: "https://picsum.photos/400/400?random=1", images: [], namatoko: "MotifKain", daerah: "Jakarta" },
-        { id: "2", nama: "Motif Parang Classic", harga: 175000, kategori: "desain-motif", deskripsi: "Motif parang klasik Yogyakarta", image: "https://picsum.photos/400/400?random=2", images: [], namatoko: "MotifKain", daerah: "Solo" },
-        { id: "3", nama: "Kain Printing Premium", harga: 200000, kategori: "printing", deskripsi: "Kain printing kualitas premium", image: "https://picsum.photos/400/400?random=3", images: [], namatoko: "MotifKain", daerah: "Bandung" },
-        { id: "4", nama: "Blouse Batik Elegant", harga: 350000, kategori: "pakaian", deskripsi: "Blouse batik dengan motif eksklusif", image: "https://picsum.photos/400/400?random=4", images: [], namatoko: "MotifKain", daerah: "Yogyakarta" },
+        { id: "1", nama: "Motif Bunga Melati", harga: 150000, kategori: "Desain Motif", daerah: "Jakarta", namatoko: "MotifKain", image: "https://picsum.photos/400/400?random=1", deskripsi: "Desain motif bunga melati klasik Indonesia" },
+        { id: "2", nama: "Motif Parang Classic", harga: 175000, kategori: "Desain Motif", daerah: "Solo", namatoko: "MotifKain", image: "https://picsum.photos/400/400?random=2", deskripsi: "Motif parang klasik Yogyakarta" },
+        { id: "3", nama: "Kain Printing Premium", harga: 200000, kategori: "Printing Kain", daerah: "Bandung", namatoko: "MotifKain", image: "https://picsum.photos/400/400?random=3", deskripsi: "Kain printing kualitas premium" },
+        { id: "4", nama: "Blouse Batik Elegant", harga: 350000, kategori: "Pakaian Jadi", daerah: "Yogyakarta", namatoko: "MotifKain", image: "https://picsum.photos/400/400?random=4", deskripsi: "Blouse batik dengan motif eksklusif" },
+        { id: "5", nama: "Gelang Batik Artisan", harga: 75000, kategori: "Asesoris", daerah: "Surabaya", namatoko: "MotifKain", image: "https://picsum.photos/400/400?random=5", deskripsi: "Gelang aksesoris dari kain batik" },
+        { id: "6", nama: "Motif Kawung Geometris", harga: 160000, kategori: "Desain Motif", daerah: "Jakarta", namatoko: "MotifKain", image: "https://picsum.photos/400/400?random=6", deskripsi: "Desain motif kawung geometric modern" },
     ];
-}
-
-function getSubcategories(category) {
-    const subMap = {};
-    products.forEach(p => {
-        if (p.kategori === category && p.subkategori) {
-            subMap[p.subkategori] = { id: p.subkategori, name: capitalize(p.subkategori) };
-        }
-    });
-    return Object.values(subMap);
-}
-
-function selectSubcategory(id) {
-    currentSubcategory = currentSubcategory === id ? null : id;
-    renderSubcategories();
-    filterProducts();
-}
-
-function capitalize(str) {
-    return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
-}
-
-// ===== SEARCH =====
-
-function setupSearch() {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', filterProducts);
-    }
 }
 
 function filterProducts() {
     const searchQuery = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const searchClear = document.getElementById('searchClear');
+    if (searchClear) searchClear.style.display = searchQuery ? 'block' : 'none';
+
     filteredProducts = products.filter(p => {
-        if (p.kategori !== currentCategory) return false;
-        if (currentSubcategory && p.subkategori !== currentSubcategory) return false;
-        if (searchQuery) {
-            const matchName = (p.nama || '').toLowerCase().includes(searchQuery);
-            const matchStore = (p.namatoko || '').toLowerCase().includes(searchQuery);
-            const matchDesc = (p.deskripsi || '').toLowerCase().includes(searchQuery);
-            if (!matchName && !matchStore && !matchDesc) return false;
-        }
-        return true;
+        const matchSearch = !searchQuery ||
+            (p.nama || '').toLowerCase().includes(searchQuery) ||
+            (p.namatoko || '').toLowerCase().includes(searchQuery) ||
+            (p.deskripsi || '').toLowerCase().includes(searchQuery);
+        const matchKategori = !currentCategory || p.kategori === currentCategory;
+        const matchDaerah = !currentDaerah || p.daerah === currentDaerah;
+        return matchSearch && matchKategori && matchDaerah;
     });
-    renderProductsGrid();
+    renderProducts();
 }
 
-// ===== PRODUCTS GRID =====
-
-function renderProductsGrid() {
+function renderProducts() {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
 
     if (filteredProducts.length === 0) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column: span 2;"><h3>Produk Tidak Ditemukan</h3></div>';
+        grid.innerHTML = `
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="#BDBDBD"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 0 0 1.57-4.23 6.5 6.5 0 1 0-9.57 4.23l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9s2.01-5 5-5 5 3.01 5 5-2.01 5-5 5z"/></svg>
+                <h3>Produk Tidak Ditemukan</h3>
+                <p>Coba ubah kata kunci atau filter Anda</p>
+            </div>
+        `;
         return;
     }
 
-    grid.innerHTML = filteredProducts.map(product => {
-        const images = getProductImages(product);
-        const mainImage = images[0] || product.image || 'https://via.placeholder.com/400x400?text=No+Image';
-        const harga = product.harga ? formatRupiah(product.harga) : 'Hubungi Kami';
-
-        return '<div class="product-card" onclick="openDetail(\'' + product.id + '\')">' +
-            '<div class="product-image"><img src="' + mainImage + '" alt="' + (product.nama || '') + '"></div>' +
-            '<div class="product-info">' +
-            '<h3 class="product-name">' + (product.nama || '') + '</h3>' +
-            '<p class="product-price">' + harga + '</p>' +
-            '<div class="product-store"><span>' + (product.namatoko || 'MotifKain') + '</span></div>' +
-            '<div class="product-location"><span>' + (product.daerah || '-') + '</span></div>' +
-            '</div></div>';
-    }).join('');
-}
-
-function getProductImages(product) {
-    const images = [];
-    if (product.image) images.push(product.image);
-    if (product.images && Array.isArray(product.images)) images.push(...product.images.filter(Boolean));
-    return images;
+    grid.innerHTML = filteredProducts.map(p => `
+        <div class="product-card" onclick="showProductDetail('${p.id}')">
+            <div class="product-card-image">
+                <img src="${p.image || 'https://via.placeholder.com/400x400?text=No+Image'}" alt="${p.nama || ''}" loading="lazy">
+            </div>
+            <div class="product-card-info">
+                <h4 class="product-card-name">${p.nama || ''}</h4>
+                <p class="product-card-price">${p.harga ? formatRupiah(p.harga) : ''}</p>
+                <div class="product-card-store">
+                    <span>🏪 ${p.namatoko || 'MotifKain'}</span>
+                </div>
+                <div class="product-card-location">
+                    <span>📍 ${p.daerah || '-'}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
 }
 
 function formatRupiah(num) {
+    if (num >= 1000000) {
+        return 'Rp ' + (num / 1000000).toFixed(1) + 'Jt';
+    } else if (num >= 1000) {
+        return 'Rp ' + Math.round(num / 1000) + 'Rb';
+    }
     return 'Rp ' + num.toLocaleString('id-ID');
 }
 
-// ===== PRODUCT DETAIL =====
-
-let productImages = [];
-
-function openDetail(productId) {
-    selectedProduct = filteredProducts.find(p => p.id === productId) || products.find(p => p.id === productId);
+function showProductDetail(productId) {
+    selectedProduct = products.find(p => p.id === productId);
     if (!selectedProduct) return;
 
-    const images = getProductImages(selectedProduct);
-    currentImageIndex = 0;
-    productImages = images;
+    const images = [selectedProduct.image, ...(selectedProduct.images || [])].filter(Boolean);
+    const modal = document.getElementById('productModal');
+    if (!modal) return;
 
-    document.getElementById('detailImage').src = images[0] || 'https://via.placeholder.com/400x400?text=No+Image';
-    document.getElementById('detailName').textContent = selectedProduct.nama || '';
-    document.getElementById('detailPrice').textContent = selectedProduct.harga ? formatRupiah(selectedProduct.harga) : 'Hubungi Kami';
-    document.getElementById('detailBadge').textContent = capitalize(selectedProduct.subkategori || selectedProduct.kategori || '');
-    document.getElementById('detailDescription').textContent = selectedProduct.deskripsi || 'Tidak ada deskripsi';
+    let galleryHtml = '';
+    if (images.length > 0) {
+        galleryHtml = '<img src="' + images[0] + '" alt="' + (selectedProduct.nama || '') + '" class="detail-image">';
+    }
 
-    document.getElementById('detailModal').classList.add('active');
+    let badgeHtml = '';
+    if (selectedProduct.kategori) {
+        badgeHtml = '<span class="detail-badge">' + selectedProduct.kategori + '</span>';
+    }
+
+    modal.innerHTML = `
+        <div class="modal-backdrop" onclick="closeProductDetail()"></div>
+        <div class="modal-content">
+            <div class="modal-handle"></div>
+            <button class="modal-close" onclick="closeProductDetail()">
+                <svg viewBox="0 0 24 24" fill="#757575"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+            <div class="detail-gallery">${galleryHtml}</div>
+            <div class="detail-body">
+                <h2 class="detail-name">${selectedProduct.nama || ''}</h2>
+                ${selectedProduct.harga ? '<p class="detail-price">' + formatRupiah(selectedProduct.harga) + '</p>' : ''}
+                ${badgeHtml}
+                <div class="store-card" onclick="showWaForm()">
+                    <div class="store-icon">🏪</div>
+                    <div class="store-info">
+                        <p class="store-name">${selectedProduct.namatoko || 'MotifKain'}</p>
+                        <p class="store-location">📍 ${selectedProduct.daerah || '-'} • 💬 Chat WA</p>
+                    </div>
+                    <svg class="store-arrow" viewBox="0 0 24 24" fill="#4CAF50"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                </div>
+                <div class="detail-section">
+                    <h3>Deskripsi</h3>
+                    <p>${selectedProduct.deskripsi || 'Tidak ada deskripsi'}</p>
+                </div>
+                <button class="wa-button-full" onclick="showWaForm()">
+                    💬 Hubungi via WhatsApp
+                </button>
+            </div>
+        </div>
+    `;
+    modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
-function closeDetail() {
-    document.getElementById('detailModal').classList.remove('active');
+function closeProductDetail() {
+    const modal = document.getElementById('productModal');
+    if (modal) modal.classList.remove('active');
     document.body.style.overflow = '';
 }
 
-// ===== WHATSAPP =====
+function showWaForm() {
+    const modal = document.getElementById('waFormModal');
+    if (!modal) return;
 
-async function loadUsers() {
-    try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.userCollection + '/records?sort=+role');
-        if (res.ok) {
-            const data = await res.json();
-            users = data.items || [];
-        }
-    } catch (e) {
-        users = [];
-    }
+    modal.innerHTML = `
+        <div class="modal-backdrop" onclick="closeWaForm()"></div>
+        <div class="wa-form-content">
+            <div class="wa-form-header">
+                <div class="wa-form-icon">💬</div>
+                <h3>Hubungi Penjual</h3>
+                <p>Isi data di bawah untuk melanjutkan via WhatsApp</p>
+            </div>
+            <form class="wa-form" onsubmit="submitWaForm(event)">
+                <div class="form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="waNama" placeholder="Masukkan nama Anda" required>
+                </div>
+                <div class="form-group">
+                    <label>No. HP / WhatsApp</label>
+                    <input type="tel" id="waHp" placeholder="08123456789">
+                    <small>Format: 08123456789</small>
+                </div>
+                <div class="info-box">
+                    <span>ℹ️</span> No. HP opsional, bisa langsung diisi nanti via WA
+                </div>
+                <button type="submit" class="btn-wa-continue">LANJUT KE WHATSAPP</button>
+                <button type="button" class="btn-skip" onclick="openWaDirect()">LEWATI - Chat Langsung</button>
+            </form>
+        </div>
+    `;
+    modal.classList.add('active');
 }
 
-function toggleWaMenu() {
-    const dropdown = document.getElementById('waDropdown');
-    const list = document.getElementById('waDropdownList');
-    if (dropdown.classList.contains('show')) {
-        dropdown.classList.remove('show');
+function closeWaForm() {
+    const modal = document.getElementById('waFormModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function submitWaForm(e) {
+    e.preventDefault();
+    const nama = document.getElementById('waNama')?.value || '';
+    closeWaForm();
+    closeProductDetail();
+    openWa(nama);
+}
+
+function openWaDirect() {
+    closeWaForm();
+    closeProductDetail();
+    openWa(null);
+}
+
+function openWa(namaPengirim) {
+    const noWa = selectedProduct?.nowa || selectedProduct?.noWa || selectedProduct?.whatsapp || '';
+    if (!noWa) {
+        alert('Nomor WhatsApp tidak tersedia');
         return;
     }
 
-    let html = '';
-    users.forEach(u => {
-        html += '<button class="wa-option" onclick="openWaChat(\'' + (u.whatsapp || '') + '\', \'' + (u.nama || '') + '\')">' +
-            '<span>' + (u.nama || '-') + '</span></button>';
-    });
-
-    if (users.length === 0) {
-        html = '<div class="wa-empty">Belum ada kontak WA</div>';
-    }
-
-    list.innerHTML = html;
-    dropdown.classList.add('show');
-}
-
-function openWaChat(whatsapp, nama) {
-    if (!whatsapp) {
-        alert('Nomor WhatsApp belum diset');
-        return;
-    }
-    let phone = whatsapp.replace(/[^0-9]/g, '');
-    if (!phone.startsWith('62')) {
+    let phone = noWa.replace(/[^0-9]/g, '');
+    if (phone.startsWith('0')) {
         phone = '62' + phone.substring(1);
     }
-    const message = 'Halo, saya ingin info tentang ' + (selectedProduct?.nama || 'produk MotifKain');
+
+    let message = namaPengirim
+        ? 'Assalamualaikum warahmatullahi wabarakatuh\n\nIbu ' + (selectedProduct?.namatoko || 'Penjual') + ',\n\nSaya ' + namaPengirim + ' tertarik dengan produk ini:\n*' + (selectedProduct?.nama || 'produk') + '*\n\nMohon informasinya ya Bu.\n\nTerima kasih.'
+        : 'Halo, saya tertarik dengan produk *' + (selectedProduct?.nama || 'ini') + '* dari ' + (selectedProduct?.namatoko || 'toko ini') + ',\nMohon informasinya ya.';
+
     const waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
     window.open(waUrl, '_blank');
-    document.getElementById('waDropdown').classList.remove('show');
 }
-
-document.addEventListener('click', function(e) {
-    const dropdown = document.getElementById('waDropdown');
-    const btn = document.querySelector('.wa-button');
-    if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
-        dropdown.classList.remove('show');
-    }
-});
