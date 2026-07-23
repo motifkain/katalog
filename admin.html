@@ -6,7 +6,6 @@
     <title>Admin - MotifKain</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* EARTH TONE THEME */
         :root {
             --primary: #8B5A2B;
             --primary-light: #A67C52;
@@ -28,7 +27,6 @@
             min-height: 100vh;
         }
 
-        /* LOGIN */
         .login-section {
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; padding: 20px;
@@ -52,18 +50,14 @@
             border-radius: 10px; font-size: 14px;
             margin-bottom: 12px; background: var(--surface);
         }
-        .form-input:focus {
-            outline: none; border-color: var(--primary);
-        }
+        .form-input:focus { outline: none; border-color: var(--primary); }
 
         .btn {
             padding: 12px 24px; border: none; border-radius: 10px;
             font-size: 14px; font-weight: 600; cursor: pointer;
             transition: all 0.2s;
         }
-        .btn-primary {
-            background: var(--primary); color: white;
-        }
+        .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: #7A4E26; }
         .btn-outline {
             background: transparent; border: 1px solid var(--primary);
@@ -75,7 +69,6 @@
         .btn-sm { padding: 8px 16px; font-size: 13px; }
         .btn-block { width: 100%; }
 
-        /* DASHBOARD */
         .dashboard-section { display: none; }
         .dashboard-section.active { display: block; }
 
@@ -95,12 +88,26 @@
             background: white; color: var(--primary);
         }
 
-        /* MAIN CONTENT */
+        /* MENU TABS */
+        .menu-tabs {
+            display: flex; gap: 8px; padding: 16px 24px;
+            background: var(--surface); border-bottom: 1px solid var(--divider);
+        }
+        .menu-tab {
+            padding: 12px 24px; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            background: transparent; color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .menu-tab:hover { background: rgba(139,90,43,0.1); }
+        .menu-tab.active {
+            background: var(--primary); color: white;
+        }
+
         .dashboard-content {
             padding: 24px; max-width: 1200px; margin: 0 auto;
         }
 
-        /* SECTION CARDS */
         .section-card {
             background: var(--surface);
             border-radius: 16px; padding: 24px;
@@ -117,7 +124,6 @@
             font-size: 18px; color: var(--primary);
         }
 
-        /* PRODUCTS GRID */
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -159,7 +165,6 @@
             font-size: 11px; color: var(--text-secondary);
         }
 
-        /* MODAL */
         .modal {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,0.5); z-index: 9999;
@@ -209,7 +214,6 @@
             color: var(--text-secondary); margin-top: 4px;
         }
 
-        /* IMAGE UPLOAD */
         .image-upload-area {
             border: 2px dashed var(--divider);
             border-radius: 12px; padding: 40px;
@@ -220,9 +224,7 @@
             border-color: var(--primary);
             background: rgba(139,90,43,0.05);
         }
-        .image-upload-area .icon {
-            font-size: 32px; margin-bottom: 8px;
-        }
+        .image-upload-area .icon { font-size: 32px; margin-bottom: 8px; }
         .image-upload-area p { color: var(--text-secondary); font-size: 13px; }
 
         .uploaded-images {
@@ -253,7 +255,6 @@
             font-size: 12px;
         }
 
-        /* NOTIFICATION */
         .notification {
             position: fixed; bottom: 24px; right: 24px;
             padding: 14px 24px; border-radius: 10px;
@@ -267,12 +268,14 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* EMPTY STATE */
         .empty-state {
             text-align: center; padding: 40px;
             color: var(--text-secondary);
         }
         .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
 <body>
@@ -304,15 +307,36 @@
             </div>
         </header>
 
+        <!-- MENU TABS -->
+        <nav class="menu-tabs">
+            <button class="menu-tab active" onclick="admin.switchTab('produk')">Produk</button>
+            <button class="menu-tab" onclick="admin.switchTab('portfolio')">Portfolio</button>
+        </nav>
+
         <div class="dashboard-content">
-            <!-- PRODUK -->
-            <div class="section-card">
-                <div class="section-header">
-                    <h2>Daftar Produk</h2>
-                    <button class="btn btn-primary btn-sm" onclick="admin.showAddProductModal()">+ Tambah Produk</button>
+            <!-- PRODUK TAB -->
+            <div id="tab-produk" class="tab-content active">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Daftar Produk</h2>
+                        <button class="btn btn-primary btn-sm" onclick="admin.showAddProductModal()">+ Tambah Produk</button>
+                    </div>
+                    <div class="products-grid" id="produkGrid">
+                        <!-- Loaded from PocketBase -->
+                    </div>
                 </div>
-                <div class="products-grid" id="productsGrid">
-                    <!-- Loaded from PocketBase -->
+            </div>
+
+            <!-- PORTFOLIO TAB -->
+            <div id="tab-portfolio" class="tab-content">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Daftar Portfolio</h2>
+                        <button class="btn btn-primary btn-sm" onclick="admin.showAddPortfolioModal()">+ Tambah Portfolio</button>
+                    </div>
+                    <div class="products-grid" id="portfolioGrid">
+                        <!-- Loaded from PocketBase -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -353,7 +377,7 @@
                         <div class="icon">📷</div>
                         <p>Klik untuk upload gambar</p>
                     </div>
-                    <input type="file" id="productImagesInput" accept="image/*" multiple style="display:none" onchange="admin.handleImageUpload(this)">
+                    <input type="file" id="productImagesInput" accept="image/*" multiple style="display:none" onchange="admin.handleProductImageUpload(this)">
                     <div class="uploaded-images" id="uploadedImagesList"></div>
                 </div>
                 <div class="form-group">
@@ -374,7 +398,45 @@
         </div>
     </div>
 
-    <!-- MODAL: EDIT IMAGE DETAIL -->
+    <!-- MODAL: ADD/EDIT PORTFOLIO -->
+    <div id="portfolioModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="portfolioModalTitle">Tambah Portfolio</h3>
+                <button class="modal-close" onclick="admin.closeModal('portfolioModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Judul Portfolio</label>
+                    <input type="text" id="portfolioJudul" class="form-input" placeholder="Contoh: Koleksi Batik Nusantara">
+                </div>
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <input type="text" id="portfolioKategori" class="form-input" placeholder="Contoh: Batik, Tenun, dll">
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="portfolioDeskripsi" class="form-input" rows="3" placeholder="Deskripsi portfolio..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Gambar Portfolio (bisa lebih dari 1)</label>
+                    <div class="image-upload-area" onclick="document.getElementById('portfolioImagesInput').click()">
+                        <div class="icon">📷</div>
+                        <p>Klik untuk upload gambar</p>
+                    </div>
+                    <input type="file" id="portfolioImagesInput" accept="image/*" multiple style="display:none" onchange="admin.handlePortfolioImageUpload(this)">
+                    <div class="uploaded-images" id="portfolioImagesList"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="admin.closeModal('portfolioModal')">Batal</button>
+                <button class="btn btn-danger" id="deletePortfolioBtn" onclick="admin.deletePortfolio()" style="display:none;">Hapus</button>
+                <button class="btn btn-primary" onclick="admin.savePortfolio()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: IMAGE DETAIL -->
     <div id="imageDetailModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -396,7 +458,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-danger" onclick="admin.deleteImage()">Hapus Gambar</button>
+                <button class="btn btn-danger" onclick="admin.deleteCurrentImage()">Hapus Gambar</button>
                 <button class="btn btn-primary" onclick="admin.saveImageDetail()">Simpan</button>
             </div>
         </div>
