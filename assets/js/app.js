@@ -370,9 +370,9 @@ function renderWelcomeLight(ws, theme) {
 function renderWelcomeSplit(ws, theme) {
     const logoStyle = getLogoStyleWelcome(ws);
     const titleStyle = getTitleStyleWelcome(ws);
-    const subtitleStyle = getSubtitleStyleWelcome(ws);
     const descStyle = getDescriptionStyleWelcome(ws);
     const taglineStyle = getTaglineStyleWelcome(ws);
+    const btnStyle = getBtnStyleWelcome(ws);
 
     const bgImg = ws.backgroundImage || ws.backgroundImageUrl;
     const rightBgStyle = bgImg
@@ -405,9 +405,9 @@ function renderWelcomeNumbered(ws, theme) {
 
     const logoStyle = getLogoStyleWelcome(ws);
     const titleStyle = getTitleStyleWelcome(ws);
-    const subtitleStyle = getSubtitleStyleWelcome(ws);
     const descStyle = getDescriptionStyleWelcome(ws);
     const taglineStyle = getTaglineStyleWelcome(ws);
+    const btnStyle = getBtnStyleWelcome(ws);
 
     const logoHtml = ws.logoUrl
         ? `<img src="${ws.logoUrl}" style="${logoStyle}">`
