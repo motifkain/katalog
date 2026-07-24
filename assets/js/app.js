@@ -1,795 +1,645 @@
-/**
- * MOTIFKAIN KATALOG
- * Earth Tone Theme
- *
- * Struktur Data Hirarkis:
- * layanan > kategori > subkategori > produk > warna > gambar
- */
+/* =====================================================================
+   MotifKain — Katalog Publik (vanilla JS, no build, no deps)
+   Alur:
+     1. Boot → load hierarki 6 koleksi PocketBase (parallel + expand)
+     2. Bangun tree di-memory: layanan → kategori → subkategori → produk → warna → gambar
+     3. Render: hero stats, filter chips, motif grid, kontak, footer year
+     4. Interaksi: search, filter, modal detail, lightbox gallery
+     5. Fallback: bila PB gagal/kosong → pakai sample dari config.js
+   ===================================================================== */
 
-const CONFIG = window.MOTIFKAIN_CONFIG || {
-    pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
-    layananCollection: 'layanan',
-    kategoriCollection: 'kategori',
-    subkategoriCollection: 'subkategori',
-    produkCollection: 'produk',
-    warnaCollection: 'warna',
-    gambarCollection: 'gambar',
-    portfolioCollection: 'portofolio',
-    kontakCollection: 'kontak'
-};
+(function () {
+  'use strict';
 
-// Earth Tone Colors
-const COLORS = {
-    primary: '#8B5A2B',
-    primaryLight: '#A67C52',
-    accent: '#CD853F',
-    background: '#FAF0E6',
-    textPrimary: '#3E2723',
-    textSecondary: '#8B7355',
-    divider: '#D4C4B0'
-};
+  /* ---------- Config & state ---------- */
+  var CFG = window.MOTIFKAIN_CONFIG || {};
+  var pbUrl = (CFG.pocketbaseUrl || '').replace(/\/+$/, '');
+  var perPage = CFG.perPage || 500;
 
-// Data state
-let dataLayanan = [];
-let dataKategori = [];
-let dataSubkategori = [];
-let dataProduk = [];
-let dataWarna = [];
-let dataGambar = [];
-let portfolio = [];
-let kontak = [];
+  var els = {};
+  var state = {
+    layanan: [],
+    kategori: [],
+    subkategori: [],
+    produk: [],
+    warna: [],
+    gambar: [],
+    kontak: [],
+    /* Tree siap-render */
+    tree: { layanan: [] },
+    /* UI state */
+    activeLayanan: 'all',
+    query: '',
+    loaded: false,
+    lightboxImages: [],
+    lightboxIndex: 0
+  };
 
-// Filter state
-let selectedLayanan = null;
-let selectedKategori = null;
-let selectedSubkategori = null;
+  /* =================================================================
+     1. Boot
+     ================================================================= */
+  document.addEventListener('DOMContentLoaded', function () {
+    cacheElements();
+    bindEvents();
+    setFooterYear();
+    showLoading(true);
+    loadAllData().then(function () {
+      buildTree();
+      renderHeroStats();
+      renderFilters();
+      renderMotifGrid();
+      renderKontak();
+      state.loaded = true;
+      showLoading(false);
+    }).catch(function (err) {
+      console.warn('[MotifKain] PocketBase fetch gagal, pakai sample fallback:', err && err.message);
+      useSampleFallback();
+      buildTree();
+      renderHeroStats();
+      renderFilters();
+      renderMotifGrid();
+      renderKontak();
+      state.loaded = true;
+      showLoading(false);
+      showStateError('Tidak dapat terhubung ke PocketBase. Menampilkan data contoh.');
+    });
+  });
 
-// Detail state
-let selectedItem = null;
-let selectedWarnaIndex = 0;
-let currentImageIndex = 0;
+  function cacheElements() {
+    els.grid         = document.getElementById('motifGrid');
+    els.filterBar    = document.getElementById('filterBar');
+    els.searchInput  = document.getElementById('searchInput');
+    els.searchForm   = document.getElementById('searchForm');
+    els.searchBar    = document.getElementById('searchBar');
+    els.searchToggle = document.getElementById('searchToggle');
+    els.searchClose  = document.getElementById('searchClose');
+    els.modal        = document.getElementById('modalDetail');
+    els.detailTitle  = document.getElementById('modalDetailTitle');
+    els.detailCrumb  = document.getElementById('detailCrumb');
+    els.detailMeta   = document.getElementById('detailMeta');
+    els.detailPrice  = document.getElementById('detailPrice');
+    els.detailDesc   = document.getElementById('detailDesc');
+    els.detailWarna  = document.getElementById('detailWarna');
+    els.warnaList    = document.getElementById('warnaList');
+    els.detailActions= document.getElementById('detailActions');
+    els.btnWaDesainer= document.getElementById('btnWaDesainer');
+    els.btnWaPemasaran = document.getElementById('btnWaPemasaran');
+    els.detailGallery= document.getElementById('detailGallery');
+    els.lightbox     = document.getElementById('lightbox');
+    els.lightboxImg  = document.getElementById('lightboxImg');
+    els.stateLoading = document.getElementById('stateLoading');
+    els.stateError   = document.getElementById('stateError');
+    els.stateEmpty   = document.getElementById('stateEmpty');
+    els.stateErrorMsg= document.getElementById('stateErrorMsg');
+    els.stateRetry   = document.getElementById('stateRetry');
+    els.toast        = document.getElementById('toast');
+  }
 
-// Sample data fallback
-const SAMPLE_LAYANAN = [
-    { id: 'l1', nama: 'Jasa Desain', order: 1 },
-    { id: 'l2', nama: 'Kain Printing', order: 2 },
-    { id: 'l3', nama: 'Pakaian Jadi', order: 3 },
-    { id: 'l4', nama: 'Asesoris', order: 4 }
-];
+  function bindEvents() {
+    /* Search */
+    els.searchToggle.addEventListener('click', toggleSearch);
+    els.searchClose.addEventListener('click', closeSearch);
+    els.searchInput.addEventListener('input', function (e) {
+      state.query = (e.target.value || '').trim().toLowerCase();
+      renderMotifGrid();
+    });
 
-const SAMPLE_KATEGORI = [
-    { id: 'k1', nama: 'Batik', layanan: 'l1', order: 1 },
-    { id: 'k2', nama: 'Tenun', layanan: 'l1', order: 2 },
-    { id: 'k3', nama: 'Songket', layanan: 'l1', order: 3 },
-    { id: 'k4', nama: 'Kain Polos', layanan: 'l2', order: 1 },
-    { id: 'k5', nama: 'Kain Motif', layanan: 'l2', order: 2 },
-    { id: 'k6', nama: 'Blouse', layanan: 'l3', order: 1 },
-    { id: 'k7', nama: 'Dress', layanan: 'l3', order: 2 },
-    { id: 'k8', nama: 'Gelang', layanan: 'l4', order: 1 },
-    { id: 'k9', nama: 'Cincin', layanan: 'l4', order: 2 }
-];
-
-const SAMPLE_SUBKATEGORI = [
-    { id: 'sk1', nama: 'Motif Parang', kategori: 'k1', order: 1 },
-    { id: 'sk2', nama: 'Motif Bunga', kategori: 'k1', order: 2 },
-    { id: 'sk3', nama: 'Motif Geometris', kategori: 'k1', order: 3 },
-    { id: 'sk4', nama: 'Motif Kawung', kategori: 'k1', order: 4 },
-    { id: 'sk5', nama: 'Tenun Ikat', kategori: 'k2', order: 1 },
-    { id: 'sk6', nama: 'Tenun Sutera', kategori: 'k2', order: 2 },
-    { id: 'sk7', nama: 'Songket Emas', kategori: 'k3', order: 1 },
-    { id: 'sk8', nama: 'Songket Perak', kategori: 'k3', order: 2 }
-];
-
-const SAMPLE_PRODUK = [
-    { id: 'p1', nama: 'Motif Parang Klasik', subkategori: 'sk1', harga: 150000, deskripsi: 'Desain motif parang klasik' },
-    { id: 'p2', nama: 'Motif Bunga Melati', subkategori: 'sk2', harga: 175000, deskripsi: 'Motif bunga melati' },
-    { id: 'p3', nama: 'Tenun Ikat Premium', subkategori: 'sk5', harga: 250000, deskripsi: 'Tenun ikat kualitas premium' }
-];
-
-const SAMPLE_WARNA = [
-    { id: 'w1', nama: 'Merah Maroon', produk: 'p1' },
-    { id: 'w2', nama: 'Biru Navy', produk: 'p1' },
-    { id: 'w3', nama: 'Putih Coklat', produk: 'p2' },
-    { id: 'w4', nama: 'Kuning Gold', produk: 'p2' }
-];
-
-const SAMPLE_GAMBAR = [
-    { id: 'g1', gambar: 'https://picsum.photos/400/400?random=1', deskripsi: 'Tampak depan', warna: 'w1' },
-    { id: 'g2', gambar: 'https://picsum.photos/400/400?random=2', deskripsi: 'Detail motif', warna: 'w1' },
-    { id: 'g3', gambar: 'https://picsum.photos/400/400?random=3', deskripsi: 'Tampak depan', warna: 'w2' },
-    { id: 'g4', gambar: 'https://picsum.photos/400/400?random=4', deskripsi: 'Detail motif', warna: 'w3' }
-];
-
-const SAMPLE_PORTFOLIO = [
-    { id: 'pf1', judul: 'Koleksi Batik Nusantara', kategori: 'Batik', image: 'https://picsum.photos/400/400?random=10', deskripsi: 'Koleksi batik' },
-    { id: 'pf2', judul: 'Tenun Ikat Lombok', kategori: 'Tenun', image: 'https://picsum.photos/400/400?random=11', deskripsi: 'Tenun ikat Lombok' }
-];
-
-document.addEventListener('DOMContentLoaded', async () => {
-    renderWelcomeScreen();
-});
-
-function renderWelcomeScreen() {
-    const ws = document.getElementById('welcomeScreen');
-    if (ws) {
-        ws.innerHTML = `
-            <div class="simple-welcome">
-                <img src="assets/images/KATALOG.png" alt="MotifKain" class="simple-welcome-image" onclick="openKatalog()">
-            </div>
-            <button class="simple-welcome-btn" onclick="openKatalog()">Lihat Produk</button>
-        `;
+    /* Modal close */
+    if (els.modal) {
+      els.modal.addEventListener('click', function (e) {
+        if (e.target.hasAttribute('data-close')) closeModal();
+      });
     }
-}
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        if (els.lightbox && !els.lightbox.hidden) closeLightbox();
+        else if (els.modal && !els.modal.hidden) closeModal();
+        else if (els.searchBar && !els.searchBar.hidden) closeSearch();
+      }
+      if (els.lightbox && !els.lightbox.hidden) {
+        if (e.key === 'ArrowLeft')  navigateLightbox(-1);
+        if (e.key === 'ArrowRight') navigateLightbox(1);
+      }
+    });
 
-function openKatalog() {
-    const ws = document.getElementById('welcomeScreen');
-    const app = document.getElementById('appScreen');
-    if (ws) ws.style.display = 'none';
-    if (app) {
-        app.style.display = 'flex';
-        loadKatalog();
-    }
-}
-
-async function loadKatalog() {
-    renderKatalogHeader();
-    await Promise.all([
-        loadLayanan(),
-        loadKategori(),
-        loadSubkategori(),
-        loadProduk(),
-        loadWarna(),
-        loadGambar(),
-        loadPortfolio(),
-        loadKontak()
-    ]);
-    buildHierarchicalData();
-    renderItems();
-}
-
-async function loadLayanan() {
-    try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.layananCollection + '/records?per-page=500&sort=order');
-        if (res.ok) {
-            const data = await res.json();
-            dataLayanan = data.items || [];
-        }
-    } catch (e) { console.error('Error loading layanan:', e); }
-    if (!dataLayanan.length) dataLayanan = SAMPLE_LAYANAN;
-}
-
-async function loadKategori() {
-    try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.kategoriCollection + '/records?per-page=500&sort=order');
-        if (res.ok) {
-            const data = await res.json();
-            dataKategori = data.items || [];
-        }
-    } catch (e) { console.error('Error loading kategori:', e); }
-    if (!dataKategori.length) dataKategori = SAMPLE_KATEGORI;
-}
-
-async function loadSubkategori() {
-    try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.subkategoriCollection + '/records?per-page=500&sort=order');
-        if (res.ok) {
-            const data = await res.json();
-            dataSubkategori = data.items || [];
-        }
-    } catch (e) { console.error('Error loading subkategori:', e); }
-    if (!dataSubkategori.length) dataSubkategori = SAMPLE_SUBKATEGORI;
-}
-
-async function loadProduk() {
-    try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.produkCollection + '/records?per-page=500&sort=-created');
-        if (res.ok) {
-            const data = await res.json();
-            dataProduk = data.items || [];
-        }
-    } catch (e) { console.error('Error loading produk:', e); }
-    if (!dataProduk.length) dataProduk = SAMPLE_PRODUK;
-}
-
-async function loadWarna() {
-    try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.warnaCollection + '/records?per-page=500');
-        if (res.ok) {
-            const data = await res.json();
-            dataWarna = data.items || [];
-        }
-    } catch (e) { console.error('Error loading warna:', e); }
-    if (!dataWarna.length) dataWarna = SAMPLE_WARNA;
-}
-
-async function loadGambar() {
-    try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.gambarCollection + '/records?per-page=1000');
-        if (res.ok) {
-            const data = await res.json();
-            dataGambar = data.items || [];
-        }
-    } catch (e) { console.error('Error loading gambar:', e); }
-    if (!dataGambar.length) dataGambar = SAMPLE_GAMBAR;
-}
-
-async function loadPortfolio() {
-    try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.portfolioCollection + '/records?per-page=500&sort=-created');
-        if (res.ok) {
-            const data = await res.json();
-            portfolio = (data.items || []).map(item => ({
-                ...item,
-                type: 'portfolio',
-                image: item.image ? CONFIG.pocketbaseUrl + '/api/files/' + CONFIG.portfolioCollection + '/' + item.id + '/' + item.image : ''
-            }));
-        }
-    } catch (e) { console.error('Error loading portfolio:', e); }
-    if (!portfolio.length) portfolio = SAMPLE_PORTFOLIO;
-}
-
-async function loadKontak() {
-    try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.kontakCollection + '/records?per-page=100');
-        if (res.ok) {
-            const data = await res.json();
-            kontak = data.items || [];
-        }
-    } catch (e) { console.error('Error loading kontak:', e); }
-}
-
-function buildHierarchicalData() {
-    for (const layanan of dataLayanan) {
-        layanan.kategoriList = dataKategori.filter(k => {
-            const kid = typeof k.layanan === 'string' ? k.layanan : k.layanan?.id;
-            return kid === layanan.id;
-        }).sort((a, b) => (a.order || 0) - (b.order || 0));
-
-        for (const kategori of layanan.kategoriList) {
-            kategori.subkategoriList = dataSubkategori.filter(sk => {
-                const skid = typeof sk.kategori === 'string' ? sk.kategori : sk.kategori?.id;
-                return skid === kategori.id;
-            }).sort((a, b) => (a.order || 0) - (b.order || 0));
-
-            for (const subkategori of kategori.subkategoriList) {
-                subkategori.produkList = dataProduk.filter(p => {
-                    const pid = typeof p.subkategori === 'string' ? p.subkategori : p.subkategori?.id;
-                    return pid === subkategori.id;
-                });
-
-                for (const produk of subkategori.produkList) {
-                    produk.warnaList = dataWarna.filter(w => {
-                        const wid = typeof w.produk === 'string' ? w.produk : w.produk?.id;
-                        return wid === produk.id;
-                    }).map(warna => {
-                        const warnaGambar = dataGambar.filter(g => {
-                            const gid = typeof g.warna === 'string' ? g.warna : g.warna?.id;
-                            return gid === warna.id;
-                        }).map(g => ({
-                            id: g.id,
-                            gambar: CONFIG.pocketbaseUrl + '/api/files/' + CONFIG.gambarCollection + '/' + g.id + '/' + g.gambar,
-                            deskripsi: g.deskripsi || ''
-                        }));
-                        return {
-                            id: warna.id,
-                            nama: warna.nama,
-                            image: warnaGambar.length > 0 ? warnaGambar[0].gambar : '',
-                            images: warnaGambar
-                        };
-                    });
-                    produk.image = produk.warnaList.length > 0 ? produk.warnaList[0].image : '';
-                }
-            }
-        }
-    }
-}
-
-function renderKatalogHeader() {
-    const app = document.getElementById('appScreen');
-    if (!app) return;
-
-    const layananFilters = dataLayanan.map(l => {
-        const active = selectedLayanan === l.id ? 'active' : '';
-        return `<button class="filter-chip ${active}" onclick="selectLayanan('${l.id}')">${l.nama}</button>`;
-    }).join('');
-
-    app.innerHTML = `
-        <header class="katalog-header">
-            <div class="katalog-top">
-                <button class="back-btn" onclick="backToWelcome()">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-                </button>
-                <img src="assets/images/logo-motifkain.png" alt="MotifKain" class="header-logo">
-            </div>
-            <div class="filter-section">
-                <div class="filter-chips">
-                    <button class="filter-chip ${!selectedLayanan ? 'active' : ''}" onclick="selectLayanan(null)">Semua</button>
-                    ${layananFilters}
-                    <button class="filter-chip ${selectedLayanan === 'portfolio' ? 'active' : ''}" onclick="selectLayanan('portfolio')">Portfolio</button>
-                </div>
-            </div>
-        </header>
-        <div class="breadcrumb" id="breadcrumb"></div>
-        <div class="products-container" id="productsContainer">
-            <div class="products-grid" id="productsGrid"></div>
-            <div class="loading" id="loading"><div class="spinner"></div></div>
-        </div>
-        <div class="detail-modal" id="detailModal"></div>
-    `;
-}
-
-function selectLayanan(id) {
-    selectedLayanan = id;
-    selectedKategori = null;
-    selectedSubkategori = null;
-    renderKatalogHeader();
-    renderItems();
-}
-
-function selectKategori(id) {
-    selectedKategori = id;
-    selectedSubkategori = null;
-    renderItems();
-}
-
-function selectSubkategori(id) {
-    selectedSubkategori = id;
-    renderItems();
-}
-
-function clearKategori() {
-    selectedKategori = null;
-    selectedSubkategori = null;
-    renderKatalogHeader();
-    renderItems();
-}
-
-function clearSubkategori() {
-    selectedSubkategori = null;
-    renderItems();
-}
-
-function renderItems() {
-    const grid = document.getElementById('productsGrid');
-    const loading = document.getElementById('loading');
-    const breadcrumb = document.getElementById('breadcrumb');
-    if (loading) loading.style.display = 'none';
-    if (!grid) return;
-
-    if (selectedLayanan === 'portfolio') {
-        if (breadcrumb) breadcrumb.innerHTML = '<span>Portfolio</span>';
-        renderPortfolio(grid);
-        return;
+    /* Lightbox nav */
+    if (els.lightbox) {
+      els.lightbox.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+      els.lightbox.querySelector('.lightbox-prev').addEventListener('click', function () { navigateLightbox(-1); });
+      els.lightbox.querySelector('.lightbox-next').addEventListener('click', function () { navigateLightbox(1); });
+      els.lightbox.addEventListener('click', function (e) {
+        if (e.target === els.lightbox) closeLightbox();
+      });
     }
 
-    if (!selectedLayanan) {
-        if (breadcrumb) breadcrumb.innerHTML = '';
-        renderLayananList(grid);
-        return;
+    /* Retry */
+    if (els.stateRetry) {
+      els.stateRetry.addEventListener('click', function () {
+        showLoading(true);
+        hideAllStates();
+        loadAllData().then(function () {
+          buildTree(); renderHeroStats(); renderFilters(); renderMotifGrid(); renderKontak();
+          showLoading(false);
+        }).catch(function () { showLoading(false); showStateError('Masih tidak dapat terhubung.'); });
+      });
     }
+  }
 
-    const layanan = dataLayanan.find(l => l.id === selectedLayanan);
-    if (!layanan) return;
+  function setFooterYear() {
+    var el = document.getElementById('yearNow');
+    if (el) el.textContent = String(new Date().getFullYear());
+  }
 
-    if (!selectedKategori) {
-        if (breadcrumb) breadcrumb.innerHTML = `<span onclick="clearKategori()">${layanan.nama}</span>`;
-        renderKategoriList(grid, layanan);
-        return;
+  /* =================================================================
+     2. PocketBase fetch
+     ================================================================= */
+  function pbUrl_(path) { return pbUrl + path; }
+
+  function pbFetch(path) {
+    /* Endpoint publik — tanpa Authorization.
+       PocketBase secara default menerima ?page=1&perPage=500&sort=field. */
+    return fetch(pbUrl_(path), {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status + ' dari ' + path);
+      return r.json();
+    });
+  }
+
+  function fetchCollection(name) {
+    var path = '/api/collections/' + encodeURIComponent(name) + '/records?perPage=' + perPage + '&sort=order,nama,created';
+    return pbFetch(path).then(function (j) { return j.items || []; });
+  }
+
+  function loadAllData() {
+    /* Fetch paralel semua koleksi yang diperlukan */
+    var lists = CFG.fetchList || ['layanan', 'kategori', 'subkategori', 'produk', 'warna', 'gambar', 'kontak'];
+    var promises = lists.map(function (name) {
+      return fetchCollection(name).then(function (items) { return { name: name, items: items }; });
+    });
+    return Promise.all(promises).then(function (results) {
+      results.forEach(function (r) {
+        if (state.hasOwnProperty(r.name)) state[r.name] = r.items;
+      });
+    });
+  }
+
+  function useSampleFallback() {
+    var s = (CFG.sample) || {};
+    state.layanan     = s.layanan     || [];
+    state.kategori    = s.kategori    || [];
+    state.subkategori = s.subkategori || [];
+    state.produk      = s.produk      || [];
+    state.warna       = s.warna       || [];
+    state.gambar      = s.gambar      || [];
+    state.kontak      = s.kontak      || [];
+  }
+
+  /* =================================================================
+     3. Build tree (relasi one-to-many)
+     ================================================================= */
+  function buildTree() {
+    var byIdLayanan     = indexBy(state.layanan, 'id');
+    var byIdKategori    = indexBy(state.kategori, 'id');
+    var byIdSubkategori = indexBy(state.subkategori, 'id');
+    var byIdProduk      = indexBy(state.produk, 'id');
+    var byIdWarna       = indexBy(state.warna, 'id');
+
+    /* gambar dikelompokkan per warna (relasi Many — gambar.warna bisa id array) */
+    state.gambar.forEach(function (g) {
+      var ids = Array.isArray(g.warna) ? g.warna : (g.warna ? [g.warna] : []);
+      g._warnaIds = ids;
+      /* bangun url PocketBase */
+      g._url = buildFileUrl(CFG.collections.gambar, g.id, g.gambar);
+    });
+
+    /* warna → produk (Many), produk → warnaList (Many) */
+    var warnaByProduk = {};
+    state.warna.forEach(function (w) {
+      var pIds = Array.isArray(w.produk) ? w.produk : (w.produk ? [w.produk] : []);
+      w._produkIds = pIds;
+      (warnaByProduk[w.produk] = warnaByProduk[w.produk] || []).push(w);
+      /* url gambar per warna */
+      w._images = state.gambar.filter(function (g) { return g._warnaIds.indexOf(w.id) !== -1; });
+    });
+
+    /* produk → warnaList, dengan gambar pertama sebagai thumbnail */
+    state.produk.forEach(function (p) {
+      p._warnaList = warnaByProduk[p.id] || [];
+      var firstImg = null;
+      for (var i = 0; i < p._warnaList.length; i++) {
+        if (p._warnaList[i]._images.length) { firstImg = p._warnaList[i]._images[0]; break; }
+      }
+      p._thumb = firstImg ? firstImg._url : fileUrlToDataUri(CFG.placeholderSvg);
+    });
+
+    /* subkategori → produkList */
+    var produkBySub = groupBy(state.produk, function (p) {
+      return Array.isArray(p.subkategori) ? p.subkategori[0] : p.subkategori;
+    });
+    state.subkategori.forEach(function (s) { s._produkList = produkBySub[s.id] || []; });
+
+    /* kategori → subkategoriList */
+    var subByKat = groupBy(state.subkategori, function (s) {
+      return Array.isArray(s.kategori) ? s.kategori[0] : s.kategori;
+    });
+    state.kategori.forEach(function (k) { k._subkategoriList = subByKat[k.id] || []; });
+
+    /* layanan → kategoriList */
+    var katByLayanan = groupBy(state.kategori, function (k) {
+      return Array.isArray(k.layanan) ? k.layanan[0] : k.layanan;
+    });
+    state.layanan.forEach(function (l) { l._kategoriList = katByLayanan[l.id] || []; });
+
+    /* Tree siap-render */
+    state.tree.layanan = state.layanan.slice().sort(function (a, b) {
+      return (a.order || 999) - (b.order || 999);
+    });
+  }
+
+  function buildFileUrl(collectionName, recordId, filename) {
+    if (!filename) return null;
+    var fname = Array.isArray(filename) ? filename[0] : filename;
+    if (!fname) return null;
+    if (/^(https?:|data:)/.test(fname)) return fname; /* sudah absolut / data URI */
+    if (!pbUrl) return null;
+    return pbUrl + '/api/files/' + encodeURIComponent(collectionName) + '/' + encodeURIComponent(recordId) + '/' + encodeURIComponent(fname);
+  }
+
+  function fileUrlToDataUri(svgString) {
+    if (!svgString) return null;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svgString);
+  }
+
+  /* =================================================================
+     4. Render
+     ================================================================= */
+  function renderHeroStats() {
+    setStat('motif',       state.gambar.length);
+    setStat('kategori',    state.kategori.length);
+    setStat('subkategori', state.subkategori.length);
+    setStat('produk',      state.produk.length);
+
+    function setStat(key, val) {
+      var node = document.querySelector('[data-count="' + key + '"]');
+      if (node) node.textContent = val > 0 ? String(val) : '—';
     }
+  }
 
-    const kategori = layanan.kategoriList.find(k => k.id === selectedKategori);
-    if (!kategori) return;
+  function renderFilters() {
+    var html = '<button class="chip chip-active" data-filter="all" role="tab" aria-selected="true">Semua <span class="chip-count">' + state.produk.length + '</span></button>';
+    state.layanan.forEach(function (l) {
+      var count = l._kategoriList.reduce(function (acc, k) {
+        return acc + k._subkategoriList.reduce(function (acc2, s) { return acc2 + s._produkList.length; }, 0);
+      }, 0);
+      html += '<button class="chip" data-filter="' + escAttr(l.id) + '" role="tab" aria-selected="false">' +
+              escHtml(l.nama) + ' <span class="chip-count">' + count + '</span></button>';
+    });
+    els.filterBar.innerHTML = html;
 
-    if (!selectedSubkategori) {
-        if (breadcrumb) breadcrumb.innerHTML = `<span onclick="clearKategori()">${layanan.nama}</span> &gt; <span>${kategori.nama}</span>`;
-        renderSubkategoriList(grid, kategori);
-        return;
+    /* Bind click */
+    Array.prototype.forEach.call(els.filterBar.querySelectorAll('.chip'), function (chip) {
+      chip.addEventListener('click', function () {
+        Array.prototype.forEach.call(els.filterBar.querySelectorAll('.chip'), function (c) {
+          c.classList.remove('chip-active');
+          c.setAttribute('aria-selected', 'false');
+        });
+        chip.classList.add('chip-active');
+        chip.setAttribute('aria-selected', 'true');
+        state.activeLayanan = chip.getAttribute('data-filter');
+        renderMotifGrid();
+      });
+    });
+  }
+
+  function renderMotifGrid() {
+    var produkList = filteredProduk();
+    if (!produkList.length) {
+      els.grid.innerHTML = '';
+      els.stateEmpty.hidden = false;
+      return;
     }
+    els.stateEmpty.hidden = true;
 
-    const subkategori = kategori.subkategoriList.find(s => s.id === selectedSubkategori);
-    if (!subkategori) return;
+    var html = '';
+    produkList.forEach(function (p) {
+      var sub = findById(state.subkategori, firstId(p.subkategori));
+      var kat = sub ? findById(state.kategori, firstId(sub.kategori)) : null;
+      var lay = kat ? findById(state.layanan, firstId(kat.layanan)) : null;
 
-    if (breadcrumb) breadcrumb.innerHTML = `<span onclick="clearKategori()">${layanan.nama}</span> &gt; <span onclick="clearSubkategori()">${kategori.nama}</span> &gt; <span>${subkategori.nama}</span>`;
-    renderProdukList(grid, subkategori);
-}
+      var crumb = [lay, kat, sub].filter(Boolean).map(function (x) { return x.nama; }).join(' · ');
+      var warnaCount = p._warnaList.length;
+      var imgCount = p._warnaList.reduce(function (a, w) { return a + w._images.length; }, 0);
 
-function renderLayananList(grid) {
-    grid.innerHTML = dataLayanan.map(layanan => `
-        <div class="category-card" onclick="selectLayanan('${layanan.id}')">
-            <h3>${layanan.nama}</h3>
-            <p>${layanan.kategoriList?.length || 0} kategori</p>
-        </div>
-    `).join('');
-}
+      html += '<article class="motif-card" data-produk-id="' + escAttr(p.id) + '" tabindex="0" role="button" aria-label="Lihat detail ' + escAttr(p.nama) + '">' +
+        '<div class="motif-img-wrap">' +
+          (p._thumb ? '<img src="' + escAttr(p._thumb) + '" alt="' + escAttr(p.nama) + '" class="motif-img" loading="lazy">' : '<div class="motif-img-placeholder">' + escHtml(p.nama) + '</div>') +
+          (lay ? '<span class="motif-img-badge">' + escHtml(lay.nama) + '</span>' : '') +
+        '</div>' +
+        '<div class="motif-body">' +
+          '<p class="motif-crumb">' + escHtml(crumb) + '</p>' +
+          '<h3 class="motif-title">' + escHtml(p.nama) + '</h3>' +
+          '<div class="motif-meta">' +
+            (warnaCount > 0 ? '<span class="motif-meta-item">' + warnaCount + ' warna</span>' : '') +
+            (imgCount > 0 ? '<span class="motif-meta-item">' + imgCount + ' foto</span>' : '') +
+            (typeof p.harga === 'number' ? '<span class="motif-meta-item" style="margin-left:auto; font-weight:600; color:var(--color-primary);">' + formatRupiah(p.harga) + '</span>' : '') +
+          '</div>' +
+        '</div>' +
+      '</article>';
+    });
 
-function renderKategoriList(grid, layanan) {
-    grid.innerHTML = layanan.kategoriList.map(kategori => `
-        <div class="category-card" onclick="selectKategori('${kategori.id}')">
-            <h3>${kategori.nama}</h3>
-            <p>${kategori.subkategoriList?.length || 0} subkategori</p>
-        </div>
-    `).join('');
-}
+    els.grid.innerHTML = html;
+    Array.prototype.forEach.call(els.grid.querySelectorAll('.motif-card'), function (card) {
+      card.addEventListener('click', function () { openDetail(card.getAttribute('data-produk-id')); });
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(card.getAttribute('data-produk-id')); }
+      });
+    });
+  }
 
-function renderSubkategoriList(grid, kategori) {
-    grid.innerHTML = kategori.subkategoriList.map(subkategori => `
-        <div class="category-card" onclick="selectSubkategori('${subkategori.id}')">
-            <h3>${subkategori.nama}</h3>
-            <p>${subkategori.produkList?.length || 0} produk</p>
-        </div>
-    `).join('');
-}
-
-function renderProdukList(grid, subkategori) {
-    const produkList = subkategori.produkList || [];
-    if (produkList.length === 0) {
-        grid.innerHTML = '<div class="empty-state"><h3>Belum ada produk</h3><p>Subkategori ini belum memiliki produk.</p></div>';
-        return;
+  function renderKontak() {
+    var el = document.getElementById('kontakList');
+    if (!el) return;
+    if (!state.kontak.length) {
+      el.innerHTML = '';
+      return;
     }
+    var html = '';
+    state.kontak.forEach(function (k) {
+      var initials = (k.nama || '').split(' ').map(function (s) { return s[0]; }).join('').slice(0, 2).toUpperCase();
+      var waLink = formatWaLink(k.whatsapp);
+      html += '<a class="kontak-card" href="' + escAttr(waLink) + '" target="_blank" rel="noopener">' +
+        '<div class="kontak-avatar">' + escHtml(initials) + '</div>' +
+        '<div class="kontak-info">' +
+          '<div class="kontak-name">' + escHtml(k.nama) + '</div>' +
+          '<div class="kontak-role">' + escHtml(k.role || '') + '</div>' +
+          '<div class="kontak-wa">' + escHtml(k.whatsapp || '') + ' ↗</div>' +
+        '</div>' +
+      '</a>';
+    });
+    el.innerHTML = html;
+  }
 
-    grid.innerHTML = produkList.map(produk => {
-        const thumbImages = [];
-        for (const warna of produk.warnaList || []) {
-            if (warna.image) thumbImages.push(warna.image);
-            if (thumbImages.length >= 4) break;
-        }
-
-        const thumbnailsHtml = thumbImages.length > 1 ? `
-            <div class="card-thumbnails">
-                ${thumbImages.map((img, i) => `<div class="card-thumb ${i === 0 ? 'active' : ''}"><img src="${img}" alt=""></div>`).join('')}
-            </div>
-        ` : '';
-
-        return `
-            <div class="product-card" onclick="showDetail('${produk.id}', '${subkategori.id}')">
-                <div class="card-img">
-                    <img src="${produk.image || 'https://via.placeholder.com/400'}" alt="${produk.nama}">
-                </div>
-                ${thumbnailsHtml}
-                <div class="card-info">
-                    <h4>${produk.nama}</h4>
-                    ${produk.harga ? `<p class="price">${formatRupiah(produk.harga)}</p>` : ''}
-                    ${produk.deskripsi ? `<p class="desc">${produk.deskripsi}</p>` : ''}
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function renderPortfolio(grid) {
-    if (portfolio.length === 0) {
-        grid.innerHTML = '<div class="empty-state"><h3>Belum ada portfolio</h3></div>';
-        return;
+  function filteredProduk() {
+    var list = state.produk.slice();
+    /* Filter by layanan */
+    if (state.activeLayanan && state.activeLayanan !== 'all') {
+      var allowedKatIds = state.kategori
+        .filter(function (k) { return firstId(k.layanan) === state.activeLayanan; })
+        .map(function (k) { return k.id; });
+      var allowedSubIds = state.subkategori
+        .filter(function (s) { return allowedKatIds.indexOf(firstId(s.kategori)) !== -1; })
+        .map(function (s) { return s.id; });
+      list = list.filter(function (p) { return allowedSubIds.indexOf(firstId(p.subkategori)) !== -1; });
     }
+    /* Filter by query */
+    if (state.query) {
+      var q = state.query;
+      list = list.filter(function (p) {
+        if ((p.nama || '').toLowerCase().indexOf(q) !== -1) return true;
+        if ((p.deskripsi || '').toLowerCase().indexOf(q) !== -1) return true;
+        var sub = findById(state.subkategori, firstId(p.subkategori));
+        if (sub && (sub.nama || '').toLowerCase().indexOf(q) !== -1) return true;
+        var kat = sub ? findById(state.kategori, firstId(sub.kategori)) : null;
+        if (kat && (kat.nama || '').toLowerCase().indexOf(q) !== -1) return true;
+        var lay = kat ? findById(state.layanan, firstId(kat.layanan)) : null;
+        if (lay && (lay.nama || '').toLowerCase().indexOf(q) !== -1) return true;
+        return false;
+      });
+    }
+    return list;
+  }
 
-    grid.innerHTML = portfolio.map(item => `
-        <div class="product-card" onclick="showDetail('${item.id}', 'portfolio')">
-            <div class="card-img">
-                <img src="${item.image || 'https://via.placeholder.com/400'}" alt="${item.judul}">
-                <span class="type-badge">Portfolio</span>
-            </div>
-            <div class="card-info">
-                <h4>${item.judul}</h4>
-                <p class="layanan">${item.kategori || 'Portfolio'}</p>
-            </div>
-        </div>
-    `).join('');
-}
+  /* =================================================================
+     5. Detail modal & lightbox
+     ================================================================= */
+  function openDetail(produkId) {
+    var p = findById(state.produk, produkId);
+    if (!p) return;
+    var sub = findById(state.subkategori, firstId(p.subkategori));
+    var kat = sub ? findById(state.kategori, firstId(sub.kategori)) : null;
+    var lay = kat ? findById(state.layanan, firstId(kat.layanan)) : null;
 
-function formatRupiah(n) {
-    if (n >= 1000000) return 'Rp ' + (n/1000000).toFixed(1) + 'Jt';
-    if (n >= 1000) return 'Rp ' + Math.round(n/1000) + 'Rb';
-    return 'Rp ' + (n || 0).toLocaleString('id-ID');
-}
+    var crumb = [lay, kat, sub].filter(Boolean).map(function (x) { return x.nama; }).join(' · ');
+    els.detailCrumb.textContent  = crumb;
+    els.detailTitle.textContent  = p.nama || '';
+    els.detailMeta.textContent   = sub ? ('Subkategori: ' + sub.nama) : '';
+    els.detailDesc.textContent   = p.deskripsi || 'Belum ada deskripsi untuk motif ini.';
 
-function showDetail(id, context) {
-    if (context === 'portfolio') {
-        selectedItem = portfolio.find(p => p.id === id);
-        selectedItem.type = 'portfolio';
+    if (typeof p.harga === 'number' && p.harga > 0) {
+      els.detailPrice.hidden = false;
+      els.detailPrice.textContent = formatRupiah(p.harga);
     } else {
-        const subkategori = findSubkategoriByProduk(id);
-        if (subkategori) {
-            selectedItem = subkategori.produkList.find(p => p.id === id);
-            selectedItem.subkategori = subkategori;
-        }
+      els.detailPrice.hidden = true;
     }
 
-    if (!selectedItem) return;
-
-    selectedWarnaIndex = 0;
-    currentImageIndex = 0;
-    const isPortfolio = selectedItem.type === 'portfolio';
-    const name = isPortfolio ? (selectedItem.judul || '') : (selectedItem.nama || '');
-
-    const modal = document.getElementById('detailModal');
-    if (!modal) return;
-
-    const firstWarna = selectedItem.warnaList?.[0];
-    const allImages = firstWarna
-        ? [firstWarna.image, ...(firstWarna.images || [])].filter(Boolean)
-        : [];
-
-    const warnaSelectorHtml = buildWarnaDots(selectedItem);
-    const portfolioImages = [selectedItem.image, ...(selectedItem.images || [])].filter(Boolean);
-
-    modal.innerHTML = `
-        <div class="modal-bg" onclick="closeDetail()"></div>
-        <div class="modal-sheet">
-            <div class="modal-handle"></div>
-            <button class="modal-close" onclick="closeDetail()">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </button>
-
-            <div class="detail-gallery">
-                <div class="gallery-container" id="galleryContainer">
-                    ${isPortfolio
-                        ? portfolioImages.map((img, i) => `<img src="${img}" alt="" class="gallery-img" data-index="${i}" style="display:${i === 0 ? 'block' : 'none'}">`).join('')
-                        : allImages.map((img, i) => `<img src="${img}" alt="" class="gallery-img" data-index="${i}" style="display:${i === 0 ? 'block' : 'none'}">`).join('')
-                    }
-                </div>
-                ${(isPortfolio ? portfolioImages : allImages).length > 1 ? `
-                    <div class="gallery-nav">
-                        <button class="gallery-btn prev" onclick="prevImg()">
-                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-                        </button>
-                        <div class="gallery-dots">
-                            ${(isPortfolio ? portfolioImages : allImages).map((_, i) => `<span class="gdot ${i === 0 ? 'active' : ''}" onclick="goToImage(${i})"></span>`).join('')}
-                        </div>
-                        <button class="gallery-btn next" onclick="nextImg()">
-                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-                        </button>
-                    </div>
-                ` : ''}
-            </div>
-
-            ${!isPortfolio && selectedItem.warnaList?.length > 0 ? warnaSelectorHtml : ''}
-
-            <div class="modal-body">
-                <h2>${name}</h2>
-                ${selectedItem.harga ? `<p class="harga">${formatRupiah(selectedItem.harga)}</p>` : ''}
-
-                ${!isPortfolio && selectedItem.subkategori ? `
-                <p class="breadcrumb-info">
-                    ${selectedItem.subkategori.nama}
-                </p>
-                ` : ''}
-
-                ${selectedItem.deskripsi ? `
-                <div class="desc">
-                    <p>${selectedItem.deskripsi}</p>
-                </div>
-                ` : ''}
-
-                ${!isPortfolio && firstWarna?.deskripsi ? `
-                <div class="desc" id="gambarDescSection">
-                    <p id="gambarDescText">${firstWarna.deskripsi}</p>
-                </div>
-                ` : ''}
-
-                ${!isPortfolio ? `
-                <div class="wa-section">
-                    <button class="wa-btn-icon" onclick="toggleWaDropdown()">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                    </button>
-                    <div class="wa-dropdown" id="waDropdown">
-                        <button onclick="openWa('desainer')">Desainer</button>
-                        <button onclick="openWa('pemasaran')">Pemasaran</button>
-                    </div>
-                </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden';
-    initTouchSwipe();
-}
-
-function findSubkategoriByProduk(produkId) {
-    for (const layanan of dataLayanan) {
-        for (const kategori of layanan.kategoriList || []) {
-            for (const subkategori of kategori.subkategoriList || []) {
-                if (subkategori.produkList?.some(p => p.id === produkId)) {
-                    return subkategori;
-                }
-            }
-        }
-    }
-    return null;
-}
-
-function buildWarnaDots(item) {
-    if (!item.warnaList || item.warnaList.length <= 1) return '';
-
-    return `
-        <div class="warna-bar">
-            <span class="warna-label">Warna:</span>
-            <div class="warna-dots">
-                ${item.warnaList.map((warna, i) => `
-                    <div class="warna-dot ${i === selectedWarnaIndex ? 'active' : ''}"
-                         style="background: ${getColorCode(warna.nama)}"
-                         onclick="selectWarna(${i}); showWarnaList();">
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-}
-
-function getColorCode(colorName) {
-    const name = (colorName || '').toLowerCase();
-    if (name.includes('merah') || name.includes('maroon') || name.includes('burgundy')) return '#800020';
-    if (name.includes('biru') || name.includes('navy') || name.includes('blue')) return '#000080';
-    if (name.includes('hijau') || name.includes('green')) return '#228B22';
-    if (name.includes('kuning') || name.includes('yellow')) return '#FFD700';
-    if (name.includes('oranye') || name.includes('orange')) return '#FF8C00';
-    if (name.includes('ungu') || name.includes('purple')) return '#800080';
-    if (name.includes('pink') || name.includes('magenta')) return '#FF69B4';
-    if (name.includes('coklat') || name.includes('brown')) return '#8B4513';
-    if (name.includes('abu') || name.includes('grey') || name.includes('gray')) return '#808080';
-    if (name.includes('hitam') || name.includes('black')) return '#1a1a1a';
-    if (name.includes('putih') || name.includes('white')) return '#f5f5f5';
-    if (name.includes('emas') || name.includes('gold')) return '#FFD700';
-    if (name.includes('silver')) return '#C0C0C0';
-    return '#D4C4B0';
-}
-
-function selectWarna(index) {
-    selectedWarnaIndex = index;
-    const warna = selectedItem.warnaList[index];
-    if (!warna) return;
-
-    currentImageIndex = 0;
-
-    const allImages = [warna.image, ...(warna.images || [])].filter(Boolean);
-    const galleryContainer = document.getElementById('galleryContainer');
-    if (galleryContainer) {
-        galleryContainer.classList.remove('zoomed');
-        galleryContainer.innerHTML = allImages.map((img, i) =>
-            `<img src="${img}" alt="" class="gallery-img" data-index="${i}" style="display:${i === 0 ? 'block' : 'none'}">`
-        ).join('');
-    }
-
-    const dotsHtml = allImages.map((_, i) =>
-        `<span class="gdot ${i === 0 ? 'active' : ''}" onclick="goToImage(${i})"></span>`
-    ).join('');
-    const dotsContainer = document.querySelector('.gallery-dots');
-    if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
-
-    const nav = document.querySelector('.gallery-nav');
-    if (nav) nav.style.display = allImages.length > 1 ? 'flex' : 'none';
-
-    const dots = document.querySelectorAll('.warna-dot');
-    dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === index);
+    /* Gallery: kumpulkan semua gambar dari semua warna */
+    var allImages = [];
+    p._warnaList.forEach(function (w) {
+      w._images.forEach(function (g) { allImages.push({ url: g._url, desc: g.deskripsi || w.nama, warnaId: w.id }); });
     });
+    if (!allImages.length) {
+      allImages.push({ url: fileUrlToDataUri(CFG.placeholderSvg), desc: p.nama, warnaId: null });
+    }
+    state.lightboxImages = allImages.map(function (x) { return x.url; });
 
-    const descSection = document.getElementById('gambarDescSection');
-    const descText = document.getElementById('gambarDescText');
-    if (descSection && descText) {
-        if (warna.deskripsi) {
-            descText.textContent = warna.deskripsi;
-            descSection.style.display = 'block';
+    /* Main image + thumbnails */
+    var galleryHtml = '<img src="' + escAttr(allImages[0].url) + '" alt="' + escAttr(p.nama) + '" class="detail-main-img" id="detailMainImg" data-zoom="0">';
+    if (allImages.length > 1) {
+      galleryHtml += '<div class="detail-thumbs">';
+      allImages.forEach(function (img, i) {
+        galleryHtml += '<img src="' + escAttr(img.url) + '" alt="' + escAttr(img.desc || '') + '" class="detail-thumb' + (i === 0 ? ' active' : '') + '" data-thumb-index="' + i + '">';
+      });
+      galleryHtml += '</div>';
+    }
+    els.detailGallery.innerHTML = galleryHtml;
+
+    /* Bind thumb click + zoom */
+    Array.prototype.forEach.call(els.detailGallery.querySelectorAll('.detail-thumb'), function (thumb) {
+      thumb.addEventListener('click', function () {
+        var i = parseInt(thumb.getAttribute('data-thumb-index'), 10) || 0;
+        var main = document.getElementById('detailMainImg');
+        if (main) { main.src = thumb.src; main.setAttribute('data-zoom', String(i)); }
+        Array.prototype.forEach.call(els.detailGallery.querySelectorAll('.detail-thumb'), function (t) { t.classList.remove('active'); });
+        thumb.classList.add('active');
+      });
+    });
+    var mainImg = document.getElementById('detailMainImg');
+    if (mainImg) mainImg.addEventListener('click', function () { openLightbox(state.lightboxImages, parseInt(mainImg.getAttribute('data-zoom') || '0', 10)); });
+
+    /* Warna chips */
+    if (p._warnaList.length) {
+      els.detailWarna.hidden = false;
+      els.warnaList.innerHTML = p._warnaList.map(function (w, i) {
+        return '<span class="warna-chip' + (i === 0 ? ' warna-chip-active' : '') + '" data-warna-id="' + escAttr(w.id) + '">' + escHtml(w.nama) + ' (' + w._images.length + ')</span>';
+      }).join('');
+      Array.prototype.forEach.call(els.warnaList.querySelectorAll('.warna-chip'), function (chip) {
+        chip.addEventListener('click', function () {
+          var wid = chip.getAttribute('data-warna-id');
+          var w = findById(state.warna, wid);
+          if (!w || !w._images.length) return;
+          var imgs = w._images.map(function (g) { return g._url; });
+          state.lightboxImages = imgs;
+          var main = document.getElementById('detailMainImg');
+          if (main) { main.src = imgs[0]; main.setAttribute('data-zoom', '0'); }
+          Array.prototype.forEach.call(els.warnaList.querySelectorAll('.warna-chip'), function (c) { c.classList.remove('warna-chip-active'); });
+          chip.classList.add('warna-chip-active');
+        });
+      });
+    } else {
+      els.detailWarna.hidden = true;
+    }
+
+    /* Action buttons → kontak WA */
+    var desainer = state.kontak.find(function (k) { return (k.role || '').toLowerCase() === 'desainer'; });
+    var pemasaran = state.kontak.find(function (k) { return (k.role || '').toLowerCase() === 'pemasaran'; });
+    if (desainer || pemasaran) {
+      els.detailActions.hidden = false;
+      if (els.btnWaDesainer) {
+        if (desainer) {
+          els.btnWaDesainer.href = formatWaLink(desainer.whatsapp, formatWaMessage(p, 'desainer', desainer.nama));
+          els.btnWaDesainer.style.display = '';
         } else {
-            descSection.style.display = 'none';
+          els.btnWaDesainer.style.display = 'none';
         }
-    }
-}
-
-function initTouchSwipe() {
-    const container = document.getElementById('galleryContainer');
-    if (!container) return;
-
-    let startX = 0;
-    let isZooming = false;
-
-    container.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        isZooming = container.classList.contains('zoomed');
-    }, { passive: true });
-
-    container.addEventListener('touchend', (e) => {
-        if (isZooming) return;
-        const dx = e.changedTouches[0].clientX - startX;
-        if (Math.abs(dx) > 50) {
-            dx < 0 ? nextImg() : prevImg();
+      }
+      if (els.btnWaPemasaran) {
+        if (pemasaran) {
+          els.btnWaPemasaran.href = formatWaLink(pemasaran.whatsapp, formatWaMessage(p, 'pemasaran', pemasaran.nama));
+          els.btnWaPemasaran.style.display = '';
+        } else {
+          els.btnWaPemasaran.style.display = 'none';
         }
-    }, { passive: true });
-
-    container.addEventListener('click', (e) => {
-        if (Math.abs(e.clientX - startX) > 10) return;
-        container.classList.toggle('zoomed');
-        container.querySelectorAll('.gallery-img').forEach(img => img.classList.toggle('zoomed'));
-    });
-}
-
-function prevImg() {
-    const container = document.getElementById('galleryContainer');
-    if (container?.classList.contains('zoomed')) {
-        container.classList.remove('zoomed');
-        container.querySelectorAll('.gallery-img').forEach(img => img.classList.remove('zoomed'));
+      }
+    } else {
+      els.detailActions.hidden = true;
     }
-    const imgs = document.querySelectorAll('.gallery-img');
-    if (imgs.length <= 1) return;
-    imgs[currentImageIndex].style.display = 'none';
-    document.querySelectorAll('.gdot')[currentImageIndex]?.classList.remove('active');
-    currentImageIndex = (currentImageIndex - 1 + imgs.length) % imgs.length;
-    imgs[currentImageIndex].style.display = 'block';
-    document.querySelectorAll('.gdot')[currentImageIndex]?.classList.add('active');
-}
 
-function nextImg() {
-    const container = document.getElementById('galleryContainer');
-    if (container?.classList.contains('zoomed')) {
-        container.classList.remove('zoomed');
-        container.querySelectorAll('.gallery-img').forEach(img => img.classList.remove('zoomed'));
-    }
-    const imgs = document.querySelectorAll('.gallery-img');
-    if (imgs.length <= 1) return;
-    imgs[currentImageIndex].style.display = 'none';
-    document.querySelectorAll('.gdot')[currentImageIndex]?.classList.remove('active');
-    currentImageIndex = (currentImageIndex + 1) % imgs.length;
-    imgs[currentImageIndex].style.display = 'block';
-    document.querySelectorAll('.gdot')[currentImageIndex]?.classList.add('active');
-}
+    /* Lock body scroll */
+    document.body.style.overflow = 'hidden';
+    els.modal.hidden = false;
+    els.modal.scrollTop = 0;
+  }
 
-function goToImage(i) {
-    const container = document.getElementById('galleryContainer');
-    if (container?.classList.contains('zoomed')) {
-        container.classList.remove('zoomed');
-        container.querySelectorAll('.gallery-img').forEach(img => img.classList.remove('zoomed'));
-    }
-    const imgs = document.querySelectorAll('.gallery-img');
-    if (!imgs.length) return;
-    imgs[currentImageIndex].style.display = 'none';
-    document.querySelectorAll('.gdot')[currentImageIndex]?.classList.remove('active');
-    currentImageIndex = i;
-    imgs[currentImageIndex].style.display = 'block';
-    document.querySelectorAll('.gdot')[currentImageIndex]?.classList.add('active');
-}
-
-function closeDetail() {
-    const modal = document.getElementById('detailModal');
-    if (modal) modal.classList.remove('show');
+  function closeModal() {
+    els.modal.hidden = true;
     document.body.style.overflow = '';
-}
+  }
 
-function openWa(role) {
-    const person = kontak.find(k => k.role === role && k.whatsapp);
-    if (!person || !person.whatsapp) {
-        alert('Nomor WhatsApp ' + role + ' belum tersedia');
-        return;
+  function openLightbox(images, index) {
+    if (!images || !images.length) return;
+    state.lightboxImages = images;
+    state.lightboxIndex = Math.max(0, Math.min(index || 0, images.length - 1));
+    els.lightboxImg.src = images[state.lightboxIndex];
+    els.lightbox.hidden = false;
+  }
+
+  function closeLightbox() {
+    els.lightbox.hidden = true;
+  }
+
+  function navigateLightbox(delta) {
+    if (!state.lightboxImages.length) return;
+    state.lightboxIndex = (state.lightboxIndex + delta + state.lightboxImages.length) % state.lightboxImages.length;
+    els.lightboxImg.src = state.lightboxImages[state.lightboxIndex];
+  }
+
+  /* =================================================================
+     6. Search toggle
+     ================================================================= */
+  function toggleSearch() {
+    if (els.searchBar.hidden) {
+      els.searchBar.hidden = false;
+      els.searchInput.focus();
+    } else {
+      closeSearch();
     }
+  }
+  function closeSearch() {
+    els.searchBar.hidden = true;
+    els.searchInput.value = '';
+    state.query = '';
+    renderMotifGrid();
+  }
 
-    let wa = person.whatsapp.replace(/\D/g, '');
-    if (wa.startsWith('0')) wa = '62' + wa.slice(1);
-    const produkName = selectedItem?.nama || 'produk ini';
-    const msg = encodeURIComponent(`Assalamualaikum warahmatullahi wabarakatuh. Saya tertarik dengan produk ini: *${produkName}*`);
-    window.open('https://wa.me/' + wa + '?text=' + msg, '_blank');
+  /* =================================================================
+     7. UI states (loading / error / empty)
+     ================================================================= */
+  function showLoading(on) { els.stateLoading.hidden = !on; }
+  function hideAllStates() {
+    els.stateLoading.hidden = true;
+    els.stateError.hidden   = true;
+    els.stateEmpty.hidden   = true;
+  }
+  function showStateError(msg) {
+    if (msg) els.stateErrorMsg.textContent = msg;
+    els.stateError.hidden = false;
+  }
 
-    const dropdown = document.getElementById('waDropdown');
-    if (dropdown) dropdown.classList.remove('show');
-}
+  /* =================================================================
+     8. Toast
+     ================================================================= */
+  var toastTimer = null;
+  function showToast(text) {
+    if (!els.toast) return;
+    els.toast.textContent = text;
+    els.toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { els.toast.hidden = true; }, 2400);
+  }
 
-function toggleWaDropdown() {
-    const dropdown = document.getElementById('waDropdown');
-    if (dropdown) dropdown.classList.toggle('show');
-}
-
-document.addEventListener('click', (e) => {
-    const dropdown = document.getElementById('waDropdown');
-    const btn = document.querySelector('.wa-btn-icon');
-    if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
-        dropdown.classList.remove('show');
-    }
-});
-
-function backToWelcome() {
-    const ws = document.getElementById('welcomeScreen');
-    const app = document.getElementById('appScreen');
-    if (app) app.style.display = 'none';
-    if (ws) {
-        ws.style.display = 'flex';
-        renderWelcomeScreen();
-    }
-}
+  /* =================================================================
+     9. Helpers
+     ================================================================= */
+  function indexBy(arr, key) {
+    var map = {};
+    (arr || []).forEach(function (x) { if (x && x[key]) map[x[key]] = x; });
+    return map;
+  }
+  function findById(arr, id) {
+    if (!arr || !id) return null;
+    for (var i = 0; i < arr.length; i++) if (arr[i] && arr[i].id === id) return arr[i];
+    return null;
+  }
+  function firstId(val) {
+    if (!val) return '';
+    return Array.isArray(val) ? (val[0] || '') : val;
+  }
+  function groupBy(arr, keyFn) {
+    var out = {};
+    (arr || []).forEach(function (x) {
+      var k = keyFn(x);
+      if (!k) return;
+      (out[k] = out[k] || []).push(x);
+    });
+    return out;
+  }
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+  function escAttr(s) { return escHtml(s); }
+  function formatRupiah(n) {
+    if (typeof n !== 'number') return '';
+    try {
+      return 'Rp ' + n.toLocaleString('id-ID');
+    } catch (e) { return 'Rp ' + String(n); }
+  }
+  function formatWaLink(num, msg) {
+    if (!num) return '#';
+    var n = String(num).replace(/[^0-9]/g, '');
+    if (!n) return '#';
+    var url = 'https://wa.me/' + n;
+    if (msg) url += '?text=' + encodeURIComponent(msg);
+    return url;
+  }
+  function formatWaMessage(produk, role, nama) {
+    var tpl = (CFG && CFG.waFallbackMessage) || 'Halo, saya tertarik dengan motif {nama}.';
+    return tpl
+      .replace('{nama}', produk.nama || '')
+      .replace('{role}', role || '')
+      .replace('{kontak}', nama || '');
+  }
+})();

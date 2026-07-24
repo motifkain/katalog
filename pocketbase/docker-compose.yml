@@ -1,5 +1,13 @@
 version: '3.8'
 
+# =============================================================================
+# MotifKain — PocketBase + Nginx (self-host)
+# Usage:
+#   docker-compose up -d
+# Akses PocketBase di http://localhost:8090 (admin UI di /_/)
+# Untuk HTTPS publik, uncomment blok `nginx` dan sediakan nginx.conf + ssl/.
+# =============================================================================
+
 services:
   pocketbase:
     image: ghcr.io/muchobien/pocketbase:latest
@@ -12,19 +20,24 @@ services:
     environment:
       - TZ=Asia/Jakarta
 
-  # Nginx sebagai reverse proxy dengan SSL
-  nginx:
-    image: nginx:alpine
-    container_name: motifkain-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - pocketbase
+  # Opsional — aktifkan untuk HTTPS publik (api.motifkain.com → pocketbase:8090).
+  # Anda perlu:
+  #   - pocketbase/nginx.conf (reverse proxy config)
+  #   - pocketbase/ssl/  (sertifikat Let's Encrypt)
+  # Untuk development lokal, biarkan service ini nonaktif dan akses via :8090.
+  #
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: motifkain-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+  #     - ./ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - pocketbase
 
 volumes:
   pb_data:
