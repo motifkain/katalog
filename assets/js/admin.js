@@ -534,19 +534,26 @@ class AdminDashboard {
                 for (const img of warna.images) {
                     // Only upload new images (no id)
                     if (img.file) {
-                        const formDataGambar = new FormData();
-                        formDataGambar.append('gambar', img.file);
-                        formDataGambar.append('deskripsi', img.deskripsi || '');
-                        formDataGambar.append('warna', warnaId);
-
-                        const gambarRes = await fetch(this.pocketbaseUrl + '/api/collections/gambar/records', {
-                            method: 'POST',
-                            headers: { 'Authorization': 'Admin ' + this.pocketbaseToken },
-                            body: formDataGambar
+                        // Create gambar record first with relation to warna
+                        const gambarData = await this.fetchAPI('/api/collections/gambar/records', 'POST', {
+                            warna: warnaId,
+                            deskripsi: img.deskripsi || ''
                         });
 
-                        if (!gambarRes.ok) throw new Error('Gagal menyimpan gambar');
-                        const gambarData = await gambarRes.json();
+                        // Upload file to the created record
+                        const formDataUpload = new FormData();
+                        formDataUpload.append('gambar', img.file);
+
+                        const uploadRes = await fetch(
+                            this.pocketbaseUrl + '/api/collections/gambar/records/' + gambarData.id + '/gambar',
+                            {
+                                method: 'POST',
+                                headers: { 'Authorization': 'Admin ' + this.pocketbaseToken },
+                                body: formDataUpload
+                            }
+                        );
+
+                        if (!uploadRes.ok) throw new Error('Gagal upload gambar');
                         newGambarIds.push(gambarData.id);
                     } else if (img.id) {
                         // Update deskripsi for existing image
@@ -565,13 +572,7 @@ class AdminDashboard {
                         await this.fetchAPI(`/api/collections/gambar/records/${oldGambarId}`, 'DELETE');
                     }
                 }
-
-                // Update gambar relation in warna record
-                if (newGambarIds.length > 0) {
-                    await this.fetchAPI(`/api/collections/warna/records/${warnaId}`, 'PATCH', {
-                        gambar: newGambarIds.join(',')
-                    });
-                }
+                // Note: gambar relation will be matched via filter when loading
             }
 
             // Delete removed warna
