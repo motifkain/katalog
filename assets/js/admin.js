@@ -534,29 +534,29 @@ class AdminDashboard {
                 for (const img of warna.images) {
                     // Only upload new images (no id)
                     if (img.file) {
-                        // Create gambar record first with relation to warna
-                        const gambarData = await this.fetchAPI('/api/collections/gambar/records', 'POST', {
-                            warna: warnaId,
-                            deskripsi: img.deskripsi || ''
-                        });
+                        // Use FormData to upload file and create record at once
+                        const formData = new FormData();
+                        formData.append('gambar', img.file);
+                        formData.append('deskripsi', img.deskripsi || '');
+                        formData.append('warna', warnaId);
 
-                        // Upload file to the created record
-                        const formDataUpload = new FormData();
-                        formDataUpload.append('gambar', img.file);
-
-                        const uploadRes = await fetch(
-                            this.pocketbaseUrl + '/api/collections/gambar/records/' + gambarData.id + '/gambar',
+                        const gambarRes = await fetch(
+                            this.pocketbaseUrl + '/api/collections/gambar/records',
                             {
                                 method: 'POST',
                                 headers: { 'Authorization': 'Admin ' + this.pocketbaseToken },
-                                body: formDataUpload
+                                body: formData
                             }
                         );
 
-                        if (!uploadRes.ok) throw new Error('Gagal upload gambar');
+                        if (!gambarRes.ok) {
+                            const err = await gambarRes.json();
+                            console.error('Gambar save error:', err);
+                            throw new Error('Gagal menyimpan gambar');
+                        }
+                        const gambarData = await gambarRes.json();
                         newGambarIds.push(gambarData.id);
                     } else if (img.id) {
-                        // Update deskripsi for existing image
                         newGambarIds.push(img.id);
                         if (img.deskripsi !== undefined) {
                             await this.fetchAPI(`/api/collections/gambar/records/${img.id}`, 'PATCH', {
