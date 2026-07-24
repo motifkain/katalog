@@ -838,7 +838,9 @@ class AdminDashboard {
         }
         const res = await fetch(this.pocketbaseUrl + endpoint, options);
         if (!res.ok) throw new Error('API Error: ' + res.status);
-        return res.json();
+        // Handle empty response (DELETE requests return empty body)
+        const text = await res.text();
+        return text ? JSON.parse(text) : {};
     }
 
     closeModal(id) {
