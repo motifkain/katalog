@@ -1,12 +1,19 @@
 /**
  * MOTIFKAIN KATALOG
  * Earth Tone Theme
- * Struktur: Produk → Warna → Gambar
+ *
+ * Struktur Data Hirarkis:
+ * layanan > kategori > subkategori > produk > warna > gambar
  */
 
 const CONFIG = window.MOTIFKAIN_CONFIG || {
     pocketbaseUrl: 'https://katalog-production-104e.up.railway.app',
+    layananCollection: 'layanan',
+    kategoriCollection: 'kategori',
+    subkategoriCollection: 'subkategori',
     produkCollection: 'produk',
+    warnaCollection: 'warna',
+    gambarCollection: 'gambar',
     portfolioCollection: 'portofolio',
     kontakCollection: 'kontak'
 };
@@ -22,23 +29,88 @@ const COLORS = {
     divider: '#D4C4B0'
 };
 
-let products = [];
+// Data state
+let dataLayanan = [];
+let dataKategori = [];
+let dataSubkategori = [];
+let dataProduk = [];
+let dataWarna = [];
+let dataGambar = [];
 let portfolio = [];
 let kontak = [];
-let filteredItems = [];
-let currentFilter = null;
+
+// Filter state
+let selectedLayanan = null;
+let selectedKategori = null;
+let selectedSubkategori = null;
+
+// Detail state
 let selectedItem = null;
 let selectedWarnaIndex = 0;
 let currentImageIndex = 0;
 
-const filterList = ['Semua', 'Jasa Desain', 'Kain Printing', 'Pakaian Jadi', 'Asesoris', 'Portfolio'];
+// Sample data fallback
+const SAMPLE_LAYANAN = [
+    { id: 'l1', nama: 'Jasa Desain', order: 1 },
+    { id: 'l2', nama: 'Kain Printing', order: 2 },
+    { id: 'l3', nama: 'Pakaian Jadi', order: 3 },
+    { id: 'l4', nama: 'Asesoris', order: 4 }
+];
+
+const SAMPLE_KATEGORI = [
+    { id: 'k1', nama: 'Batik', layanan: 'l1', order: 1 },
+    { id: 'k2', nama: 'Tenun', layanan: 'l1', order: 2 },
+    { id: 'k3', nama: 'Songket', layanan: 'l1', order: 3 },
+    { id: 'k4', nama: 'Kain Polos', layanan: 'l2', order: 1 },
+    { id: 'k5', nama: 'Kain Motif', layanan: 'l2', order: 2 },
+    { id: 'k6', nama: 'Blouse', layanan: 'l3', order: 1 },
+    { id: 'k7', nama: 'Dress', layanan: 'l3', order: 2 },
+    { id: 'k8', nama: 'Gelang', layanan: 'l4', order: 1 },
+    { id: 'k9', nama: 'Cincin', layanan: 'l4', order: 2 }
+];
+
+const SAMPLE_SUBKATEGORI = [
+    { id: 'sk1', nama: 'Motif Parang', kategori: 'k1', order: 1 },
+    { id: 'sk2', nama: 'Motif Bunga', kategori: 'k1', order: 2 },
+    { id: 'sk3', nama: 'Motif Geometris', kategori: 'k1', order: 3 },
+    { id: 'sk4', nama: 'Motif Kawung', kategori: 'k1', order: 4 },
+    { id: 'sk5', nama: 'Tenun Ikat', kategori: 'k2', order: 1 },
+    { id: 'sk6', nama: 'Tenun Sutera', kategori: 'k2', order: 2 },
+    { id: 'sk7', nama: 'Songket Emas', kategori: 'k3', order: 1 },
+    { id: 'sk8', nama: 'Songket Perak', kategori: 'k3', order: 2 }
+];
+
+const SAMPLE_PRODUK = [
+    { id: 'p1', nama: 'Motif Parang Klasik', subkategori: 'sk1', harga: 150000, deskripsi: 'Desain motif parang klasik' },
+    { id: 'p2', nama: 'Motif Bunga Melati', subkategori: 'sk2', harga: 175000, deskripsi: 'Motif bunga melati' },
+    { id: 'p3', nama: 'Tenun Ikat Premium', subkategori: 'sk5', harga: 250000, deskripsi: 'Tenun ikat kualitas premium' }
+];
+
+const SAMPLE_WARNA = [
+    { id: 'w1', nama: 'Merah Maroon', produk: 'p1' },
+    { id: 'w2', nama: 'Biru Navy', produk: 'p1' },
+    { id: 'w3', nama: 'Putih Coklat', produk: 'p2' },
+    { id: 'w4', nama: 'Kuning Gold', produk: 'p2' }
+];
+
+const SAMPLE_GAMBAR = [
+    { id: 'g1', gambar: 'https://picsum.photos/400/400?random=1', deskripsi: 'Tampak depan', warna: 'w1' },
+    { id: 'g2', gambar: 'https://picsum.photos/400/400?random=2', deskripsi: 'Detail motif', warna: 'w1' },
+    { id: 'g3', gambar: 'https://picsum.photos/400/400?random=3', deskripsi: 'Tampak depan', warna: 'w2' },
+    { id: 'g4', gambar: 'https://picsum.photos/400/400?random=4', deskripsi: 'Detail motif', warna: 'w3' }
+];
+
+const SAMPLE_PORTFOLIO = [
+    { id: 'pf1', judul: 'Koleksi Batik Nusantara', kategori: 'Batik', image: 'https://picsum.photos/400/400?random=10', deskripsi: 'Koleksi batik' },
+    { id: 'pf2', judul: 'Tenun Ikat Lombok', kategori: 'Tenun', image: 'https://picsum.photos/400/400?random=11', deskripsi: 'Tenun ikat Lombok' }
+];
 
 document.addEventListener('DOMContentLoaded', async () => {
     renderWelcomeScreen();
 });
 
 function renderWelcomeScreen() {
-    const ws = document.getElementById("welcomeScreen");
+    const ws = document.getElementById('welcomeScreen');
     if (ws) {
         ws.innerHTML = `
             <div class="simple-welcome">
@@ -50,8 +122,8 @@ function renderWelcomeScreen() {
 }
 
 function openKatalog() {
-    const ws = document.getElementById("welcomeScreen");
-    const app = document.getElementById("appScreen");
+    const ws = document.getElementById('welcomeScreen');
+    const app = document.getElementById('appScreen');
     if (ws) ws.style.display = 'none';
     if (app) {
         app.style.display = 'flex';
@@ -61,17 +133,164 @@ function openKatalog() {
 
 async function loadKatalog() {
     renderKatalogHeader();
-    await Promise.all([loadProducts(), loadPortfolio(), loadKontak()]);
+    await Promise.all([
+        loadLayanan(),
+        loadKategori(),
+        loadSubkategori(),
+        loadProduk(),
+        loadWarna(),
+        loadGambar(),
+        loadPortfolio(),
+        loadKontak()
+    ]);
+    buildHierarchicalData();
     renderItems();
 }
 
+async function loadLayanan() {
+    try {
+        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.layananCollection + '/records?per-page=500&sort=order');
+        if (res.ok) {
+            const data = await res.json();
+            dataLayanan = data.items || [];
+        }
+    } catch (e) { console.error('Error loading layanan:', e); }
+    if (!dataLayanan.length) dataLayanan = SAMPLE_LAYANAN;
+}
+
+async function loadKategori() {
+    try {
+        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.kategoriCollection + '/records?per-page=500&sort=order');
+        if (res.ok) {
+            const data = await res.json();
+            dataKategori = data.items || [];
+        }
+    } catch (e) { console.error('Error loading kategori:', e); }
+    if (!dataKategori.length) dataKategori = SAMPLE_KATEGORI;
+}
+
+async function loadSubkategori() {
+    try {
+        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.subkategoriCollection + '/records?per-page=500&sort=order');
+        if (res.ok) {
+            const data = await res.json();
+            dataSubkategori = data.items || [];
+        }
+    } catch (e) { console.error('Error loading subkategori:', e); }
+    if (!dataSubkategori.length) dataSubkategori = SAMPLE_SUBKATEGORI;
+}
+
+async function loadProduk() {
+    try {
+        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.produkCollection + '/records?per-page=500&sort=-created');
+        if (res.ok) {
+            const data = await res.json();
+            dataProduk = data.items || [];
+        }
+    } catch (e) { console.error('Error loading produk:', e); }
+    if (!dataProduk.length) dataProduk = SAMPLE_PRODUK;
+}
+
+async function loadWarna() {
+    try {
+        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.warnaCollection + '/records?per-page=500');
+        if (res.ok) {
+            const data = await res.json();
+            dataWarna = data.items || [];
+        }
+    } catch (e) { console.error('Error loading warna:', e); }
+    if (!dataWarna.length) dataWarna = SAMPLE_WARNA;
+}
+
+async function loadGambar() {
+    try {
+        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.gambarCollection + '/records?per-page=1000');
+        if (res.ok) {
+            const data = await res.json();
+            dataGambar = data.items || [];
+        }
+    } catch (e) { console.error('Error loading gambar:', e); }
+    if (!dataGambar.length) dataGambar = SAMPLE_GAMBAR;
+}
+
+async function loadPortfolio() {
+    try {
+        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.portfolioCollection + '/records?per-page=500&sort=-created');
+        if (res.ok) {
+            const data = await res.json();
+            portfolio = (data.items || []).map(item => ({
+                ...item,
+                type: 'portfolio',
+                image: item.image ? CONFIG.pocketbaseUrl + '/api/files/' + CONFIG.portfolioCollection + '/' + item.id + '/' + item.image : ''
+            }));
+        }
+    } catch (e) { console.error('Error loading portfolio:', e); }
+    if (!portfolio.length) portfolio = SAMPLE_PORTFOLIO;
+}
+
+async function loadKontak() {
+    try {
+        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.kontakCollection + '/records?per-page=100');
+        if (res.ok) {
+            const data = await res.json();
+            kontak = data.items || [];
+        }
+    } catch (e) { console.error('Error loading kontak:', e); }
+}
+
+function buildHierarchicalData() {
+    for (const layanan of dataLayanan) {
+        layanan.kategoriList = dataKategori.filter(k => {
+            const kid = typeof k.layanan === 'string' ? k.layanan : k.layanan?.id;
+            return kid === layanan.id;
+        }).sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        for (const kategori of layanan.kategoriList) {
+            kategori.subkategoriList = dataSubkategori.filter(sk => {
+                const skid = typeof sk.kategori === 'string' ? sk.kategori : sk.kategori?.id;
+                return skid === kategori.id;
+            }).sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            for (const subkategori of kategori.subkategoriList) {
+                subkategori.produkList = dataProduk.filter(p => {
+                    const pid = typeof p.subkategori === 'string' ? p.subkategori : p.subkategori?.id;
+                    return pid === subkategori.id;
+                });
+
+                for (const produk of subkategori.produkList) {
+                    produk.warnaList = dataWarna.filter(w => {
+                        const wid = typeof w.produk === 'string' ? w.produk : w.produk?.id;
+                        return wid === produk.id;
+                    }).map(warna => {
+                        const warnaGambar = dataGambar.filter(g => {
+                            const gid = typeof g.warna === 'string' ? g.warna : g.warna?.id;
+                            return gid === warna.id;
+                        }).map(g => ({
+                            id: g.id,
+                            gambar: CONFIG.pocketbaseUrl + '/api/files/' + CONFIG.gambarCollection + '/' + g.id + '/' + g.gambar,
+                            deskripsi: g.deskripsi || ''
+                        }));
+                        return {
+                            id: warna.id,
+                            nama: warna.nama,
+                            image: warnaGambar.length > 0 ? warnaGambar[0].gambar : '',
+                            images: warnaGambar
+                        };
+                    });
+                    produk.image = produk.warnaList.length > 0 ? produk.warnaList[0].image : '';
+                }
+            }
+        }
+    }
+}
+
 function renderKatalogHeader() {
-    const app = document.getElementById("appScreen");
+    const app = document.getElementById('appScreen');
     if (!app) return;
 
-    const filterHtml = filterList.map(f => {
-        const active = (f === 'Semua' && !currentFilter) || f === currentFilter ? 'active' : '';
-        return `<button class="filter-chip ${active}" onclick="toggleFilter('${f}')">${f}</button>`;
+    const layananFilters = dataLayanan.map(l => {
+        const active = selectedLayanan === l.id ? 'active' : '';
+        return `<button class="filter-chip ${active}" onclick="selectLayanan('${l.id}')">${l.nama}</button>`;
     }).join('');
 
     app.innerHTML = `
@@ -83,9 +302,14 @@ function renderKatalogHeader() {
                 <img src="assets/images/logo-motifkain.png" alt="MotifKain" class="header-logo">
             </div>
             <div class="filter-section">
-                <div class="filter-chips">${filterHtml}</div>
+                <div class="filter-chips">
+                    <button class="filter-chip ${!selectedLayanan ? 'active' : ''}" onclick="selectLayanan(null)">Semua</button>
+                    ${layananFilters}
+                    <button class="filter-chip ${selectedLayanan === 'portfolio' ? 'active' : ''}" onclick="selectLayanan('portfolio')">Portfolio</button>
+                </div>
             </div>
         </header>
+        <div class="breadcrumb" id="breadcrumb"></div>
         <div class="products-container" id="productsContainer">
             <div class="products-grid" id="productsGrid"></div>
             <div class="loading" id="loading"><div class="spinner"></div></div>
@@ -94,130 +318,162 @@ function renderKatalogHeader() {
     `;
 }
 
-function toggleFilter(f) {
-    currentFilter = f === 'Semua' ? null : f;
+function selectLayanan(id) {
+    selectedLayanan = id;
+    selectedKategori = null;
+    selectedSubkategori = null;
     renderKatalogHeader();
     renderItems();
 }
 
-async function loadProducts() {
-    try {
-        // Load all produk
-        const res = await fetch(
-            CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.produkCollection +
-            '/records?per-page=500&sort=-created'
-        );
-        if (res.ok) {
-            const data = await res.json();
-            products = data.items.map(item => {
-                const p = { ...item, type: 'produk' };
+function selectKategori(id) {
+    selectedKategori = id;
+    selectedSubkategori = null;
+    renderItems();
+}
 
-                // Load all warna for this produk
-                return p;
-            });
+function selectSubkategori(id) {
+    selectedSubkategori = id;
+    renderItems();
+}
 
-            // Load all warna
-            const warnaRes = await fetch(
-                CONFIG.pocketbaseUrl + '/api/collections/warna/records?per-page=500'
-            );
-            const allWarna = warnaRes.ok ? await warnaRes.json() : { items: [] };
-            const produkIds = products.map(p => p.id);
-            const filteredWarna = allWarna.items.filter(w => produkIds.includes(w.produk));
+function clearKategori() {
+    selectedKategori = null;
+    selectedSubkategori = null;
+    renderKatalogHeader();
+    renderItems();
+}
 
-            // Load all gambar
-            const gambarRes = await fetch(
-                CONFIG.pocketbaseUrl + '/api/collections/gambar/records?per-page=1000'
-            );
-            const allGambar = gambarRes.ok ? await gambarRes.json() : { items: [] };
+function clearSubkategori() {
+    selectedSubkategori = null;
+    renderItems();
+}
 
-            // Match warna and gambar to produk
-            for (const p of products) {
-                const produkWarna = filteredWarna.filter(w => w.produk === p.id);
-                p.warnaList = produkWarna.map(warna => {
-                    const warnaGambar = allGambar.items.filter(g => g.warna === warna.id);
-                    const images = warnaGambar.map(g => ({
-                        id: g.id,
-                        gambar: CONFIG.pocketbaseUrl + '/api/files/gambar/' + g.id + '/' + g.gambar,
-                        deskripsi: g.deskripsi
-                    }));
-                    return {
-                        id: warna.id,
-                        nama: warna.nama,
-                        image: images.length > 0 ? images[0].gambar : '',
-                        images: images
-                    };
-                });
+function renderItems() {
+    const grid = document.getElementById('productsGrid');
+    const loading = document.getElementById('loading');
+    const breadcrumb = document.getElementById('breadcrumb');
+    if (loading) loading.style.display = 'none';
+    if (!grid) return;
 
-                // Set first image as produk image
-                if (p.warnaList && p.warnaList.length > 0) {
-                    for (const w of p.warnaList) {
-                        if (w.image) {
-                            p.image = w.image;
-                            break;
-                        }
-                    }
-                }
-            }
+    if (selectedLayanan === 'portfolio') {
+        if (breadcrumb) breadcrumb.innerHTML = '<span>Portfolio</span>';
+        renderPortfolio(grid);
+        return;
+    }
+
+    if (!selectedLayanan) {
+        if (breadcrumb) breadcrumb.innerHTML = '';
+        renderLayananList(grid);
+        return;
+    }
+
+    const layanan = dataLayanan.find(l => l.id === selectedLayanan);
+    if (!layanan) return;
+
+    if (!selectedKategori) {
+        if (breadcrumb) breadcrumb.innerHTML = `<span onclick="clearKategori()">${layanan.nama}</span>`;
+        renderKategoriList(grid, layanan);
+        return;
+    }
+
+    const kategori = layanan.kategoriList.find(k => k.id === selectedKategori);
+    if (!kategori) return;
+
+    if (!selectedSubkategori) {
+        if (breadcrumb) breadcrumb.innerHTML = `<span onclick="clearKategori()">${layanan.nama}</span> &gt; <span>${kategori.nama}</span>`;
+        renderSubkategoriList(grid, kategori);
+        return;
+    }
+
+    const subkategori = kategori.subkategoriList.find(s => s.id === selectedSubkategori);
+    if (!subkategori) return;
+
+    if (breadcrumb) breadcrumb.innerHTML = `<span onclick="clearKategori()">${layanan.nama}</span> &gt; <span onclick="clearSubkategori()">${kategori.nama}</span> &gt; <span>${subkategori.nama}</span>`;
+    renderProdukList(grid, subkategori);
+}
+
+function renderLayananList(grid) {
+    grid.innerHTML = dataLayanan.map(layanan => `
+        <div class="category-card" onclick="selectLayanan('${layanan.id}')">
+            <h3>${layanan.nama}</h3>
+            <p>${layanan.kategoriList?.length || 0} kategori</p>
+        </div>
+    `).join('');
+}
+
+function renderKategoriList(grid, layanan) {
+    grid.innerHTML = layanan.kategoriList.map(kategori => `
+        <div class="category-card" onclick="selectKategori('${kategori.id}')">
+            <h3>${kategori.nama}</h3>
+            <p>${kategori.subkategoriList?.length || 0} subkategori</p>
+        </div>
+    `).join('');
+}
+
+function renderSubkategoriList(grid, kategori) {
+    grid.innerHTML = kategori.subkategoriList.map(subkategori => `
+        <div class="category-card" onclick="selectSubkategori('${subkategori.id}')">
+            <h3>${subkategori.nama}</h3>
+            <p>${subkategori.produkList?.length || 0} produk</p>
+        </div>
+    `).join('');
+}
+
+function renderProdukList(grid, subkategori) {
+    const produkList = subkategori.produkList || [];
+    if (produkList.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><h3>Belum ada produk</h3><p>Subkategori ini belum memiliki produk.</p></div>';
+        return;
+    }
+
+    grid.innerHTML = produkList.map(produk => {
+        const thumbImages = [];
+        for (const warna of produk.warnaList || []) {
+            if (warna.image) thumbImages.push(warna.image);
+            if (thumbImages.length >= 4) break;
         }
-    } catch (e) { console.error(e); }
-    if (!products.length) products = getSampleProducts();
+
+        const thumbnailsHtml = thumbImages.length > 1 ? `
+            <div class="card-thumbnails">
+                ${thumbImages.map((img, i) => `<div class="card-thumb ${i === 0 ? 'active' : ''}"><img src="${img}" alt=""></div>`).join('')}
+            </div>
+        ` : '';
+
+        return `
+            <div class="product-card" onclick="showDetail('${produk.id}', '${subkategori.id}')">
+                <div class="card-img">
+                    <img src="${produk.image || 'https://via.placeholder.com/400'}" alt="${produk.nama}">
+                </div>
+                ${thumbnailsHtml}
+                <div class="card-info">
+                    <h4>${produk.nama}</h4>
+                    ${produk.harga ? `<p class="price">${formatRupiah(produk.harga)}</p>` : ''}
+                    ${produk.deskripsi ? `<p class="desc">${produk.deskripsi}</p>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
-async function loadPortfolio() {
-    try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.portfolioCollection + '/records?per-page=500&sort=-created');
-        if (res.ok) {
-            const data = await res.json();
-            portfolio = data.items.map(item => ({
-                ...item,
-                type: 'portfolio',
-                image: item.image ? CONFIG.pocketbaseUrl + '/api/files/' + CONFIG.portfolioCollection + '/' + item.id + '/' + item.image : '',
-                images: (item.images || []).map(img => CONFIG.pocketbaseUrl + '/api/files/' + CONFIG.portfolioCollection + '/' + item.id + '/' + img)
-            }));
-        }
-    } catch (e) { console.error(e); }
-    if (!portfolio.length) portfolio = getSamplePortfolio();
-}
+function renderPortfolio(grid) {
+    if (portfolio.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><h3>Belum ada portfolio</h3></div>';
+        return;
+    }
 
-async function loadKontak() {
-    try {
-        const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.kontakCollection + '/records?per-page=100');
-        if (res.ok) {
-            const data = await res.json();
-            kontak = data.items || [];
-        }
-    } catch (e) { console.error(e); }
-}
-
-function getSampleProducts() {
-    return [
-        {
-            id: "p1", nama: "Motif Bunga Melati", harga: 150000, layanan: "Jasa Desain", type: "produk",
-            image: "https://picsum.photos/400/400?random=1",
-            deskripsi: "Desain motif bunga melati untuk kain batik",
-            warnaList: [
-                { id: "w1", nama: "Merah Maroon", image: "https://picsum.photos/400/400?random=1", images: ["https://picsum.photos/400/400?random=2"], deskripsi: "Detail motif bunga" },
-                { id: "w2", nama: "Biru Navy", image: "https://picsum.photos/400/400?random=3", images: ["https://picsum.photos/400/400?random=4"], deskripsi: "Motif garis" }
-            ]
-        },
-        {
-            id: "p2", nama: "Motif Parang Classic", harga: 175000, layanan: "Jasa Desain", type: "produk",
-            image: "https://picsum.photos/400/400?random=5",
-            deskripsi: "Motif parang klasik pilihan",
-            warnaList: [
-                { id: "w3", nama: "Hitam Gold", image: "https://picsum.photos/400/400?random=5", images: ["https://picsum.photos/400/400?random=6"], deskripsi: "Parang emas" }
-            ]
-        },
-        { id: "p3", nama: "Kain Printing Premium", harga: 200000, layanan: "Kain Printing", type: "produk", image: "https://picsum.photos/400/400?random=7", deskripsi: "Kain printing berkualitas premium", warnaList: [] },
-        { id: "p4", nama: "Blouse Batik Elegant", harga: 350000, layanan: "Pakaian Jadi", type: "produk", image: "https://picsum.photos/400/400?random=8", deskripsi: "Blouse batik elegan", warnaList: [] },
-    ];
-}
-
-function getSamplePortfolio() {
-    return [
-        { id: "pf1", judul: "Koleksi Batik Nusantara", kategori: "Batik", type: "portfolio", image: "https://picsum.photos/400/400?random=10", deskripsi: "Koleksi batik dari berbagai daerah", images: [] },
-        { id: "pf2", judul: "Tenun Ikat Lombok", kategori: "Tenun", type: "portfolio", image: "https://picsum.photos/400/400?random=11", deskripsi: "Tenun ikat dari Lombok", images: [] },
-    ];
+    grid.innerHTML = portfolio.map(item => `
+        <div class="product-card" onclick="showDetail('${item.id}', 'portfolio')">
+            <div class="card-img">
+                <img src="${item.image || 'https://via.placeholder.com/400'}" alt="${item.judul}">
+                <span class="type-badge">Portfolio</span>
+            </div>
+            <div class="card-info">
+                <h4>${item.judul}</h4>
+                <p class="layanan">${item.kategori || 'Portfolio'}</p>
+            </div>
+        </div>
+    `).join('');
 }
 
 function formatRupiah(n) {
@@ -226,68 +482,18 @@ function formatRupiah(n) {
     return 'Rp ' + (n || 0).toLocaleString('id-ID');
 }
 
-function renderItems() {
-    const grid = document.getElementById('productsGrid');
-    const loading = document.getElementById('loading');
-    if (loading) loading.style.display = 'none';
-    if (!grid) return;
-
-    const allItems = [...products, ...portfolio];
-
-    if (currentFilter === 'Portfolio') {
-        filteredItems = portfolio;
-    } else if (currentFilter) {
-        filteredItems = products.filter(p => p.layanan === currentFilter);
+function showDetail(id, context) {
+    if (context === 'portfolio') {
+        selectedItem = portfolio.find(p => p.id === id);
+        selectedItem.type = 'portfolio';
     } else {
-        filteredItems = allItems;
-    }
-
-    if (filteredItems.length === 0) {
-        grid.innerHTML = '<div class="empty-state"><h3>Tidak ada item</h3><p>Coba pilih filter lain</p></div>';
-        return;
-    }
-
-    grid.innerHTML = filteredItems.map(item => {
-        const isPortfolio = item.type === 'portfolio';
-        const name = isPortfolio ? (item.judul || '') : (item.nama || '');
-
-        // Build thumbnail images
-        let thumbnailsHtml = '';
-        if (!isPortfolio && item.warnaList?.length > 0) {
-            const thumbImages = [];
-            for (const warna of item.warnaList) {
-                if (warna.image) thumbImages.push(warna.image);
-                if (thumbImages.length >= 4) break;
-            }
-            if (thumbImages.length > 1) {
-                thumbnailsHtml = `
-                    <div class="card-thumbnails">
-                        ${thumbImages.map((img, i) => `<div class="card-thumb ${i === 0 ? 'active' : ''}"><img src="${img}" alt=""></div>`).join('')}
-                    </div>
-                `;
-            }
+        const subkategori = findSubkategoriByProduk(id);
+        if (subkategori) {
+            selectedItem = subkategori.produkList.find(p => p.id === id);
+            selectedItem.subkategori = subkategori;
         }
+    }
 
-        return `
-            <div class="product-card" onclick="showDetail('${item.id}')">
-                <div class="card-img">
-                    <img src="${item.image || 'https://via.placeholder.com/400'}" alt="${name}">
-                    ${isPortfolio ? '<span class="type-badge">Portfolio</span>' : ''}
-                </div>
-                ${thumbnailsHtml}
-                <div class="card-info">
-                    <h4>${name}</h4>
-                    ${item.harga ? `<p class="price">${formatRupiah(item.harga)}</p>` : ''}
-                    <p class="layanan">${isPortfolio ? (item.kategori || 'Portfolio') : (item.layanan || '')}</p>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function showDetail(id) {
-    const allItems = [...products, ...portfolio];
-    selectedItem = allItems.find(item => item.id === id);
     if (!selectedItem) return;
 
     selectedWarnaIndex = 0;
@@ -298,16 +504,12 @@ function showDetail(id) {
     const modal = document.getElementById('detailModal');
     if (!modal) return;
 
-    // Build gallery from first warna
     const firstWarna = selectedItem.warnaList?.[0];
     const allImages = firstWarna
         ? [firstWarna.image, ...(firstWarna.images || [])].filter(Boolean)
         : [];
 
-    // Build warna selector HTML
     const warnaSelectorHtml = buildWarnaDots(selectedItem);
-
-    // Portfolio images
     const portfolioImages = [selectedItem.image, ...(selectedItem.images || [])].filter(Boolean);
 
     modal.innerHTML = `
@@ -345,9 +547,10 @@ function showDetail(id) {
             <div class="modal-body">
                 <h2>${name}</h2>
                 ${selectedItem.harga ? `<p class="harga">${formatRupiah(selectedItem.harga)}</p>` : ''}
-                ${!isPortfolio && (selectedItem.kategori || selectedItem.subkategori) ? `
-                <p class="kategori-info">
-                    ${selectedItem.kategori || ''}${selectedItem.kategori && selectedItem.subkategori ? ' - ' : ''}${selectedItem.subkategori || ''}
+
+                ${!isPortfolio && selectedItem.subkategori ? `
+                <p class="breadcrumb-info">
+                    ${selectedItem.subkategori.nama}
                 </p>
                 ` : ''}
 
@@ -380,6 +583,19 @@ function showDetail(id) {
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';
     initTouchSwipe();
+}
+
+function findSubkategoriByProduk(produkId) {
+    for (const layanan of dataLayanan) {
+        for (const kategori of layanan.kategoriList || []) {
+            for (const subkategori of kategori.subkategoriList || []) {
+                if (subkategori.produkList?.some(p => p.id === produkId)) {
+                    return subkategori;
+                }
+            }
+        }
+    }
+    return null;
 }
 
 function buildWarnaDots(item) {
@@ -418,26 +634,6 @@ function getColorCode(colorName) {
     return '#D4C4B0';
 }
 
-function showWarnaList() {
-    if (!selectedItem || !selectedItem.warnaList) return;
-
-    const options = selectedItem.warnaList.map((warna, i) =>
-        `<button onclick="selectWarna(${i}); closeWarnaList();">${warna.nama}</button>`
-    ).join('');
-
-    const dropdown = document.createElement('div');
-    dropdown.className = 'warna-dropdown show';
-    dropdown.innerHTML = `<div class="warna-dropdown-content">${options}</div>`;
-    dropdown.id = 'warnaDropdownTemp';
-    dropdown.onclick = (e) => { if (e.target === dropdown) closeWarnaList(); };
-    document.body.appendChild(dropdown);
-}
-
-function closeWarnaList() {
-    const dropdown = document.getElementById('warnaDropdownTemp');
-    if (dropdown) dropdown.remove();
-}
-
 function selectWarna(index) {
     selectedWarnaIndex = index;
     const warna = selectedItem.warnaList[index];
@@ -445,7 +641,6 @@ function selectWarna(index) {
 
     currentImageIndex = 0;
 
-    // Update gallery
     const allImages = [warna.image, ...(warna.images || [])].filter(Boolean);
     const galleryContainer = document.getElementById('galleryContainer');
     if (galleryContainer) {
@@ -455,24 +650,20 @@ function selectWarna(index) {
         ).join('');
     }
 
-    // Update dots
     const dotsHtml = allImages.map((_, i) =>
         `<span class="gdot ${i === 0 ? 'active' : ''}" onclick="goToImage(${i})"></span>`
     ).join('');
     const dotsContainer = document.querySelector('.gallery-dots');
     if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
 
-    // Update gallery nav visibility
     const nav = document.querySelector('.gallery-nav');
     if (nav) nav.style.display = allImages.length > 1 ? 'flex' : 'none';
 
-    // Update selected warna dots
     const dots = document.querySelectorAll('.warna-dot');
     dots.forEach((dot, i) => {
         dot.classList.toggle('active', i === index);
     });
 
-    // Update deskripsi
     const descSection = document.getElementById('gambarDescSection');
     const descText = document.getElementById('gambarDescText');
     if (descSection && descText) {
@@ -490,30 +681,25 @@ function initTouchSwipe() {
     if (!container) return;
 
     let startX = 0;
-    let startY = 0;
     let isZooming = false;
 
     container.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
         isZooming = container.classList.contains('zoomed');
     }, { passive: true });
 
     container.addEventListener('touchend', (e) => {
-        if (isZooming) return; // Skip swipe when zoomed
+        if (isZooming) return;
         const dx = e.changedTouches[0].clientX - startX;
-        const dy = e.changedTouches[0].clientY - startY;
-        if (Math.abs(dx) > 50 && Math.abs(dy) < 30) {
+        if (Math.abs(dx) > 50) {
             dx < 0 ? nextImg() : prevImg();
         }
     }, { passive: true });
 
-    // Click to zoom
     container.addEventListener('click', (e) => {
-        if (Math.abs(e.clientX - startX) > 10) return; // Ignore swipe end
+        if (Math.abs(e.clientX - startX) > 10) return;
         container.classList.toggle('zoomed');
-        const imgs = container.querySelectorAll('.gallery-img');
-        imgs.forEach(img => img.classList.toggle('zoomed'));
+        container.querySelectorAll('.gallery-img').forEach(img => img.classList.toggle('zoomed'));
     });
 }
 
@@ -521,7 +707,7 @@ function prevImg() {
     const container = document.getElementById('galleryContainer');
     if (container?.classList.contains('zoomed')) {
         container.classList.remove('zoomed');
-        document.querySelectorAll('.gallery-img').forEach(img => img.classList.remove('zoomed'));
+        container.querySelectorAll('.gallery-img').forEach(img => img.classList.remove('zoomed'));
     }
     const imgs = document.querySelectorAll('.gallery-img');
     if (imgs.length <= 1) return;
@@ -530,14 +716,13 @@ function prevImg() {
     currentImageIndex = (currentImageIndex - 1 + imgs.length) % imgs.length;
     imgs[currentImageIndex].style.display = 'block';
     document.querySelectorAll('.gdot')[currentImageIndex]?.classList.add('active');
-    updateCounter();
 }
 
 function nextImg() {
     const container = document.getElementById('galleryContainer');
     if (container?.classList.contains('zoomed')) {
         container.classList.remove('zoomed');
-        document.querySelectorAll('.gallery-img').forEach(img => img.classList.remove('zoomed'));
+        container.querySelectorAll('.gallery-img').forEach(img => img.classList.remove('zoomed'));
     }
     const imgs = document.querySelectorAll('.gallery-img');
     if (imgs.length <= 1) return;
@@ -546,14 +731,13 @@ function nextImg() {
     currentImageIndex = (currentImageIndex + 1) % imgs.length;
     imgs[currentImageIndex].style.display = 'block';
     document.querySelectorAll('.gdot')[currentImageIndex]?.classList.add('active');
-    updateCounter();
 }
 
 function goToImage(i) {
     const container = document.getElementById('galleryContainer');
     if (container?.classList.contains('zoomed')) {
         container.classList.remove('zoomed');
-        document.querySelectorAll('.gallery-img').forEach(img => img.classList.remove('zoomed'));
+        container.querySelectorAll('.gallery-img').forEach(img => img.classList.remove('zoomed'));
     }
     const imgs = document.querySelectorAll('.gallery-img');
     if (!imgs.length) return;
@@ -562,13 +746,6 @@ function goToImage(i) {
     currentImageIndex = i;
     imgs[currentImageIndex].style.display = 'block';
     document.querySelectorAll('.gdot')[currentImageIndex]?.classList.add('active');
-    updateCounter();
-}
-
-function updateCounter() {
-    const counter = document.querySelector('.gallery-counter');
-    const imgs = document.querySelectorAll('.gallery-img');
-    if (counter) counter.textContent = `${currentImageIndex + 1} / ${imgs.length}`;
 }
 
 function closeDetail() {
@@ -587,10 +764,9 @@ function openWa(role) {
     let wa = person.whatsapp.replace(/\D/g, '');
     if (wa.startsWith('0')) wa = '62' + wa.slice(1);
     const produkName = selectedItem?.nama || 'produk ini';
-    const msg = encodeURIComponent(`Assalamualaikum warahmah. saya tertarik dengan produk ini: *${produkName}*`);
+    const msg = encodeURIComponent(`Assalamualaikum warahmatullahi wabarakatuh. Saya tertarik dengan produk ini: *${produkName}*`);
     window.open('https://wa.me/' + wa + '?text=' + msg, '_blank');
 
-    // Close dropdown
     const dropdown = document.getElementById('waDropdown');
     if (dropdown) dropdown.classList.remove('show');
 }
@@ -600,7 +776,6 @@ function toggleWaDropdown() {
     if (dropdown) dropdown.classList.toggle('show');
 }
 
-// Close dropdown when clicking outside
 document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('waDropdown');
     const btn = document.querySelector('.wa-btn-icon');
@@ -610,8 +785,8 @@ document.addEventListener('click', (e) => {
 });
 
 function backToWelcome() {
-    const ws = document.getElementById("welcomeScreen");
-    const app = document.getElementById("appScreen");
+    const ws = document.getElementById('welcomeScreen');
+    const app = document.getElementById('appScreen');
     if (app) app.style.display = 'none';
     if (ws) {
         ws.style.display = 'flex';
