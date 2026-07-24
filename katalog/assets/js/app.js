@@ -161,14 +161,51 @@ async function loadProducts() {
     const loading = document.getElementById('loading');
     if (loading) loading.style.display = 'flex';
     try {
+        // Load all produk
         const res = await fetch(CONFIG.pocketbaseUrl + '/api/collections/' + CONFIG.produkCollection + '/records?per-page=200&sort=-created');
         if (res.ok) {
             const data = await res.json();
-            products = data.items.map(item => ({
-                ...item,
-                image: item.image ? CONFIG.pocketbaseUrl + '/api/files/' + CONFIG.produkCollection + '/' + item.id + '/' + item.image : '',
-                images: (item.images || []).map(img => CONFIG.pocketbaseUrl + '/api/files/' + CONFIG.produkCollection + '/' + item.id + '/' + img)
-            }));
+            const produkList = data.items || [];
+
+            // Load all warna dan gambar untuk setiap produk
+            const warnaRes = await fetch(CONFIG.pocketbaseUrl + '/api/collections/warna/records?per-page=500');
+            const gambarRes = await fetch(CONFIG.pocketbaseUrl + '/api/collections/gambar/records?per-page=500');
+
+            let warnaMap = {};
+            if (warnaRes.ok) {
+                const warnaData = await warnaRes.json();
+                (warnaData.items || []).forEach(w => {
+                    warnaMap[w.produk] = warnaMap[w.produk] || [];
+                    warnaMap[w.produk].push(w);
+                });
+            }
+
+            let gambarMap = {};
+            if (gambarRes.ok) {
+                const gambarData = await gambarRes.json();
+                (gambarData.items || []).forEach(g => {
+                    if (g.gambar) {
+                        (g.warna || []).forEach(warnaId => {
+                            const produkId = Object.keys(warnaMap).find(pid =>
+                                warnaMap[pid].some(w => w.id === warnaId)
+                            );
+                            if (produkId) {
+                                gambarMap[produkId] = gambarMap[produkId] || [];
+                                gambarMap[produkId].push(CONFIG.pocketbaseUrl + '/api/files/gambar/' + g.id + '/' + g.gambar);
+                            }
+                        });
+                    }
+                });
+            }
+
+            products = produkList.map(item => {
+                const images = gambarMap[item.id] || [];
+                return {
+                    ...item,
+                    image: images[0] || '',
+                    images: images
+                };
+            });
         }
     } catch (e) { console.error(e); }
     if (!products.length) products = getSamples();
@@ -198,9 +235,13 @@ function renderProducts() {
         grid.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="#BDBDBD"><path d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 1 0 9 16 6.5 6.5 0 1 0 9 16zm6.5 3c0 2.21-1.79 4-4 4s-4-1.79-4-4 1.79-4 4-4 4 1.79 4 4-1.79 4-4z"/></svg><h3>Tidak ada produk</h3><p>Coba ubah filter</p></div>';
         return;
     }
-    grid.innerHTML = filteredProducts.map(p => `
+    grid.innerHTML = filteredProducts.map((p, idx) => {
+        const allImages = [p.image, ...(p.images || [])].filter(Boolean);
+        return `
         <div class="product-card" onclick="showDetail('${p.id}')">
-            <div class="card-img"><img src="${p.image || 'https://via.placeholder.com/400'}" alt="${p.nama}"></div>
+            <div class="card-img" onclick="event.stopPropagation(); openImageZoom('${p.image || ''}', ${JSON.stringify(allImages).replace(/"/g, '&quot;')}, 0)">
+                <img src="${p.image || 'https://via.placeholder.com/400'}" alt="${p.nama}">
+            </div>
             <div class="card-info">
                 <h4>${p.nama || ''}</h4>
                 <p class="price">${p.harga ? formatRupiah(p.harga) : ''}</p>
@@ -208,7 +249,7 @@ function renderProducts() {
                 <p class="lokasi">📍 ${p.daerah || '-'}</p>
             </div>
         </div>
-    `).join('');
+    `;}).join('');
 }
 
 function renderProductCards() { renderProducts(); }
@@ -235,7 +276,7 @@ function showDetail(id) {
             <div class="modal-handle"></div>
             <button class="modal-close" onclick="closeDetail()">✕</button>
             <div class="gallery" id="gallery" ontouchstart="touchStart(event)" ontouchend="touchEnd(event)">
-                ${imgs.map((img, i) => `<img src="${img}" alt="" class="gallery-img" data-index="${i}" style="display:${i === 0 ? 'block' : 'none'}">`).join('')}
+                ${imgs.map((img, i) => `<img src="${img}" alt="" class="gallery-img" data-index="${i}" style="display:${i === 0 ? 'block' : 'none'}" onclick="openImageZoom('${img}', ${JSON.stringify(imgs).replace(/"/g, '&quot;')}, ${i})">`).join('')}
                 ${prevBtn}
                 ${nextBtn}
                 ${imgs.length > 1 ? `<div class="gallery-dots">${imgs.map((_, i) => `<span class="gdot ${i === 0 ? 'active' : ''}" onclick="goToImage(${i})"></span>`).join('')}</div>` : ''}
@@ -308,3 +349,161 @@ function openWa() {
     const msg = encodeURIComponent(`Halo ${selectedProduct?.namatoko || 'Penjual'}, saya tertarik dengan produk *${selectedProduct?.nama || 'ini}*`);
     window.open('https://wa.me/' + p + '?text=' + msg, '_blank');
 }
+
+// === ZOOM IMAGE FUNCTIONS ===
+let zoomImages = [];
+let zoomCurrentIndex = 0;
+let touchStartX = 0;
+let touchStartY = 0;
+let isZoomed = false;
+
+function openImageZoom(src, images, index) {
+    zoomImages = images || [src];
+    zoomCurrentIndex = index || 0;
+
+    const modal = document.getElementById('zoomModal');
+    const img = document.getElementById('zoomImage');
+    const counter = document.getElementById('zoomCounter');
+    const prevBtn = document.querySelector('.zoom-prev');
+    const nextBtn = document.querySelector('.zoom-next');
+
+    if (modal && img) {
+        img.src = zoomImages[zoomCurrentIndex];
+        img.classList.remove('zoomed');
+        isZoomed = false;
+
+        if (counter) {
+            counter.textContent = `${zoomCurrentIndex + 1} / ${zoomImages.length}`;
+        }
+
+        if (prevBtn) prevBtn.style.display = zoomImages.length > 1 ? 'flex' : 'none';
+        if (nextBtn) nextBtn.style.display = zoomImages.length > 1 ? 'flex' : 'none';
+
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        // Setup touch events for zoom container
+        setupZoomGestures();
+    }
+}
+
+function closeImageZoom(event) {
+    if (event && event.target !== event.currentTarget) return;
+
+    const modal = document.getElementById('zoomModal');
+    const img = document.getElementById('zoomImage');
+
+    if (modal) modal.classList.remove('show');
+    if (img) img.classList.remove('zoomed');
+    document.body.style.overflow = '';
+    isZoomed = false;
+}
+
+function zoomPrevImage() {
+    zoomCurrentIndex = (zoomCurrentIndex - 1 + zoomImages.length) % zoomImages.length;
+    updateZoomImage();
+}
+
+function zoomNextImage() {
+    zoomCurrentIndex = (zoomCurrentIndex + 1) % zoomImages.length;
+    updateZoomImage();
+}
+
+function updateZoomImage() {
+    const img = document.getElementById('zoomImage');
+    const counter = document.getElementById('zoomCounter');
+
+    if (img) {
+        img.src = zoomImages[zoomCurrentIndex];
+        img.classList.remove('zoomed');
+        isZoomed = false;
+    }
+    if (counter) {
+        counter.textContent = `${zoomCurrentIndex + 1} / ${zoomImages.length}`;
+    }
+}
+
+function setupZoomGestures() {
+    const container = document.querySelector('.zoom-container');
+    const img = document.getElementById('zoomImage');
+
+    if (!container || !img) return;
+
+    let scale = 1;
+    let lastScale = 1;
+    let pinchStartDistance = 0;
+
+    container.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+
+        // Handle pinch zoom
+        if (e.touches.length === 2) {
+            pinchStartDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        // Prevent default scrolling when zoomed
+        if (isZoomed) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    container.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+
+        // Handle pinch zoom
+        if (e.touches.length === 0 && pinchStartDistance > 0) {
+            const endDistance = Math.hypot(
+                e.changedTouches[0].clientX - (e.changedTouches[1]?.clientX || 0),
+                e.changedTouches[0].clientY - (e.changedTouches[1]?.clientY || 0)
+            );
+            // Pinch zoom detected, but simple tap/drag detection
+            pinchStartDistance = 0;
+            return;
+        }
+
+        // Swipe left/right for navigation
+        if (Math.abs(dx) > 50 && Math.abs(dy) < 30) {
+            if (dx < 0) {
+                zoomNextImage();
+            } else {
+                zoomPrevImage();
+            }
+        }
+    }, { passive: true });
+
+    // Click to toggle zoom
+    let clickTimer = null;
+    container.addEventListener('click', (e) => {
+        // Double tap to zoom
+        if (clickTimer) {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+
+            // Double click - toggle zoom
+            isZoomed = !isZoomed;
+            img.classList.toggle('zoomed', isZoomed);
+        } else {
+            clickTimer = setTimeout(() => {
+                clickTimer = null;
+                // Single click - close if not zoomed
+                if (!isZoomed) {
+                    closeImageZoom(e);
+                } else {
+                    // Reset zoom
+                    img.classList.remove('zoomed');
+                    isZoomed = false;
+                }
+            }, 300);
+        }
+    });
+}
+
+// Override showDetail to support zoom on gallery images
+const originalShowDetail = typeof showDetail === 'function' ? showDetail : null;
