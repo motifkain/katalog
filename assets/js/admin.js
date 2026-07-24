@@ -493,8 +493,8 @@ class AdminDashboard {
 
                 const formDataWarna = new FormData();
                 formDataWarna.append('nama', warna.nama);
-                // PocketBase relation fields need to be sent as JSON array string
-                formDataWarna.append('produk', JSON.stringify([produkId]));
+                // PocketBase relation: Single use ID, Multiple use comma-separated IDs
+                formDataWarna.append('produk', produkId);
 
                 let warnaId = warna.id;
                 let warnaMethod = 'POST';
@@ -564,6 +564,13 @@ class AdminDashboard {
                     if (!newGambarIds.includes(oldGambarId)) {
                         await this.fetchAPI(`/api/collections/gambar/records/${oldGambarId}`, 'DELETE');
                     }
+                }
+
+                // Update gambar relation in warna record
+                if (newGambarIds.length > 0) {
+                    await this.fetchAPI(`/api/collections/warna/records/${warnaId}`, 'PATCH', {
+                        gambar: newGambarIds.join(',')
+                    });
                 }
             }
 
