@@ -4,19 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#5D4037" />
-  <title>MotifKain — Katalog Motif Tradisional Nusantara</title>
-  <meta name="description" content="Telusuri koleksi motif kain tradisional Indonesia — batik, tenun, songket, sasirangan, dan lain-lain. Etalase digital untuk para perajin dan pencinta warisan budaya." />
-  <meta name="keywords" content="katalog motif kain, batik, tenun, songket, motif tradisional, motifkain" />
-  <meta property="og:title" content="MotifKain — Katalog Motif Tradisional Nusantara" />
-  <meta property="og:description" content="Telusuri ribuan motif kain tradisional Indonesia." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://katalog.motifkain.com" />
-
+  <title>MotifKain — Katalog Motif Tradisional</title>
+  <meta name="description" content="Telusuri koleksi motif kain tradisional Indonesia." />
   <link rel="icon" type="image/png" href="logo/logo_motifkain.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
   <link rel="stylesheet" href="assets/css/style.css" />
   <script src="config.js" defer></script>
   <script src="assets/js/app.js" defer></script>
@@ -26,169 +19,94 @@
 <!-- ==================== HEADER ==================== -->
 <header class="site-header" id="siteHeader">
   <div class="container header-inner">
-    <a href="#beranda" class="brand" aria-label="MotifKain Beranda">
+    <a href="#" class="brand" aria-label="MotifKain">
       <img src="logo/logo_motifkain.png" alt="MotifKain" class="brand-logo" />
       <span class="brand-text">
         <span class="brand-name">MotifKain</span>
-        <span class="brand-tagline">Warisan · Filosofi · Kehidupan</span>
+        <span class="brand-tagline">Katalog Motif Tradisional</span>
       </span>
     </a>
 
-    <nav class="nav-primary" aria-label="Menu utama">
-      <a href="#beranda">Beranda</a>
-      <a href="#koleksi">Koleksi</a>
-      <a href="#cerita">Cerita</a>
-      <a href="#tentang">Tentang</a>
+    <div class="header-search">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="search" id="searchInput" placeholder="Cari motif…" aria-label="Cari motif" autocomplete="off" />
+    </div>
+
+    <nav class="header-nav" aria-label="Navigasi">
+      <a href="#" class="nav-link active">Katalog</a>
+      <a href="#tentang" class="nav-link">Tentang</a>
+      <a href="#" id="headerAdmin" class="nav-link" hidden>Admin</a>
     </nav>
-
-    <div class="header-actions">
-      <button class="search-toggle" id="searchToggle" aria-label="Buka pencarian">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- Search bar (collapsed) -->
-  <div class="search-bar" id="searchBar" hidden>
-    <div class="container">
-      <form class="search-form" role="search" id="searchForm">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input type="search" id="searchInput" placeholder="Cari motif, kategori, atau daerah…" aria-label="Cari motif" autocomplete="off" />
-        <button type="button" class="search-close" id="searchClose" aria-label="Tutup pencarian">×</button>
-      </form>
-    </div>
   </div>
 </header>
 
-<main id="beranda">
+<main>
 
-<!-- ==================== HERO ==================== -->
-<section class="hero">
-  <div class="hero-pattern" aria-hidden="true"></div>
-  <div class="container hero-inner">
-    <div class="hero-content">
-      <span class="hero-eyebrow">Warisan Budaya Nusantara</span>
-      <h1 class="hero-title">
-        Ribuan Motif Kain<br>
-        <em>Tradisional Indonesia</em>
-      </h1>
-      <p class="hero-desc">
-        Telusuri etalase digital batik, tenun, songket, dan motif kain lainnya dari berbagai penjuru nusantara — dari perajin untuk Anda yang menghargai warisan.
-      </p>
-      <div class="hero-actions">
-        <a href="#koleksi" class="btn btn-primary">Telusuri Koleksi</a>
-        <a href="#cerita" class="btn btn-ghost">Cerita Motif</a>
-      </div>
-      <div class="hero-stats" id="heroStats" aria-label="Statistik singkat">
-        <div class="stat"><span class="stat-num" data-count="motif">—</span><span class="stat-label">Motif</span></div>
-        <div class="stat"><span class="stat-num" data-count="kategori">—</span><span class="stat-label">Kategori</span></div>
-        <div class="stat"><span class="stat-num" data-count="subkategori">—</span><span class="stat-label">Subkategori</span></div>
-        <div class="stat"><span class="stat-num" data-count="produk">—</span><span class="stat-label">Produk</span></div>
-      </div>
-    </div>
-    <div class="hero-art" aria-hidden="true">
-      <div class="hero-card hero-card-1"></div>
-      <div class="hero-card hero-card-2"></div>
-      <div class="hero-card hero-card-3"></div>
-      <img src="logo/logo_motifkain.png" alt="" class="hero-emblem" />
+<!-- ==================== SEARCH BAR ==================== -->
+<section class="search-section" id="searchSection">
+  <div class="container search-inner">
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="search" id="searchInputBig" placeholder="Cari motif, kategori…" aria-label="Cari motif" autocomplete="off" />
+      <span class="search-result-count" id="resultCount" aria-live="polite"></span>
     </div>
   </div>
 </section>
 
-<!-- ==================== KOLEKSI ==================== -->
-<section class="section section-koleksi" id="koleksi">
+<!-- ==================== FILTER CHIPS ==================== -->
+<section class="filter-section" id="filterSection">
   <div class="container">
-    <header class="section-header">
-      <span class="section-eyebrow">Etalase</span>
-      <h2 class="section-title">Koleksi Motif</h2>
-      <p class="section-desc">Pilih kategori untuk menjelajahi motif berdasarkan jenis kain, teknik, atau asal daerah.</p>
-    </header>
-
-    <!-- Filter kategori (chip pill scrollable) -->
-    <div class="filter-bar" id="filterBar" role="tablist" aria-label="Filter kategori">
+    <div class="filter-scroll" id="filterBar" role="tablist" aria-label="Filter kategori">
       <button class="chip chip-active" data-filter="all" role="tab" aria-selected="true">Semua</button>
-      <!-- Chip lain di-render oleh app.js -->
-    </div>
-
-    <!-- Loading state -->
-    <div class="state state-loading" id="stateLoading" hidden>
-      <div class="spinner"></div>
-      <p>Memuat koleksi motif…</p>
-    </div>
-
-    <!-- Error state -->
-    <div class="state state-error" id="stateError" hidden>
-      <p class="state-title">Tidak dapat memuat data</p>
-      <p class="state-desc" id="stateErrorMsg">Periksa koneksi Anda atau coba lagi beberapa saat.</p>
-      <button class="btn btn-ghost" id="stateRetry">Coba Lagi</button>
-    </div>
-
-    <!-- Empty state -->
-    <div class="state state-empty" id="stateEmpty" hidden>
-      <p class="state-title">Belum ada motif</p>
-      <p class="state-desc">Koleksi sedang disiapkan. Silakan kembali lagi nanti.</p>
-    </div>
-
-    <!-- Grid motif -->
-    <div class="motif-grid" id="motifGrid">
-      <!-- Cards di-render oleh app.js -->
-    </div>
-
-    <!-- Pagination -->
-    <div class="pagination" id="pagination" hidden>
-      <button class="btn btn-ghost" id="loadMore">Muat Lebih Banyak</button>
     </div>
   </div>
 </section>
 
-<!-- ==================== CERITA ==================== -->
-<section class="section section-cerita" id="cerita">
+<!-- ==================== LOADING ==================== -->
+<div class="state-center" id="stateLoading" hidden>
+  <div class="spinner-lg"></div>
+  <p>Memuat koleksi motif…</p>
+</div>
+
+<!-- ==================== EMPTY ==================== -->
+<div class="state-center" id="stateEmpty" hidden>
+  <div class="state-icon">
+    <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/></svg>
+  </div>
+  <p class="state-title">Motif Tidak Ditemukan</p>
+  <p class="state-desc">Coba kata kunci atau filter lain.</p>
+</div>
+
+<!-- ==================== ERROR ==================== -->
+<div class="state-center" id="stateError" hidden>
+  <div class="state-icon state-icon-error">
+    <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+  </div>
+  <p class="state-title">Tidak Dapat Memuat Data</p>
+  <p class="state-desc" id="stateErrorMsg">Periksa koneksi Anda.</p>
+  <button class="btn btn-outline" id="stateRetry">Coba Lagi</button>
+</div>
+
+<!-- ==================== GRID ==================== -->
+<section class="grid-section" id="gridSection">
   <div class="container">
-    <header class="section-header">
-      <span class="section-eyebrow">Filosofi</span>
-      <h2 class="section-title">Cerita di Balik Motif</h2>
-      <p class="section-desc">Setiap motif menyimpan makna, proses, dan warisan.</p>
-    </header>
-
-    <div class="cerita-grid">
-      <article class="cerita-card">
-        <div class="cerita-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M8 12c1.5-2 3-3 4-3s2.5 1 4 3-1 5-4 5-5.5-3-4-5z"/></svg>
-        </div>
-        <h3>Makna Filosofis</h3>
-        <p>Motif bukan sekadar pola — ia adalah doa, harapan, dan pesan leluhur yang ditenun ke dalam benang.</p>
-      </article>
-
-      <article class="cerita-card">
-        <div class="cerita-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21l3-3M21 3l-3 3M6 6l12 12M3 21l5-5M21 3l-5 5"/></svg>
-        </div>
-        <h3>Proses Pembuatan</h3>
-        <p>Dari canting, pelorotan, hingga malam yang meleleh — tiap teknik punya cerita tentang kesabaran tangan.</p>
-      </article>
-
-      <article class="cerita-card">
-        <div class="cerita-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 14c2-4 4-6 8-6s6 2 8 6M4 14c2 2 4 4 8 4s6-2 8-4"/></svg>
-        </div>
-        <h3>Pewarna Alami</h3>
-        <p>Indigo, soga, mengkudu, kunyit — warna-warna tanah yang menyatu dengan serat tanpa meninggalkan jejak kimiawi.</p>
-      </article>
+    <div class="produk-grid" id="motifGrid"></div>
+    <div class="load-more-row" id="pagination" hidden>
+      <button class="btn btn-outline" id="loadMore">Muat Lebih Banyak</button>
     </div>
   </div>
 </section>
 
 <!-- ==================== TENTANG ==================== -->
-<section class="section section-tentang" id="tentang">
-  <div class="container tentang-inner">
-    <div class="tentang-content">
-      <span class="section-eyebrow">Tentang</span>
-      <h2 class="section-title">MotifKain</h2>
-      <p>MotifKain adalah etalase digital untuk para perajin dan pencinta kain tradisional Indonesia. Kami percaya setiap motif layak dicatat, diceritakan, dan dilestarikan — agar warisan ini tetap hidup untuk generasi mendatang.</p>
-      <p class="tentang-quote">"Kain adalah kulit kedua budaya."</p>
-    </div>
-    <div class="tentang-kontak" id="kontakList">
-      <!-- Di-render oleh app.js jika koleksi 'kontak' ada isinya -->
+<section class="tentang-section" id="tentang">
+  <div class="container">
+    <div class="tentang-card">
+      <div class="tentang-brand">
+        <img src="logo/logo_motifkain.png" alt="MotifKain" class="tentang-logo" />
+        <h2>MotifKain</h2>
+        <p>Etalase digital para perajin kain tradisional Indonesia. Setiap motif layak dicatat dan dilestarikan.</p>
+      </div>
+      <div class="kontak-grid" id="kontakList"></div>
     </div>
   </div>
 </section>
@@ -198,40 +116,21 @@
 <!-- ==================== FOOTER ==================== -->
 <footer class="site-footer">
   <div class="container footer-inner">
-    <div class="footer-brand">
-      <img src="logo/logo_motifkain.png" alt="MotifKain" class="footer-logo" />
-      <p>Etalase motif kain tradisional Indonesia.</p>
-    </div>
-    <nav class="footer-nav" aria-label="Menu footer">
-      <div>
-        <h4>Jelajahi</h4>
-        <a href="#beranda">Beranda</a>
-        <a href="#koleksi">Koleksi</a>
-        <a href="#cerita">Cerita</a>
-        <a href="#tentang">Tentang</a>
-      </div>
-      <div>
-        <h4>Hubungi</h4>
-        <a href="#tentang">Tentang Kami</a>
-        <a href="#" id="footerAdmin" hidden>Admin</a>
-      </div>
-    </nav>
-  </div>
-  <div class="footer-bottom container">
-    <small>© <span id="yearNow">2026</span> MotifKain. Semua karya adalah warisan bersama.</small>
+    <img src="logo/logo_motifkain.png" alt="MotifKain" class="footer-logo" />
+    <p class="footer-copy">© <span id="yearNow">2026</span> MotifKain — Etalase Motif Tradisional Indonesia</p>
   </div>
 </footer>
 
-<!-- ==================== MODAL DETAIL ==================== -->
+<!-- ==================== DETAIL MODAL ==================== -->
 <div class="modal" id="modalDetail" hidden role="dialog" aria-modal="true" aria-labelledby="modalDetailTitle">
   <div class="modal-backdrop" data-close></div>
   <div class="modal-panel">
     <button class="modal-close" data-close aria-label="Tutup">×</button>
 
-    <div class="detail-gallery" id="detailGallery">
-      <!-- Gambar utama + thumbnail strip di-render oleh app.js -->
-    </div>
+    <!-- Gallery -->
+    <div class="detail-gallery" id="detailGallery"></div>
 
+    <!-- Info -->
     <div class="detail-body">
       <p class="detail-crumb" id="detailCrumb"></p>
       <h2 class="detail-title" id="modalDetailTitle"></h2>
@@ -240,27 +139,32 @@
       <p class="detail-desc" id="detailDesc"></p>
 
       <div class="detail-warna" id="detailWarna" hidden>
-        <h4>Warna Tersedia</h4>
+        <h4>Varian Warna</h4>
         <div class="warna-list" id="warnaList"></div>
       </div>
 
       <div class="detail-actions" id="detailActions" hidden>
         <a href="#" class="btn btn-primary" id="btnWaDesainer" target="_blank" rel="noopener">Hubungi Desainer</a>
-        <a href="#" class="btn btn-ghost" id="btnWaPemasaran" target="_blank" rel="noopener">Info Pemasaran</a>
+        <a href="#" class="btn btn-outline" id="btnWaPemasaran" target="_blank" rel="noopener">Info Pemasaran</a>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ==================== LIGHTBOX GAMBAR ==================== -->
-<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true">
+<!-- ==================== LIGHTBOX ZOOM ==================== -->
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Gambar motif">
+  <div class="lightbox-bg"></div>
   <button class="lightbox-close" aria-label="Tutup">×</button>
   <button class="lightbox-prev" aria-label="Sebelumnya">‹</button>
+  <div class="lightbox-center">
+    <img id="lightboxImg" alt="" />
+    <p class="lightbox-caption" id="lightboxCaption"></p>
+  </div>
   <button class="lightbox-next" aria-label="Berikutnya">›</button>
-  <img id="lightboxImg" alt="" />
+  <div class="lightbox-counter" id="lightboxCounter"></div>
 </div>
 
-<!-- ==================== NOTIF ==================== -->
+<!-- ==================== TOAST ==================== -->
 <div class="toast" id="toast" hidden></div>
 
 </body>
