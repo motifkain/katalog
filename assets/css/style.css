@@ -90,13 +90,11 @@ p { margin: 0; }
   text-decoration: none;
 }
 .brand-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--r-md);
-  object-fit: cover;
-  background: var(--color-bg-alt);
-  border: 1px solid var(--color-border);
-  padding: 3px;
+  height: 36px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
+  object-position: left center;
 }
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
 .brand-name {
@@ -109,7 +107,8 @@ p { margin: 0; }
   font-size: 0.65rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: var(--color-accent);
+  font-weight: 600;
   margin-top: 1px;
 }
 
@@ -474,17 +473,17 @@ p { margin: 0; }
 .tentang-brand {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-.tentang-logo {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--r-md);
-  object-fit: cover;
-  border: 1px solid var(--color-border);
+  gap: 8px;
 }
 .tentang-brand h2 { font-size: 1.8rem; }
 .tentang-brand p { color: var(--color-text-soft); font-size: 0.95rem; line-height: 1.65; }
+.tentang-tagline {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--color-accent);
+  font-size: 1.05rem !important;
+  font-weight: 500;
+}
 
 .kontak-grid {
   display: grid;
@@ -552,12 +551,9 @@ p { margin: 0; }
   gap: 16px;
 }
 .footer-logo {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-sm);
-  object-fit: cover;
-  background: rgba(255,255,255,0.1);
-  padding: 3px;
+  height: 32px;
+  width: auto;
+  object-fit: contain;
   flex-shrink: 0;
 }
 .footer-copy { font-size: 0.82rem; }
@@ -825,8 +821,7 @@ p { margin: 0; }
 /* ---------- Mobile responsive ---------- */
 @media (max-width: 639px) {
   .header-nav { display: none; }
-  .brand-tagline { display: none; }
-  .brand-logo { width: 36px; height: 36px; }
+  .brand-logo { max-width: 130px; height: 30px; }
   .brand-name { font-size: 1.05rem; }
   .produk-grid { gap: 12px; }
   .card-info { padding: 10px 12px 12px; }
