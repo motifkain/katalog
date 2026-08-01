@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MotifKain — Setup PocketBase</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #FAF7F2;
+      color: #5D4037;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(93,64,55,.12);
+      max-width: 640px;
+      width: 100%;
+      padding: 40px;
+    }
+    .logo { text-align: center; margin-bottom: 24px; }
+    .logo img { height: 48px; }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; text-align: center; }
+    .subtitle { text-align: center; color: #8D6E63; margin-bottom: 32px; font-size: .9rem; }
+
+    .section { margin-bottom: 28px; }
+    .section-title {
+      font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
+      color: #A47148; font-weight: 600; margin-bottom: 12px;
+    }
+
+    .step {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 14px 16px; border-radius: 10px; margin-bottom: 8px;
+      background: #FAF7F2; border: 1px solid #EDE0D4;
+    }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%; background: #5D4037;
+      color: #FAF7F2; font-size: .8rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step-content { flex: 1; }
+    .step-title { font-weight: 600; margin-bottom: 4px; font-size: .9rem; }
+    .step-desc { font-size: .82rem; color: #8D6E63; line-height: 1.5; }
+    .step-desc code {
+      background: #EDE0D4; padding: 1px 6px; border-radius: 4px;
+      font-size: .8rem; color: #5D4037;
+    }
+    .step.done { border-color: #C9A961; background: #FFFDF5; }
+    .step.done .step-num { background: #C9A961; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: 8px; font-size: .9rem;
+      font-weight: 600; cursor: pointer; border: none; transition: all .2s;
+      width: 100%; justify-content: center;
+    }
+    .btn-primary { background: #5D4037; color: #FAF7F2; }
+    .btn-primary:hover { background: #4E342E; }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-secondary { background: #EDE0D4; color: #5D4037; }
+    .btn-secondary:hover { background: #D7CCC8; }
+
+    .log-box {
+      background: #1a1a1a; color: #e8e8e8; border-radius: 8px;
+      padding: 16px; font-family: 'Courier New', monospace; font-size: .78rem;
+      line-height: 1.8; max-height: 240px; overflow-y: auto;
+      margin-bottom: 16px;
+    }
+    .log-box .ok   { color: #4ade80; }
+    .log-box .fail { color: #f87171; }
+    .log-box .info { color: #60a5fa; }
+
+    .success-box {
+      background: #F0FDF4; border: 1px solid #86EFAC; border-radius: 10px;
+      padding: 20px; text-align: center; color: #166534;
+    }
+    .success-box h2 { font-size: 1.1rem; margin-bottom: 8px; }
+    .success-box p { font-size: .85rem; opacity: .8; }
+
+    .cors-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .cors-input {
+      background: #FAF7F2; border: 1px solid #EDE0D4; border-radius: 6px;
+      padding: 8px 10px; font-size: .82rem; color: #5D4037; width: 100%;
+      font-family: 'Courier New', monospace;
+    }
+    .cors-input:focus { outline: none; border-color: #C9A961; }
+
+    .alert {
+      padding: 12px 16px; border-radius: 8px; font-size: .82rem;
+      margin-bottom: 12px; line-height: 1.5;
+    }
+    .alert-warn { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; }
+    .alert-info { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; }
+
+    .or { text-align: center; color: #A47148; font-size: .8rem; margin: 16px 0; }
+
+    details { margin-bottom: 8px; }
+    summary { cursor: pointer; font-size: .85rem; color: #A47148; font-weight: 500; user-select: none; }
+    details[open] summary { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <img src="logo/logo_motifkain.png" alt="MotifKain" onerror="this.style.display='none'" />
+  </div>
+  <h1>MotifKain — Setup PocketBase</h1>
+  <p class="subtitle">Buat 8 koleksi hierarkis + atur CORS dalam satu langkah</p>
+
+  <!-- STEP 1 -->
+  <div class="section">
+    <div class="section-title">Langkah 1 — Buat Koleksi</div>
+
+    <details>
+      <summary>Petunjuk: Buka Console DevTools</summary>
+      <div style="margin-top:10px; font-size:.82rem; color:#8D6E63; line-height:1.6;">
+        <ol style="padding-left:18px;">
+          <li>Buka <strong>PocketBase Admin</strong>: <code id="pbAdminUrl">https://katalog-production-104e.up.railway.app/_/</code></li>
+          <li>Login dengan akun admin Anda.</li>
+          <li>Tekan <code>F12</code> atau klik kanan → <strong>Inspect</strong> → pilih tab <strong>Console</strong>.</li>
+          <li>Biarkan tab ini terbuka, lalu lanjut ke langkah berikutnya.</li>
+        </ol>
+      </div>
+    </details>
+
+    <div class="alert alert-info">
+      <strong>Catatan:</strong> Anda harus <strong>login ke PocketBase Admin</strong> sebelum menjalankan script di bawah. Buka tab baru, login ke PocketBase, lalu kembali ke tab DevTools ini.
+    </div>
+
+    <div class="or">atau</div>
+
+    <details>
+      <summary>Cara lain: Buka file ini langsung di browser setelah login PocketBase</summary>
+      <div style="margin-top:10px; font-size:.82rem; color:#8D6E63; line-height:1.6;">
+        <p>Jika Anda lebih suka membuka file secara langsung:</p>
+        <ol style="padding-left:18px; margin-top:8px;">
+          <li>Buka PocketBase Admin UI di tab lain dan <strong>login</strong>.</li>
+          <li>Di tab DevTools Console PocketBase, <strong>paste</strong> kode migration script dari file <code>pocketbase/migrations/motifkain-collections.js</code>.</li>
+          <li>Tekan Enter — script akan otomatis berjalan.</li>
+        </ol>
+      </div>
+    </details>
+
+    <div style="margin-top:16px;">
+      <div class="step" id="step1">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Jalankan Migration Script</div>
+          <div class="step-desc">Buka DevTools Console di PocketBase Admin (<code>F12</code>), lalu <strong>copy-paste</strong> isi file <code>pocketbase/migrations/motifkain-collections.js</code> ke console dan tekan Enter.</div>
+        </div>
+      </div>
+      <div class="step" id="step2">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Refresh Halaman Admin</div>
+          <div class="step-desc">Setelah script selesai, tekan <code>F5</code> (refresh) di halaman PocketBase Admin. Anda akan melihat 8 koleksi baru di sidebar.</div>
+        </div>
+      </div>
+      <div class="step" id="step3">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Verifikasi</div>
+          <div class="step-desc" id="verifyText">Tekan tombol di bawah untuk mengecek apakah koleksi sudah dibuat.</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btnVerify" style="margin-top:16px;" onclick="verifyCollections()">
+      Verifikasi Koleksi
+    </button>
+
+    <div class="log-box" id="logBox" style="display:none; margin-top:16px;"></div>
+  </div>
+
+  <!-- STEP 2: CORS -->
+  <div class="section">
+    <div class="section-title">Langkah 2 — Atur CORS</div>
+    <div class="alert alert-warn">
+      <strong>Wajib!</strong> Tanpa CORS, frontend Vercel tidak bisa mengambil data dari PocketBase Railway. Ikuti langkah di bawah.
+    </div>
+
+    <div class="step">
+      <div class="step-num">A</div>
+      <div class="step-content">
+        <div class="step-title">Buka Settings → CORS di PocketBase Admin</div>
+        <div class="step-desc">
+          Di PocketBase Admin: klik <strong>Settings</strong> (gear icon) → cari tab <strong>CORS</strong>.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">B</div>
+      <div class="step-content">
+        <div class="step-title">Isi kolom seperti ini:</div>
+        <div class="cors-grid">
+          <div>
+            <div style="font-size:.75rem; color:#A47148; margin-bottom:4px;">Allowed Origins</div>
+            <input class="cors-input" id="corsOrigins" type="text" readonly value="https://katalog.motifkain.com, https://www.motifkain.com" />
+          </div>
+          <div>
+            <div style="font-size:.75rem; color:#A47148; margin-bottom:4px;">Allowed Methods</div>
+            <input class="cors-input" type="text" readonly value="*" />
+          </div>
+          <div>
+            <div style="font-size:.75rem; color:#A47148; margin-bottom:4px;">Allowed Headers</div>
+            <input class="cors-input" type="text" readonly value="*" />
+          </div>
+          <div>
+            <div style="font-size:.75rem; color:#A47148; margin-bottom:4px;">Exposed Headers</div>
+            <input class="cors-input" type="text" readonly value="" />
+          </div>
+          <div>
+            <div style="font-size:.75rem; color:#A47148; margin-bottom:4px;">Max Age</div>
+            <input class="cors-input" type="text" readonly value="3600" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">C</div>
+      <div class="step-content">
+        <div class="step-title">Save</div>
+        <div class="step-desc">Klik tombol <strong>Save</strong> di halaman CORS.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Seed Data -->
+  <div class="section">
+    <div class="section-title">Langkah 3 — Masukkan Data Sampel (Opsional)</div>
+    <div class="alert alert-info">
+      Setelah koleksi terbuat, Anda bisa langsung mulai memasukkan data via PocketBase Admin UI. Atau gunakan <strong>admin.html</strong> yang akan saya buat terpisah.
+    </div>
+  </div>
+
+  <!-- DONE -->
+  <div id="doneSection" style="display:none;">
+    <div class="success-box">
+      <h2>Setup Selesai!</h2>
+      <p>Koleksi sudah dibuat. Sekarang buka <strong>katalog.motifkain.com</strong> untuk melihat katalog dengan data contoh.</p>
+      <br />
+      <a href="/" class="btn btn-secondary" style="text-decoration:none; display:inline-flex; width:auto;" target="_blank">Buka Katalog</a>
+    </div>
+  </div>
+</div>
+
+<script>
+var PB_URL = 'https://katalog-production-104e.up.railway.app';
+var COLLECTIONS = [
+  {name:'layanan',schema:[
+    {name:'nama',type:'text',required:true,options:{min:1,max:100}},
+    {name:'order',type:'number',required:false,options:{min:0}}
+  ]},
+  {name:'kategori',schema:[
+    {name:'nama',type:'text',required:true,options:{min:1,max:100}},
+    {name:'layanan',type:'relation',required:true,options:{collectionId:'__layanan__',cascadeDelete:false,minSelect:1,maxSelect:1}},
+    {name:'order',type:'number',required:false,options:{min:0}}
+  ]},
+  {name:'subkategori',schema:[
+    {name:'nama',type:'text',required:true,options:{min:1,max:100}},
+    {name:'kategori',type:'relation',required:true,options:{collectionId:'__kategori__',cascadeDelete:false,minSelect:1,maxSelect:1}},
+    {name:'order',type:'number',required:false,options:{min:0}}
+  ]},
+  {name:'produk',schema:[
+    {name:'nama',type:'text',required:true,options:{min:1,max:200}},
+    {name:'subkategori',type:'relation',required:true,options:{collectionId:'__subkategori__',cascadeDelete:false,minSelect:1,maxSelect:1}},
+    {name:'harga',type:'number',required:false,options:{min:0}},
+    {name:'deskripsi',type:'text',required:false,options:{max:5000}}
+  ]},
+  {name:'warna',schema:[
+    {name:'nama',type:'text',required:true,options:{min:1,max:100}},
+    {name:'produk',type:'relation',required:true,options:{collectionId:'__produk__',cascadeDelete:false,minSelect:1,maxSelect:null}}
+  ]},
+  {name:'gambar',schema:[
+    {name:'gambar',type:'file',required:true,options:{maxSelect:1,maxSize:10485760,mimeTypes:['image/jpeg','image/png','image/webp']}},
+    {name:'deskripsi',type:'text',required:false,options:{max:500}},
+    {name:'warna',type:'relation',required:true,options:{collectionId:'__warna__',cascadeDelete:false,minSelect:1,maxSelect:null}}
+  ]},
+  {name:'portofolio',schema:[
+    {name:'judul',type:'text',required:true,options:{min:1,max:200}},
+    {name:'kategori',type:'text',required:false,options:{max:100}},
+    {name:'deskripsi',type:'text',required:false,options:{max:5000}},
+    {name:'image',type:'file',required:false,options:{maxSelect:1,maxSize:10485760,mimeTypes:['image/jpeg','image/png','image/webp']}},
+    {name:'images',type:'file',required:false,options:{maxSelect:10,maxSize:10485760,mimeTypes:['image/jpeg','image/png','image/webp']}}
+  ]},
+  {name:'kontak',schema:[
+    {name:'nama',type:'text',required:true,options:{min:1,max:100}},
+    {name:'role',type:'select',required:true,options:{maxSelect:1,values:['desainer','pemasaran']}},
+    {name:'whatsapp',type:'text',required:true,options:{min:8,max:20,pattern:'^[0-9]+$'}}
+  ]}
+];
+
+var DEFAULT_RULES = {
+  listRule:'',viewRule:'',createRule:'@request.auth.id != ""',
+  updateRule:'@request.auth.id != ""',deleteRule:'@request.auth.id != ""'
+};
+
+function http(method, path, body, token) {
+  var opts = {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token || ''
+    }
+  };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  return fetch(PB_URL.replace(/\/+$/,'') + path, opts).then(function(r){
+    return r.json().then(function(j){ return {ok:r.ok,status:r.status,body:j}; });
+  });
+}
+
+function log(msg, type) {
+  var box = document.getElementById('logBox');
+  box.style.display = 'block';
+  var cls = type === 'ok' ? 'ok' : type === 'fail' ? 'fail' : type === 'info' ? 'info' : '';
+  var span = '<span class="'+cls+'">' + msg + '</span>';
+  box.innerHTML += span + '\n';
+  box.scrollTop = box.scrollHeight;
+}
+
+async function verifyCollections() {
+  var token = '';
+  // coba ambil token dari cookie
+  try { var m = document.cookie.match(/(?:^|;\s*)pb_auth_cookie=([^;]+)/); if(m) token = decodeURIComponent(m[1]); } catch(e){}
+  // coba localStorage
+  try { var t = localStorage.getItem('pb_auth_token'); if(t) token = t; } catch(e){}
+
+  log('Verifikasi koneksi ke PocketBase...', 'info');
+  var r = await http('GET', '/api/collections?perPage=200', undefined, token);
+  if (!r.ok) {
+    log('GAGAL: ' + JSON.stringify(r.body), 'fail');
+    log('Pastikan Anda sudah login ke PocketBase Admin di tab lain.', 'info');
+    return;
+  }
+  var existing = (r.body && r.body.items) || [];
+  var existingNames = existing.map(function(c){ return c.name; });
+  log('Ditemukan ' + existing.length + ' koleksi.', 'ok');
+
+  var allRequired = ['layanan','kategori','subkategori','produk','warna','gambar','portofolio','kontak'];
+  var allPresent = allRequired.every(function(n){ return existingNames.indexOf(n) !== -1; });
+
+  if (allPresent) {
+    log('SEMUA KOLEKSI SUDAH ADA! ✓', 'ok');
+    document.getElementById('step3').classList.add('done');
+    document.getElementById('doneSection').style.display = 'block';
+  } else {
+    var missing = allRequired.filter(function(n){ return existingNames.indexOf(n) === -1; });
+    log('Koleksi yang belum ada: ' + missing.join(', '), 'fail');
+    log('Silakan buka DevTools Console di PocketBase Admin, paste isi file pocketbase/migrations/motifkain-collections.js, lalu tekan Enter.', 'info');
+  }
+}
+</script>
+</body>
+</html>

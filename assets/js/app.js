@@ -51,6 +51,7 @@
       renderKontak();
       state.loaded = true;
       showLoading(false);
+    showLoading(false);
     }).catch(function (err) {
       console.warn('[MotifKain] PocketBase fetch gagal, pakai sample fallback:', err && err.message);
       useSampleFallback();
@@ -61,7 +62,6 @@
       renderKontak();
       state.loaded = true;
       showLoading(false);
-      showStateError('Tidak dapat terhubung ke PocketBase. Menampilkan data contoh.');
     });
   });
 
@@ -182,6 +182,10 @@
       results.forEach(function (r) {
         if (state.hasOwnProperty(r.name)) state[r.name] = r.items;
       });
+      /* PocketBase reachable tapi semua koleksi kosong → pakai sample fallback
+         agar UI tetap menampilkan konten contoh (bukan halaman kosong). */
+      var totalItems = results.reduce(function (sum, r) { return sum + r.items.length; }, 0);
+      if (totalItems === 0 && CFG.sample) useSampleFallback();
     });
   }
 
