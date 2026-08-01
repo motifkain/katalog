@@ -58,20 +58,35 @@
   function bindWelcomeScreen() {
     var welcome = document.getElementById('welcomeScreen');
     var btn = document.getElementById('btnMasuk');
-    if (!welcome || !btn) return;
+    var backBtn = document.getElementById('btnBackWelcome');
+    if (!welcome) return;
 
     // Cek apakah sudah pernah lihat welcome screen
     var sudahLihat = sessionStorage.getItem('mk_welcomed');
     if (sudahLihat) {
       welcome.hidden = true;
+      if (backBtn) backBtn.style.display = '';
       return;
     }
 
     // Tombol Masuk diklik → sembunyikan welcome, simpan session
-    btn.addEventListener('click', function () {
-      sessionStorage.setItem('mk_welcomed', '1');
-      welcome.hidden = true;
-    });
+    if (btn) {
+      btn.addEventListener('click', function () {
+        sessionStorage.setItem('mk_welcomed', '1');
+        welcome.hidden = true;
+        if (backBtn) backBtn.style.display = '';
+      });
+    }
+
+    // Tombol back → tampilkan welcome screen lagi
+    if (backBtn) {
+      backBtn.style.display = 'none';
+      backBtn.addEventListener('click', function () {
+        sessionStorage.removeItem('mk_welcomed');
+        welcome.hidden = false;
+        backBtn.style.display = 'none';
+      });
+    }
   }
 
   /* =================================================================
