@@ -34,6 +34,7 @@
      ================================================================= */
   document.addEventListener('DOMContentLoaded', function () {
     cacheElements();
+    bindWelcomeScreen();
     bindEvents();
     setFooterYear();
     showLoading(true);
@@ -53,6 +54,25 @@
       showLoading(false);
     });
   });
+
+  function bindWelcomeScreen() {
+    var welcome = document.getElementById('welcomeScreen');
+    var btn = document.getElementById('btnMasuk');
+    if (!welcome || !btn) return;
+
+    // Cek apakah sudah pernah lihat welcome screen
+    var sudahLihat = sessionStorage.getItem('mk_welcomed');
+    if (sudahLihat) {
+      welcome.hidden = true;
+      return;
+    }
+
+    // Tombol Masuk diklik → sembunyikan welcome, simpan session
+    btn.addEventListener('click', function () {
+      sessionStorage.setItem('mk_welcomed', '1');
+      welcome.hidden = true;
+    });
+  }
 
   /* =================================================================
      2. Cache DOM elements
